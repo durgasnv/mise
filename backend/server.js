@@ -7,13 +7,6 @@ import health from "./api/health.js";
 import hello from "./api/hello.js";
 import auth from "./api/auth.js";
 
-const ROUTES = {
-  "/api/generate-recipe": generateRecipe,
-  "/api/health": health,
-  "/api/hello": hello,
-  "/api/auth": auth,
-};
-
 const PORT = process.env.PORT || 5000;
 
 function readBody(req) {
@@ -42,15 +35,26 @@ function wrapResponse(res) {
 const server = http.createServer(async (req, res) => {
   wrapResponse(res);
 
-  const { pathname } = new URL(req.url, `http://${req.headers.host}`);
-  
-  let handler = ROUTES[pathname];
-  if (!handler && pathname.startsWith("/api/auth")) {
+  const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+  let pathname = url.pathname;
+
+  // Normalize path (support both /api/path and /path)
+  const normalizedPath = pathname.startsWith("/api") ? pathname : `/api${pathname === "/" ? "/health" : pathname}`;
+
+  let handler = null;
+
+  if (normalizedPath === "/api/generate-recipe") {
+    handler = generateRecipe;
+  } else if (normalizedPath === "/api/health" || normalizedPath === "/api/") {
+    handler = health;
+  } else if (normalizedPath === "/api/hello") {
+    handler = hello;
+  } else if (normalizedPath.startsWith("/api/auth")) {
     handler = auth;
   }
 
   if (!handler) {
-    res.status(404).json({ error: "Not found" });
+    res.status(404).json({ error: `Route ${pathname} not found.` });
     return;
   }
 
@@ -66,5 +70,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Backend dev server listening on http://localhost:${PORT}`);
+  console.log(`Backend service listening on port ${PORT}`);
 });
