@@ -1,5 +1,5 @@
 {
-  "buildCommand": "if [ -d frontend ]; then (cd frontend && npm install && npm run build && cd .. && rm -rf dist && cp -r frontend/dist ./dist); else (npm install && npm run build); fi",
+  "buildCommand": "vite build",
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/api/auth/(.*)", "destination": "/api/auth.js" },
