@@ -77,14 +77,26 @@ const MARQUEE_ITEMS = [
   "FLAKE SEA SALT",
 ];
 
-export function LandingPage({ onEnter, onViewSaved, onOpenMysteryWheel, onOpenDemoCookingMode }) {
+export function LandingPage({ user, onEnter, onViewSaved, onOpenMysteryWheel, onOpenDemoCookingMode, onRequestAuth }) {
   const [quick1, setQuick1] = useState("Sweet Corn");
   const [quick2, setQuick2] = useState("Garlic");
   const [quick3, setQuick3] = useState("Butter");
 
   function handleQuickStart(e) {
     e.preventDefault();
+    if (!user) {
+      if (onRequestAuth) onRequestAuth("Sign in to cook with these ingredients!");
+      return;
+    }
     onEnter({ quickItems: [quick1, quick2, quick3] });
+  }
+
+  function handleFeatureClick() {
+    if (!user) {
+      if (onRequestAuth) onRequestAuth("Sign in or use 1-Click Demo to unlock this feature!");
+      return;
+    }
+    onEnter();
   }
 
   return (
@@ -236,10 +248,10 @@ export function LandingPage({ onEnter, onViewSaved, onOpenMysteryWheel, onOpenDe
 
               <div className="pt-4 mt-4 border-t border-[#EDE3D3]">
                 <button
-                  onClick={() => onEnter()}
+                  onClick={handleFeatureClick}
                   className="text-xs font-typewriter font-bold text-[#E56960] hover:text-[#C94F46] flex items-center gap-1"
                 >
-                  Try in Kitchen →
+                  {user ? "Open in Kitchen →" : "Sign In to Unlock →"}
                 </button>
               </div>
             </div>

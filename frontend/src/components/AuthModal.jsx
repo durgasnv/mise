@@ -4,7 +4,7 @@ import { getSavedRecipes } from "../lib/savedRecipes";
 
 const AVATAR_OPTIONS = ["🧑‍🍳", "👨‍🍳", "👩‍🍳", "🔥", "🥩", "🌶️", "🥑", "🔪"];
 
-export function AuthModal({ isOpen, onClose, onAuthSuccess }) {
+export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
   const [tab, setTab] = useState("login"); // 'login' | 'register'
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -90,6 +90,14 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             ✕
           </button>
         </div>
+
+        {/* Feature Lock Prompt Notice */}
+        {promptMessage && (
+          <div className="p-3 rounded-loro bg-[#FFF3EE] border border-[#E56960] text-xs font-semibold text-[#334D66] flex items-center gap-2">
+            <span>🔒</span>
+            <span>{promptMessage}</span>
+          </div>
+        )}
 
         {/* 1-Click Demo Login Highlight Box */}
         <div className="p-3.5 bg-[#FBF0DF] border border-[#EDE3D3] rounded-loro space-y-2">
