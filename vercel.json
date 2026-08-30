@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm --prefix frontend install && npm --prefix frontend run build",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
+    { "source": "/api/auth/(.*)", "destination": "/api/auth.js" },
+    { "source": "/api/(.*)", "destination": "/api/$1.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
