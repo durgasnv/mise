@@ -1,0 +1,10 @@
+node_modules/
+.codex
+.codex/
+.env
+.env.local
+.DS_Store
+dist/
+*.log
+coverage/
+*-Durga.*

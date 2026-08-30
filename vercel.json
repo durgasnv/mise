@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "backend/api/*.js": {}
+  },
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/backend/api/:path*" }
+  ]
+}
