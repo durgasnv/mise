@@ -330,8 +330,8 @@ export function LandingPage({ onEnter, onViewSaved, onOpenMysteryWheel, onOpenDe
       {/* Footer */}
       <footer className="border-t border-[#EDE3D3] bg-[#EDE3D3]/40 py-8 text-center text-xs font-typewriter text-[#636951]">
         <div className="max-w-6xl mx-auto px-4 space-y-2">
-          <p>© 2026 Fridge2Feast • Inspired by the craft of Loro Asian Smokehouse & Bar</p>
-          <p>Powered by Groq Cloud & MongoDB Atlas • Crafted for home cooks everywhere</p>
+          <p>© 2026 Mise Kitchen • Inspired by the craft of Loro Asian Smokehouse & Bar</p>
+          <p>Powered by Groq Cloud & MongoDB Atlas • Mise en place for every kitchen</p>
         </div>
       </footer>
     </div>

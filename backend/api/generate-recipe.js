@@ -5,14 +5,17 @@ import { Query } from "../models/Query.js";
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_TEXT_MODEL = "llama-3.1-8b-instant";
 const GROQ_VISION_MODEL = "llama-3.2-11b-vision-preview";
-const GROQ_TIMEOUT_MS = 20000;
+const GROQ_TIMEOUT_MS = 25000;
 
-const SYSTEM_PROMPT = `You are an elite culinary master chef and pitmaster at an artisanal Asian-Texas smokehouse & kitchen.
-When the user provides ingredients or asks for a recipe, create a mouth-watering, elevated, restaurant-quality recipe.
+const SYSTEM_PROMPT = `You are the executive chef and pitmaster at Mise, an artisanal Asian-Texas smokehouse & kitchen.
+When given ingredients (or a fridge photo), create exactly 3 DISTINCT, mouth-watering, restaurant-quality recipe options showcasing different culinary techniques (e.g. Option 1: Quick High-Heat Sauté, Option 2: Comforting Braise/Noodle Bowl, Option 3: Crispy Cast-Iron/Oven Roast).
 
-Format your response cleanly with the following markdown structure:
+Separate each of the 3 recipes with the exact marker line:
+---RECIPE_DIVIDER---
+
+For EACH of the 3 recipes, follow this exact structure:
 # [Exciting Dish Title]
-**Prep Time:** [e.g. 15 mins] | **Cook Time:** [e.g. 20 mins] | **Servings:** 2 portions | **Calories:** [e.g. ~480 kcal]
+**Prep Time:** [e.g. 15 mins] | **Cook Time:** [e.g. 15 mins] | **Servings:** 2 portions | **Calories:** [e.g. ~480 kcal]
 
 ### Ingredients
 - [Quantity] [Ingredient 1 with preparation, e.g. 2 ears Fresh sweet corn, charred]
@@ -32,13 +35,13 @@ Format your response cleanly with the following markdown structure:
 ### Chef's Tasting Note
 [A short 1-2 sentence pro chef secret on balancing acid, fat, heat, or texture.]`;
 
-let isConnected = false;
+let dbConnection = null;
 
 async function ensureDB() {
-  if (!isConnected) {
-    await connectDB();
-    isConnected = true;
+  if (!dbConnection) {
+    dbConnection = await connectDB();
   }
+  return dbConnection;
 }
 
 async function callGroq({ question, imageBase64 }) {
@@ -58,7 +61,7 @@ async function callGroq({ question, imageBase64 }) {
       userContent = [
         {
           type: "text",
-          text: question || "Identify the 3 best food ingredients in this fridge/pantry photo and create an elevated, delicious recipe with them.",
+          text: question || "Identify the best food ingredients in this fridge/pantry photo and create 3 distinct elevated recipes with them.",
         },
         {
           type: "image_url",
@@ -91,12 +94,11 @@ async function callGroq({ question, imageBase64 }) {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      // If vision fails, try text fallback if question exists
       if (isVision && question) {
-        console.warn("Vision model failed, retrying with text model...");
+        console.warn("Vision model failed, falling back to text model...");
         return callGroq({ question, imageBase64: null });
       }
-      throw new Error(data?.error?.message || "Groq API request failed.");
+      throw new Error(data?.error?.message || `Groq API responded with status ${response.status}`);
     }
 
     const content = data?.choices?.[0]?.message?.content;
@@ -106,7 +108,7 @@ async function callGroq({ question, imageBase64 }) {
 
     return content;
   } catch (error) {
-    if (error.name === "AbortError") throw new Error("Request timed out (20s).");
+    if (error.name === "AbortError") throw new Error("Request timed out (25s).");
     throw error;
   } finally {
     clearTimeout(timeout);
@@ -138,23 +140,30 @@ export default async function handler(req, res) {
   }
 
   try {
-    await ensureDB().catch((err) => console.error("DB connection notice:", err.message));
+    const db = await ensureDB().catch((err) => {
+      console.warn("DB skip:", err.message);
+      return null;
+    });
 
     let response;
     try {
       response = await callGroq({ question, imageBase64 });
     } catch (groqError) {
-      console.error("Groq failed:", groqError.message);
-      return res.status(500).json({ error: `Kitchen error: ${groqError.message}` });
+      console.error("Groq call failed:", groqError.message);
+      return res.status(500).json({ error: `Kitchen generation notice: ${groqError.message}` });
     }
 
-    await Query.create({ question: question || "Image pantry query", response }).catch((err) =>
-      console.error("DB save notice:", err.message)
-    );
+    if (db) {
+      try {
+        await Query.create({ question: question || "Image pantry query", response });
+      } catch (err) {
+        console.warn("Query save skipped:", err.message);
+      }
+    }
 
     return res.status(200).json({ response });
   } catch (error) {
-    console.error("Handler failed:", error.message);
+    console.error("Handler error:", error.message);
     return res.status(500).json({ error: "Something went wrong in the kitchen." });
   }
 }

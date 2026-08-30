@@ -1,5 +1,7 @@
 import http from "node:http";
 import dotenv from "dotenv";
+dotenv.config();
+
 import generateRecipe from "./api/generate-recipe.js";
 import health from "./api/health.js";
 import hello from "./api/hello.js";

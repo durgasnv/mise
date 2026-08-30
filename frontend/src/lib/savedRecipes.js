@@ -1,11 +1,14 @@
-const STORAGE_KEY = "fridge2feast_saved_recipes_v1";
+const STORAGE_KEY = "mise_saved_recipes_v2";
 
 const STARTER_RECIPES = [
   {
     id: "sample-1",
     title: "Smoked Garlic & Sweet Corn Sauté",
     prepTime: "15 mins",
+    cookTime: "10 mins",
     servings: "2-3 portions",
+    basePortions: 2,
+    calories: "~460 kcal",
     ingredients: [
       "2 ears Fresh sweet corn, cut off the cob",
       "4 cloves Garlic, finely slivered",
@@ -19,15 +22,20 @@ const STARTER_RECIPES = [
       "Add fresh sweet corn kernels and let char undisturbed for 2-3 minutes for deep smokehouse flavor.",
       "Toss together, season with smoked salt and pepper, and finish with freshly torn herbs.",
     ],
+    pairing: "Smoky Lemon Iced Green Tea with fresh mint",
+    quickSide: "Pickled Cucumber Ribbons with toasted sesame",
     chefNote: "Pair with a squeeze of charred lime for authentic smokehouse zest.",
-    tags: ["Smokehouse Special", "Sweet Corn", "Vegetarian"],
+    tags: ["Quick Sauté", "Sweet Corn", "Vegetarian"],
     createdAt: "2026-08-01T12:00:00.000Z",
   },
   {
     id: "sample-2",
     title: "Crispy Cast-Iron Chicken Thighs with Rosemary & Shallot",
-    prepTime: "25 mins",
+    prepTime: "15 mins",
+    cookTime: "25 mins",
     servings: "2 portions",
+    basePortions: 2,
+    calories: "~520 kcal",
     ingredients: [
       "4 Bone-in chicken thighs, patted dry",
       "3 Shallots, quartered",
@@ -40,9 +48,38 @@ const STARTER_RECIPES = [
       "Cook for 12-14 minutes until the skin is deep golden amber and shatteringly crisp.",
       "Flip, toss quartered shallots and rosemary into the rendered pan juices, and cook 8 more minutes until done.",
     ],
+    pairing: "Charred Citrus Highball with a twist of lemon",
+    quickSide: "Whipped Garlic-Miso Butter with warm flatbread",
     chefNote: "Baste the crisp chicken with the fragrant rosemary pan jus before plating.",
-    tags: ["Cast Iron", "High Protein", "Comfort Feast"],
+    tags: ["Crispy Cast-Iron", "High Protein", "Comfort Feast"],
     createdAt: "2026-08-02T14:30:00.000Z",
+  },
+  {
+    id: "sample-3",
+    title: "Gochujang Glazed Shiitake Ramen Sauté",
+    prepTime: "10 mins",
+    cookTime: "12 mins",
+    servings: "2 portions",
+    basePortions: 2,
+    calories: "~480 kcal",
+    ingredients: [
+      "2 packs Ramen noodles, boiled al dente",
+      "200g Shiitake mushrooms, sliced",
+      "1.5 tbsp Gochujang chili paste",
+      "1 tbsp Soy sauce & 1 tsp sesame oil",
+      "1 Soft-boiled egg for topping",
+    ],
+    instructions: [
+      "Boil ramen noodles for 2 minutes, drain and rinse with cold water.",
+      "In a hot skillet, sear shiitake mushrooms in sesame oil until deeply browned.",
+      "Stir in gochujang and soy sauce with 2 tbsp hot water to form a glossy glaze.",
+      "Toss noodles vigorously in the sauce, plate in bowls, and top with soft-boiled egg.",
+    ],
+    pairing: "Ginger-Yuzu Sparkling Tonic",
+    quickSide: "Sesame Scallion Slaw with chili flakes",
+    chefNote: "Rinsing noodles in cold water keeps them bouncy and chewy.",
+    tags: ["Asian Fusion", "Fast 15-Min", "Umami Rich"],
+    createdAt: "2026-08-03T16:00:00.000Z",
   },
 ];
 
@@ -87,6 +124,7 @@ export function saveRecipe(recipe) {
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event("storage"));
   } catch (err) {
     console.error("Error saving recipe:", err);
   }
@@ -105,6 +143,7 @@ export function deleteRecipe(id) {
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event("storage"));
   } catch (err) {
     console.error("Error deleting recipe:", err);
   }

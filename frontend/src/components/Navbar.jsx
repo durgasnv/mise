@@ -43,10 +43,10 @@ export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemo
 
             <div>
               <span className="font-display text-2xl sm:text-3xl text-[#334D66] tracking-tight group-hover:text-[#E56960] transition-colors leading-none block">
-                FRIDGE<span className="text-[#E56960]">2</span>FEAST
+                MISE<span className="text-[#E56960] font-serif italic text-lg ml-1">kitchen</span>
               </span>
               <span className="text-[10px] font-typewriter tracking-widest text-[#636951] uppercase block mt-0.5">
-                Asian Smokehouse & Artisanal AI Kitchen
+                Mise en Place • Artisanal AI Kitchen
               </span>
             </div>
           </button>

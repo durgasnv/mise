@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import { IngredientForm } from "../components/IngredientForm";
-import { RecipeCard } from "../components/RecipeCard";
+import { MultiRecipeStack } from "../components/MultiRecipeStack";
 import { generateRecipeApi } from "../lib/api";
-import { parseRecipeResponse, createFallbackRecipe } from "../lib/parseRecipes";
+import { parseRecipeResponse, createFallbackRecipes } from "../lib/parseRecipes";
 
 const KITCHEN_TIPS = [
   {
@@ -25,44 +25,54 @@ const KITCHEN_TIPS = [
 const LOADING_MESSAGES = [
   "Firing up the culinary hearth...",
   "Balancing acid, smoke, and savory aromatics...",
-  "Crafting step-by-step culinary method...",
-  "Finishing with chef's pairing notes...",
+  "Crafting 3 distinct cooking methods...",
+  "Pairing craft beverages and companion sides...",
+  "Finishing with pitmaster tasting notes...",
 ];
 
 export function HomePage({ onBack, onViewSaved, initialIngredients }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [currentRecipe, setCurrentRecipe] = useState(null);
-  const [error, setError] = useState(null);
+  const [recipes, setRecipes] = useState(null);
+  const [toastMessage, setToastMessage] = useState("");
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const recipeRef = useRef(null);
 
   async function handleGenerate({ question, ingredients, image }) {
     setIsLoading(true);
-    setError(null);
 
-    // Cycle through culinary loading messages
     const timer = setInterval(() => {
       setLoadingMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
-    }, 2200);
+    }, 2000);
 
     try {
       const rawResponse = await generateRecipeApi(question, image);
-      const parsed = parseRecipeResponse(rawResponse, ingredients);
-      setCurrentRecipe(parsed);
+      const parsedRecipes = parseRecipeResponse(rawResponse, ingredients);
+      setRecipes(parsedRecipes);
 
       setTimeout(() => {
         recipeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     } catch (err) {
-      console.error("Recipe generation error:", err);
-      setError(err.message || "Failed to generate recipe. Using scratch kitchen backup.");
-      // Fallback recipe so the user never encounters a blank crash screen
-      const fallback = createFallbackRecipe(ingredients);
-      setCurrentRecipe(fallback);
+      console.warn("API notice, applying hearth fallback:", err.message);
+      const fallbacks = createFallbackRecipes(ingredients);
+      setRecipes(fallbacks);
+
+      setTimeout(() => {
+        recipeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
     } finally {
       clearInterval(timer);
       setIsLoading(false);
     }
+  }
+
+  function handleSaveNotification(isSaved) {
+    if (isSaved) {
+      setToastMessage("★ Recipe saved to your Mise Cookbook!");
+    } else {
+      setToastMessage("Recipe removed from cookbook");
+    }
+    setTimeout(() => setToastMessage(""), 3000);
   }
 
   function handleCookAnother() {
@@ -84,7 +94,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients }) {
             </button>
             <span className="text-[#EDE3D3]">•</span>
             <span className="text-xs font-typewriter font-bold text-[#334D66] uppercase">
-              The AI Kitchen Workbench
+              Mise Kitchen Workbench
             </span>
           </div>
 
@@ -98,22 +108,6 @@ export function HomePage({ onBack, onViewSaved, initialIngredients }) {
       </div>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 space-y-12">
-        {/* Error Alert if any */}
-        {error && (
-          <div className="p-4 rounded-loro bg-[#FFF3EE] border border-[#E56960] text-[#334D66] text-sm flex items-start justify-between gap-3">
-            <div>
-              <span className="font-bold text-[#E56960]">Notice: </span>
-              <span>{error}</span>
-            </div>
-            <button
-              onClick={() => setError(null)}
-              className="text-[#E56960] font-bold text-xs"
-            >
-              ✕
-            </button>
-          </div>
-        )}
-
         {/* Top Grid: Form + Kitchen Tips */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Main Ingredient Form (8 cols) */}
@@ -131,7 +125,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients }) {
               <div className="flex items-center gap-2 border-b border-[#EDE3D3] pb-3">
                 <span className="text-[#E56960]">✦</span>
                 <h3 className="font-display text-lg text-[#334D66]">
-                  Smokehouse Kitchen Secrets
+                  Mise Kitchen Secrets
                 </h3>
               </div>
 
@@ -153,13 +147,13 @@ export function HomePage({ onBack, onViewSaved, initialIngredients }) {
             {/* Quick Inspiration Card */}
             <div className="bg-[#334D66] text-[#FBF0DF] p-6 rounded-loro-lg border border-[#334D66] space-y-2">
               <span className="text-[11px] font-typewriter text-[#FFBDA6] font-bold uppercase tracking-wider">
-                Kitchen Rule of Three
+                Mise en Place
               </span>
               <h4 className="font-display text-xl text-white">
-                1 Protein + 1 Veg + 1 Flavor
+                Everything in its place.
               </h4>
               <p className="text-xs text-[#FBF0DF]/80 font-serif leading-relaxed">
-                The golden balance used by top chefs. Keep it simple, season well, and let high heat do the work.
+                Whether you have 3 items or a full pantry, high heat and good seasoning create unforgettable meals.
               </p>
             </div>
           </div>
@@ -169,7 +163,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients }) {
         {isLoading && (
           <div className="py-16 text-center space-y-4 bg-white/80 rounded-loro-lg border border-[#EDE3D3] shadow-loro p-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E56960]/10 text-[#E56960] text-xs font-typewriter font-bold uppercase tracking-wider">
-              <span>🔥 Hearth In Progress</span>
+              <span>🔥 Crafting 3 Unique Variations</span>
             </div>
 
             <div className="flex justify-center gap-2 py-3">
@@ -183,30 +177,39 @@ export function HomePage({ onBack, onViewSaved, initialIngredients }) {
             </p>
 
             <p className="text-xs font-typewriter text-[#636951]">
-              Consulting master cooking techniques for your pantry items...
+              Balancing sear times, slow braises, and crunchy textures for your ingredients...
             </p>
           </div>
         )}
 
-        {/* Render Generated Recipe Card */}
-        {currentRecipe && !isLoading && (
-          <div ref={recipeRef} className="pt-4 scroll-mt-24">
-            <div className="flex items-center justify-between mb-4">
+        {/* Render Generated Top 3 Stacked Recipe Cards */}
+        {recipes && !isLoading && (
+          <div ref={recipeRef} className="pt-4 scroll-mt-24 space-y-4">
+            <div className="flex items-center justify-between">
               <span className="text-xs font-typewriter font-bold uppercase tracking-wider text-[#636951] flex items-center gap-1.5">
-                <span>✦</span> Step 02 • Your Custom Recipe
+                <span>✦</span> Step 02 • Select Your Preferred Variation
               </span>
               <button
                 onClick={handleCookAnother}
                 className="text-xs font-typewriter font-bold text-[#E56960] hover:underline"
               >
-                ↑ Edit Ingredients
+                ↑ Adjust Ingredients
               </button>
             </div>
 
-            <RecipeCard
-              recipe={currentRecipe}
+            <MultiRecipeStack
+              recipes={recipes}
+              onSaveChange={handleSaveNotification}
               onCookAnother={handleCookAnother}
             />
+          </div>
+        )}
+
+        {/* Toast Feedback Notification */}
+        {toastMessage && (
+          <div className="fixed bottom-6 right-6 z-50 bg-[#334D66] text-[#FBF0DF] px-5 py-3 rounded-loro shadow-loro-lg border border-[#4A6987] text-sm font-medium flex items-center gap-2 animate-toast-enter">
+            <span>✨</span>
+            <span>{toastMessage}</span>
           </div>
         )}
       </main>

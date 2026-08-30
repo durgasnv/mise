@@ -1,27 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { PantryWheelModal } from "./PantryWheelModal";
 
-const PANTRY_PRESETS = [
-  {
-    name: "Smokehouse Corn & Sweet Heat",
-    badge: "Chef's Pick",
-    items: ["Sweet Corn", "Garlic", "Butter"],
-  },
-  {
-    name: "Cast-Iron Chicken & Herbs",
-    badge: "High Protein",
-    items: ["Chicken Thighs", "Rosemary", "Shallots"],
-  },
-  {
-    name: "Asian Fusion Noodles",
-    badge: "15-Min Fast",
-    items: ["Ramen Noodles", "Gochujang", "Egg"],
-  },
-  {
-    name: "Hearth Garlic Tomato Sauté",
-    badge: "Plant-Forward",
-    items: ["Cherry Tomatoes", "Garlic", "Basil"],
-  },
+const INGREDIENT_COUNT_MODES = [
+  { id: "3", label: "3 Items", desc: "Quick Trio" },
+  { id: "5", label: "5 Items", desc: "Balanced Meal" },
+  { id: "7", label: "7 Items", desc: "Feast Master" },
+  { id: "freeform", label: "Freeform Text", desc: "Custom Pantry Box" },
 ];
 
 const POPULAR_INGREDIENTS = [
@@ -39,7 +23,27 @@ const POPULAR_INGREDIENTS = [
   "Potatoes",
   "Lime",
   "Avocado",
+  "Heavy Cream",
+  "Butter",
+  "Rosemary",
 ];
+
+const PRESETS_BY_COUNT = {
+  3: [
+    { name: "Smokehouse Corn & Sweet Heat", items: ["Sweet Corn", "Garlic", "Butter"] },
+    { name: "Cast-Iron Chicken & Herbs", items: ["Chicken Thighs", "Rosemary", "Shallots"] },
+    { name: "Asian Fusion Noodles", items: ["Ramen Noodles", "Gochujang", "Egg"] },
+  ],
+  5: [
+    { name: "Smokehouse Feast", items: ["Chicken Thighs", "Sweet Corn", "Garlic", "Butter", "Charred Lime"] },
+    { name: "Garden Pasta Hearth", items: ["Pasta", "Cherry Tomatoes", "Garlic", "Basil", "Olive Oil"] },
+    { name: "Umami Mushroom Bowl", items: ["Shiitake Mushrooms", "Jasmine Rice", "Tofu", "Soy Sauce", "Scallions"] },
+  ],
+  7: [
+    { name: "Pitmaster Ultimate Feast", items: ["Chicken Thighs", "Sweet Corn", "Potatoes", "Garlic", "Butter", "Rosemary", "Lime"] },
+    { name: "Tokyo Street Sizzle", items: ["Ramen Noodles", "Pork Chops", "Shiitake Mushrooms", "Eggs", "Gochujang", "Scallions", "Sesame Oil"] },
+  ],
+};
 
 const COOKING_STYLES = [
   "🔥 Smoky Cast-Iron",
@@ -50,9 +54,9 @@ const COOKING_STYLES = [
 ];
 
 export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
-  const [ing1, setIng1] = useState("");
-  const [ing2, setIng2] = useState("");
-  const [ing3, setIng3] = useState("");
+  const [mode, setMode] = useState("3"); // '3' | '5' | '7' | 'freeform'
+  const [slots, setSlots] = useState(["", "", ""]);
+  const [freeformText, setFreeformText] = useState("");
   const [selectedStyle, setSelectedStyle] = useState(COOKING_STYLES[0]);
   const [dietaryNote, setDietaryNote] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -61,29 +65,66 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
   const [isListening, setIsListening] = useState(false);
   const fileInputRef = useRef(null);
 
+  // Sync initialIngredients if passed
   useEffect(() => {
-    if (initialIngredients && Array.isArray(initialIngredients)) {
-      if (initialIngredients[0]) setIng1(initialIngredients[0]);
-      if (initialIngredients[1]) setIng2(initialIngredients[1]);
-      if (initialIngredients[2]) setIng3(initialIngredients[2]);
+    if (initialIngredients && Array.isArray(initialIngredients) && initialIngredients.length > 0) {
+      setSlots(initialIngredients);
+      if (initialIngredients.length > 5) setMode("7");
+      else if (initialIngredients.length > 3) setMode("5");
+      else setMode("3");
     }
   }, [initialIngredients]);
 
+  // Adjust slots when switching mode
+  function handleModeChange(newMode) {
+    setMode(newMode);
+    if (newMode === "3") {
+      setSlots((prev) => (prev.length >= 3 ? prev.slice(0, 3) : [...prev, ...Array(3 - prev.length).fill("")]));
+    } else if (newMode === "5") {
+      setSlots((prev) => (prev.length >= 5 ? prev.slice(0, 5) : [...prev, ...Array(5 - prev.length).fill("")]));
+    } else if (newMode === "7") {
+      setSlots((prev) => (prev.length >= 7 ? prev.slice(0, 7) : [...prev, ...Array(7 - prev.length).fill("")]));
+    } else if (newMode === "freeform") {
+      const existing = slots.filter(Boolean).join(", ");
+      if (existing && !freeformText) setFreeformText(existing);
+    }
+  }
+
+  function handleSlotChange(index, value) {
+    setSlots((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  }
+
+  function addSlot() {
+    setSlots((prev) => [...prev, ""]);
+  }
+
+  function removeSlot(index) {
+    if (slots.length <= 1) return;
+    setSlots((prev) => prev.filter((_, i) => i !== index));
+  }
+
   function handleSubmit(e) {
     if (e) e.preventDefault();
-    const clean1 = ing1.trim();
-    const clean2 = ing2.trim();
-    const clean3 = ing3.trim();
 
-    if (!clean1 && !clean2 && !clean3 && !imagePreview) return;
+    let list = [];
+    if (mode === "freeform") {
+      list = freeformText.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean);
+    } else {
+      list = slots.map((s) => s.trim()).filter(Boolean);
+    }
 
-    const list = [clean1, clean2, clean3].filter(Boolean);
-    const stylePrompt = selectedStyle ? ` Prepared with a ${selectedStyle.replace(/^[^\w]+/, "")} style.` : "";
+    if (list.length === 0 && !imagePreview) return;
+
+    const stylePrompt = selectedStyle ? ` Prepared with a ${selectedStyle.replace(/^[^\w]+/, "")} technique.` : "";
     const notePrompt = dietaryNote.trim() ? ` Dietary note: ${dietaryNote.trim()}.` : "";
 
     const question = imagePreview && list.length === 0
-      ? `Look at this photo of my fridge/pantry. Identify the 3 best ingredients visible and create an elevated, delicious recipe with them.${stylePrompt}${notePrompt}`
-      : `Create an elevated, delicious recipe using these 3 ingredients: ${list.join(", ")}.${stylePrompt}${notePrompt} Include dish title, prep & cook time, full ingredients list with portions, step-by-step instructions, craft beverage pairing, and chef's tasting note.`;
+      ? `Identify the best food ingredients in this photo and create 3 distinct elevated recipes.${stylePrompt}${notePrompt}`
+      : `Create 3 distinct elevated recipes using these pantry ingredients: ${list.join(", ")}.${stylePrompt}${notePrompt} Include prep & cook time, full ingredients list with portions, step-by-step instructions, craft beverage pairing, and pitmaster tasting notes.`;
 
     onSubmit({
       question,
@@ -106,7 +147,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
   function handleVoiceInput() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Voice recognition is not supported in this browser. Please try Chrome, Edge, or Safari.");
+      alert("Voice recognition is not supported in this browser. Try Chrome or Safari.");
       return;
     }
 
@@ -123,16 +164,17 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
 
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
-        // Clean words and split by commas, "and", or spaces
         const parts = transcript
           .replace(/I have|I've got|and|with|some/gi, ",")
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean);
 
-        if (parts[0]) setIng1(parts[0]);
-        if (parts[1]) setIng2(parts[1]);
-        if (parts[2]) setIng3(parts[2]);
+        if (mode === "freeform") {
+          setFreeformText(parts.join(", "));
+        } else {
+          setSlots(parts.slice(0, slots.length));
+        }
       };
 
       recognition.start();
@@ -143,39 +185,46 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
   }
 
   function applyPreset(preset) {
-    setIng1(preset.items[0] || "");
-    setIng2(preset.items[1] || "");
-    setIng3(preset.items[2] || "");
+    setSlots(preset.items);
+    if (preset.items.length === 3) setMode("3");
+    else if (preset.items.length === 5) setMode("5");
+    else if (preset.items.length === 7) setMode("7");
     setImagePreview(null);
   }
 
   function applyMysteryCombo(items) {
-    setIng1(items[0] || "");
-    setIng2(items[1] || "");
-    setIng3(items[2] || "");
+    setSlots(items);
+    setMode("3");
     setImagePreview(null);
   }
 
   function addIngredientToNextSlot(item) {
-    if (!ing1) setIng1(item);
-    else if (!ing2) setIng2(item);
-    else if (!ing3) setIng3(item);
-    else setIng1(item);
+    if (mode === "freeform") {
+      setFreeformText((prev) => (prev ? `${prev}, ${item}` : item));
+      return;
+    }
+
+    const emptyIndex = slots.findIndex((s) => !s.trim());
+    if (emptyIndex !== -1) {
+      handleSlotChange(emptyIndex, item);
+    } else {
+      setSlots((prev) => [...prev, item]);
+    }
   }
 
   function clearAll() {
-    setIng1("");
-    setIng2("");
-    setIng3("");
+    setSlots(Array(parseInt(mode, 10) || 3).fill(""));
+    setFreeformText("");
     setDietaryNote("");
     setImagePreview(null);
   }
 
-  const hasAnyInput = Boolean(ing1.trim() || ing2.trim() || ing3.trim() || imagePreview);
+  const currentPresets = PRESETS_BY_COUNT[parseInt(mode, 10)] || PRESETS_BY_COUNT[3];
+  const hasAnyInput = Boolean(slots.some((s) => s.trim()) || freeformText.trim() || imagePreview);
 
   return (
     <div className="bg-[#FFFDF9] rounded-loro-lg border border-[#EDE3D3] shadow-loro p-6 sm:p-8 relative">
-      {/* Header with Step indicator and Feature Tools */}
+      {/* Header with Step Indicator & Action Shortcuts */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-[#EDE3D3]">
         <div>
           <div className="flex items-center gap-2">
@@ -183,10 +232,10 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
               Step 01 • Pantry Input
             </span>
             <span className="text-[#636951] text-xs hidden sm:inline">•</span>
-            <span className="text-xs text-[#334D66]/70 hidden sm:inline">Zero food waste</span>
+            <span className="text-xs text-[#334D66]/70 hidden sm:inline">Mise en place for every kitchen</span>
           </div>
           <h2 className="font-display text-2xl sm:text-3xl text-[#334D66] mt-1">
-            Choose Your 3 Ingredients
+            Choose Your Pantry Ingredients
           </h2>
         </div>
 
@@ -241,7 +290,33 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
         </div>
       </div>
 
-      {/* Photo Preview Banner (if photo uploaded) */}
+      {/* Ingredient Count Mode Tabs: 3 Items, 5 Items, 7 Items, Freeform */}
+      <div className="pt-6 pb-2">
+        <label className="block text-xs font-typewriter font-bold tracking-wider text-[#334D66] uppercase mb-2">
+          Pantry Quantity Mode:
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {INGREDIENT_COUNT_MODES.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => handleModeChange(m.id)}
+              className={`p-2.5 rounded-loro border text-left transition-all ${
+                mode === m.id
+                  ? "bg-[#334D66] text-[#FBF0DF] border-[#334D66] shadow-sm"
+                  : "bg-white text-[#334D66] border-[#EDE3D3] hover:bg-[#FBF0DF]"
+              }`}
+            >
+              <div className="font-bold text-xs">{m.label}</div>
+              <div className={`text-[10px] font-typewriter ${mode === m.id ? "text-[#FFBDA6]" : "text-[#636951]"}`}>
+                {m.desc}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Photo Preview Banner */}
       {imagePreview && (
         <div className="mt-4 p-3 bg-[#FBF0DF] border border-[#EDE3D3] rounded-loro flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -255,7 +330,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
                 📸 Fridge Photo Loaded
               </span>
               <p className="text-xs text-[#636951]">
-                AI Vision will scan your image or refine with the 3 slots below.
+                AI Vision will scan your items or augment the slots below.
               </p>
             </div>
           </div>
@@ -270,95 +345,64 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
       )}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-        {/* 3 Ingredient Input Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Ingredient 1 */}
+        {/* Slot-based input OR Freeform Box */}
+        {mode === "freeform" ? (
           <div className="space-y-1.5">
             <label className="block text-xs font-typewriter font-bold tracking-wider text-[#334D66] uppercase">
-              <span className="inline-block w-5 h-5 rounded-full bg-[#334D66] text-[#FBF0DF] text-center leading-5 text-[11px] mr-1.5">
-                1
-              </span>
-              Main Protein / Base
+              Freeform Pantry Text Box (Paste or Type What You Have)
             </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={ing1}
-                onChange={(e) => setIng1(e.target.value)}
-                placeholder="e.g. Chicken, Sweet Corn, Pasta"
-                disabled={isLoading}
-                className="w-full bg-[#FBF0DF]/60 border border-[#EDE3D3] focus:border-[#E56960] focus:bg-white text-[#334D66] placeholder-[#8EA4B8] text-sm font-medium rounded-lg px-4 py-3 outline-none transition-all"
-              />
-              {ing1 && (
-                <button
-                  type="button"
-                  onClick={() => setIng1("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
+            <textarea
+              rows={4}
+              value={freeformText}
+              onChange={(e) => setFreeformText(e.target.value)}
+              placeholder="e.g. Chicken thighs, sweet corn, garlic cloves, heavy cream, parmesan, fresh basil, cracked pepper"
+              disabled={isLoading}
+              className="w-full bg-[#FBF0DF]/60 border border-[#EDE3D3] focus:border-[#E56960] focus:bg-white text-[#334D66] placeholder-[#8EA4B8] text-sm font-medium rounded-lg p-4 outline-none transition-all leading-relaxed"
+            />
           </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {slots.map((val, idx) => (
+                <div key={idx} className="space-y-1">
+                  <label className="block text-[11px] font-typewriter font-bold text-[#334D66] uppercase">
+                    Slot {idx + 1}
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      value={val}
+                      onChange={(e) => handleSlotChange(idx, e.target.value)}
+                      placeholder={`e.g. ${idx === 0 ? "Chicken / Tofu" : idx === 1 ? "Sweet Corn / Veg" : "Garlic / Butter"}`}
+                      disabled={isLoading}
+                      className="w-full bg-[#FBF0DF]/60 border border-[#EDE3D3] focus:border-[#E56960] focus:bg-white text-[#334D66] placeholder-[#8EA4B8] text-sm font-medium rounded-lg px-3.5 py-2.5 outline-none transition-all pr-8"
+                    />
+                    {val && (
+                      <button
+                        type="button"
+                        onClick={() => handleSlotChange(idx, "")}
+                        className="absolute right-2 text-gray-400 hover:text-gray-600 text-xs"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
 
-          {/* Ingredient 2 */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-typewriter font-bold tracking-wider text-[#334D66] uppercase">
-              <span className="inline-block w-5 h-5 rounded-full bg-[#334D66] text-[#FBF0DF] text-center leading-5 text-[11px] mr-1.5">
-                2
-              </span>
-              Fresh Produce / Veg
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={ing2}
-                onChange={(e) => setIng2(e.target.value)}
-                placeholder="e.g. Garlic, Shallots, Mushrooms"
-                disabled={isLoading}
-                className="w-full bg-[#FBF0DF]/60 border border-[#EDE3D3] focus:border-[#E56960] focus:bg-white text-[#334D66] placeholder-[#8EA4B8] text-sm font-medium rounded-lg px-4 py-3 outline-none transition-all"
-              />
-              {ing2 && (
-                <button
-                  type="button"
-                  onClick={() => setIng2("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
-                >
-                  ✕
-                </button>
-              )}
+            {/* Add extra slot button */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={addSlot}
+                className="text-xs font-typewriter font-bold text-[#334D66] hover:text-[#E56960] flex items-center gap-1"
+              >
+                + Add Another Ingredient Slot
+              </button>
             </div>
           </div>
-
-          {/* Ingredient 3 */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-typewriter font-bold tracking-wider text-[#334D66] uppercase">
-              <span className="inline-block w-5 h-5 rounded-full bg-[#334D66] text-[#FBF0DF] text-center leading-5 text-[11px] mr-1.5">
-                3
-              </span>
-              Pantry Accent / Sauce
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={ing3}
-                onChange={(e) => setIng3(e.target.value)}
-                placeholder="e.g. Butter, Gochujang, Soy Sauce"
-                disabled={isLoading}
-                className="w-full bg-[#FBF0DF]/60 border border-[#EDE3D3] focus:border-[#E56960] focus:bg-white text-[#334D66] placeholder-[#8EA4B8] text-sm font-medium rounded-lg px-4 py-3 outline-none transition-all"
-              />
-              {ing3 && (
-                <button
-                  type="button"
-                  onClick={() => setIng3("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Quick Suggestion Chips */}
         <div className="pt-1">
@@ -395,11 +439,11 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
         <div className="bg-[#FBF0DF]/70 rounded-loro p-4 border border-[#EDE3D3]">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-typewriter font-bold text-[#334D66] uppercase tracking-wider flex items-center gap-1.5">
-              <span>✨</span> Curated Smokehouse Combinations
+              <span>✨</span> Curated Smokehouse Flavor Combinations
             </span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-            {PANTRY_PRESETS.map((preset) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {currentPresets.map((preset) => (
               <button
                 key={preset.name}
                 type="button"
@@ -407,10 +451,8 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
                 disabled={isLoading}
                 className="text-left p-3 rounded-lg bg-white border border-[#EDE3D3] hover:border-[#E56960] hover:shadow-loro-sm transition-all group"
               >
-                <div className="flex items-center justify-between gap-1 mb-1">
-                  <span className="text-xs font-bold text-[#334D66] group-hover:text-[#E56960] line-clamp-1">
-                    {preset.name}
-                  </span>
+                <div className="text-xs font-bold text-[#334D66] group-hover:text-[#E56960] line-clamp-1 mb-1">
+                  {preset.name}
                 </div>
                 <div className="text-[11px] text-[#636951] font-medium font-typewriter truncate">
                   {preset.items.join(" • ")}
@@ -423,7 +465,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
         {/* Cooking Style Options */}
         <div>
           <label className="block text-xs font-typewriter font-bold tracking-wider text-[#334D66] uppercase mb-2">
-            Culinary Vibe / Technique
+            Culinary Technique / Style
           </label>
           <div className="flex flex-wrap gap-2">
             {COOKING_STYLES.map((style) => (
@@ -470,7 +512,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
           )}
         </div>
 
-        {/* Submit CTA Button - Loro style */}
+        {/* Submit CTA Button */}
         <div className="pt-2">
           <button
             type="submit"
@@ -489,7 +531,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
                   <span className="simmer-dot" />
                 </span>
                 <span className="font-typewriter text-sm tracking-widest text-[#FBF0DF]">
-                  STOKING THE HEARTH & CRAFTING RECIPE...
+                  STOKING THE HEARTH & CRAFTING TOP 3 FEASTS...
                 </span>
               </div>
             ) : (
@@ -497,7 +539,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
                 <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                 </svg>
-                <span>Generate Artisanal Feast</span>
+                <span>Generate Top 3 Artisanal Recipes</span>
                 <span className="text-xs font-typewriter opacity-80 lowercase font-normal">
                   (instant AI cook)
                 </span>

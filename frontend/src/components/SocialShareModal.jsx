@@ -33,7 +33,7 @@ export function SocialShareModal({ recipe, onClose }) {
     ctx.fillStyle = "#FBF0DF";
     ctx.font = "bold 16px Courier, monospace";
     ctx.textAlign = "center";
-    ctx.fillText("FRIDGE2FEAST • ARTISANAL AI PANTRY RECIPE", 400, 78);
+    ctx.fillText("MISE KITCHEN • ARTISANAL AI PANTRY RECIPE", 400, 78);
 
     // Dish Title
     ctx.fillStyle = "#334D66";
