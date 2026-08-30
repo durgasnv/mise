@@ -1,6 +1,6 @@
 {
-  "buildCommand": "if [ -d frontend ]; then (cd frontend && npm install && npm run build); else (npm install && npm run build); fi",
-  "outputDirectory": "frontend/dist",
+  "buildCommand": "cd frontend && npm install && npm run build && cd .. && rm -rf dist && cp -r frontend/dist ./dist",
+  "outputDirectory": "dist",
   "rewrites": [
     { "source": "/api/auth/(.*)", "destination": "/api/auth.js" },
     { "source": "/api/(.*)", "destination": "/api/$1.js" },
