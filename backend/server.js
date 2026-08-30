@@ -5,11 +5,13 @@ dotenv.config();
 import generateRecipe from "./api/generate-recipe.js";
 import health from "./api/health.js";
 import hello from "./api/hello.js";
+import auth from "./api/auth.js";
 
 const ROUTES = {
   "/api/generate-recipe": generateRecipe,
   "/api/health": health,
   "/api/hello": hello,
+  "/api/auth": auth,
 };
 
 const PORT = process.env.PORT || 5000;
@@ -41,7 +43,11 @@ const server = http.createServer(async (req, res) => {
   wrapResponse(res);
 
   const { pathname } = new URL(req.url, `http://${req.headers.host}`);
-  const handler = ROUTES[pathname];
+  
+  let handler = ROUTES[pathname];
+  if (!handler && pathname.startsWith("/api/auth")) {
+    handler = auth;
+  }
 
   if (!handler) {
     res.status(404).json({ error: "Not found" });

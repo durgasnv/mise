@@ -16,7 +16,7 @@ const pageVariants = {
 };
 
 export default function App() {
-  const [view, setView] = useState("landing");
+  const [view, setView] = useState("ask");
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [showGlobalWheel, setShowGlobalWheel] = useState(false);
   const [showDemoCooking, setShowDemoCooking] = useState(false);

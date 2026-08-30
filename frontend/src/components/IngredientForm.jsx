@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { PantryWheelModal } from "./PantryWheelModal";
+import { getCurrentUser } from "../lib/auth";
 
 const INGREDIENT_COUNT_MODES = [
   { id: "3", label: "3 Items", desc: "Quick Trio" },
@@ -119,8 +120,11 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
 
     if (list.length === 0 && !imagePreview) return;
 
-    const stylePrompt = selectedStyle ? ` Prepared with a ${selectedStyle.replace(/^[^\w]+/, "")} technique.` : "";
-    const notePrompt = dietaryNote.trim() ? ` Dietary note: ${dietaryNote.trim()}.` : "";
+    let notePrompt = dietaryNote.trim() ? ` Dietary note: ${dietaryNote.trim()}.` : "";
+    const user = getCurrentUser();
+    if (user?.dietaryPreferences?.length > 0) {
+      notePrompt += ` Strict dietary preferences: ${user.dietaryPreferences.join(", ")}. Spice level preference: ${user.spicePreference || "Medium"}.`;
+    }
 
     const question = imagePreview && list.length === 0
       ? `Identify the best food ingredients in this photo and create 3 distinct elevated recipes.${stylePrompt}${notePrompt}`

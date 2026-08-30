@@ -1,18 +1,51 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getSavedRecipes } from "../lib/savedRecipes";
+import { getCurrentUser, logoutChef } from "../lib/auth";
+import { AuthModal } from "./AuthModal";
+import { TasteProfileModal } from "./TasteProfileModal";
 
 export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemoCookingMode }) {
   const [savedCount, setSavedCount] = useState(0);
+  const [user, setUser] = useState(getCurrentUser());
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showTasteModal, setShowTasteModal] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     function updateCount() {
       const list = getSavedRecipes();
       setSavedCount(list.length);
     }
+    function updateAuth(e) {
+      setUser(e.detail?.user || getCurrentUser());
+    }
+
     updateCount();
     window.addEventListener("storage", updateCount);
-    return () => window.removeEventListener("storage", updateCount);
+    window.addEventListener("mise-auth-change", updateAuth);
+
+    return () => {
+      window.removeEventListener("storage", updateCount);
+      window.removeEventListener("mise-auth-change", updateAuth);
+    };
   }, [currentView]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function handleLogout() {
+    logoutChef();
+    setUser(null);
+    setMenuOpen(false);
+  }
 
   return (
     <header className="sticky top-0 z-40 bg-[#FBF0DF]/95 backdrop-blur-md border-b border-[#EDE3D3] transition-all">
@@ -25,11 +58,17 @@ export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemo
         <span>🎰 Mystery Wheel</span>
         <span className="opacity-40">•</span>
         <span>⏱️ Hands-Free Cooking Mode</span>
+        {user && (
+          <>
+            <span className="opacity-40">•</span>
+            <span className="text-[#FFBDA6] font-bold">☁️ Cloud Synced ({user.name})</span>
+          </>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Brand Logo - Loro inspired */}
+          {/* Brand Logo */}
           <button
             onClick={() => onNavigate("landing")}
             className="flex items-center gap-3 text-left group focus:outline-none"
@@ -51,7 +90,7 @@ export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemo
             </div>
           </button>
 
-          {/* Navigation Links with Action Buttons */}
+          {/* Navigation Links with Action Buttons & Auth Profile */}
           <nav className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => onNavigate("ask")}
@@ -98,6 +137,68 @@ export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemo
               )}
             </button>
 
+            {/* User Profile / Auth Button */}
+            {user ? (
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full bg-[#EDE3D3] hover:bg-[#e0d3c0] border border-[#EDE3D3] transition-all"
+                >
+                  <span className="w-7 h-7 rounded-full bg-[#334D66] text-white flex items-center justify-center text-sm shadow-sm">
+                    {user.avatar || "🧑‍🍳"}
+                  </span>
+                  <span className="text-xs font-bold font-typewriter text-[#334D66] hidden sm:inline">
+                    {user.name.split(" ")[0]}
+                  </span>
+                  <span className="text-[10px] text-[#636951]">▼</span>
+                </button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-[#FFFDF9] rounded-loro-lg border border-[#EDE3D3] shadow-loro-lg py-2 z-50 animate-toast-enter">
+                    <div className="px-4 py-2 border-b border-[#EDE3D3]">
+                      <div className="text-xs font-bold text-[#334D66]">{user.name}</div>
+                      <div className="text-[11px] font-typewriter text-[#636951] truncate">{user.email}</div>
+                      <div className="mt-1 flex items-center gap-1 text-[10px] font-typewriter text-[#E56960] font-bold">
+                        <span>☁️ Cloud Synced</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => { setShowTasteModal(true); setMenuOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-xs text-[#334D66] hover:bg-[#FBF0DF] flex items-center gap-2"
+                    >
+                      <span>🎯</span> Taste Profile & Diets
+                    </button>
+
+                    <button
+                      onClick={() => { onNavigate("saved"); setMenuOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-xs text-[#334D66] hover:bg-[#FBF0DF] flex items-center gap-2"
+                    >
+                      <span>📖</span> Cloud Cookbook ({savedCount})
+                    </button>
+
+                    <div className="border-t border-[#EDE3D3] my-1" />
+
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-xs text-[#E56960] hover:bg-[#FFF3EE] flex items-center gap-2 font-semibold"
+                    >
+                      <span>🚪</span> Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                className="px-3 py-2 text-xs font-bold font-typewriter uppercase tracking-wider text-[#334D66] bg-[#EDE3D3] hover:bg-[#e0d3c0] rounded-md transition-all flex items-center gap-1"
+              >
+                <span>🧑‍🍳 Sign In</span>
+              </button>
+            )}
+
             <button
               onClick={() => onNavigate("ask")}
               className="inline-flex items-center gap-1.5 bg-[#E56960] hover:bg-[#C94F46] text-white text-xs sm:text-sm font-bold px-3.5 sm:px-4 py-2 rounded-md shadow-loro-coral btn-shimmer transition-all hover:scale-102"
@@ -107,6 +208,20 @@ export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemo
           </nav>
         </div>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuthSuccess={(u) => setUser(u)}
+      />
+
+      {/* Taste Profile Modal */}
+      <TasteProfileModal
+        isOpen={showTasteModal}
+        onClose={() => setShowTasteModal(false)}
+        onSave={(u) => setUser(u)}
+      />
     </header>
   );
 }
