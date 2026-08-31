@@ -1,171 +1,171 @@
-const TOKEN_KEY = "mise_auth_token_v1";
-const USER_KEY = "mise_auth_user_v1";
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
-
-/**
- * Returns saved JWT token.
- */
-export function getAuthToken() {
-  return localStorage.getItem(TOKEN_KEY);
-}
+const USER_STORAGE_KEY = "mise_active_chef_user_v3";
+const PREFS_STORAGE_KEY = "mise_chef_taste_prefs_v3";
 
 /**
  * Returns currently authenticated user object from localStorage.
  */
 export function getCurrentUser() {
   try {
-    const raw = localStorage.getItem(USER_KEY);
+    const raw = localStorage.getItem(USER_STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-function setSession(token, user) {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
-  else localStorage.removeItem(TOKEN_KEY);
+/**
+ * Checks if a user is currently signed in.
+ */
+export function isUserSignedIn() {
+  if (typeof window !== "undefined" && window.puter?.auth?.isSignedIn?.()) {
+    return true;
+  }
+  return Boolean(getCurrentUser());
+}
 
-  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
-  else localStorage.removeItem(USER_KEY);
-
+function setLocalSession(user) {
+  if (user) {
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  } else {
+    localStorage.removeItem(USER_STORAGE_KEY);
+  }
   window.dispatchEvent(new CustomEvent("mise-auth-change", { detail: { user } }));
 }
 
 /**
- * Register a new chef account.
+ * Sign In using Puter.js (Supports Google, GitHub, Puter & Email).
  */
-export async function registerChef({ name, email, password, avatar }) {
-  const url = `${API_BASE_URL}/api/auth/register`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password, avatar }),
-  });
-
-  const data = await res.json().catch(() => null);
-  if (!res.ok) {
-    throw new Error(data?.error || "Registration failed.");
-  }
-
-  setSession(data.token, data.user);
-  return data.user;
-}
-
-/**
- * Login with existing credentials.
- */
-export async function loginChef({ email, password }) {
-  const url = `${API_BASE_URL}/api/auth/login`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-
-  const data = await res.json().catch(() => null);
-  if (!res.ok) {
-    throw new Error(data?.error || "Login failed.");
-  }
-
-  setSession(data.token, data.user);
-  return data.user;
-}
-
-/**
- * 1-Click instant demo login (Chef Durga).
- */
-export async function demoLogin() {
-  const url = `${API_BASE_URL}/api/auth/demo-login`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  });
-
-  const data = await res.json().catch(() => null);
-  if (!res.ok) {
-    // Local fallback if server route is offline
-    const fallbackUser = {
-      _id: "demo-user-1",
-      name: "Chef Durga",
-      email: "chef@mise.kitchen",
-      avatar: "👨‍🍳",
-      dietaryPreferences: ["High Protein", "Gluten-Friendly"],
-      spicePreference: "Bold & Smoky",
-      kitchenStaples: ["Cultured Butter", "Garlic Confit", "Smoked Flake Salt", "Chili Crisp"],
-      savedRecipes: [],
-    };
-    setSession("demo-token-123", fallbackUser);
-    return fallbackUser;
-  }
-
-  setSession(data.token, data.user);
-  return data.user;
-}
-
-/**
- * Logout current chef.
- */
-export function logoutChef() {
-  setSession(null, null);
-}
-
-/**
- * Updates dietary preferences, spice level, or kitchen staples.
- */
-export async function updateTastePreferences(preferences) {
-  const token = getAuthToken();
-  const currentUser = getCurrentUser();
-
-  if (!token) {
-    // If not logged in, update local guest preferences
-    const updated = { ...(currentUser || {}), ...preferences };
-    setSession(null, updated);
-    return updated;
+export async function signInWithPuter() {
+  if (typeof window === "undefined" || !window.puter) {
+    throw new Error("Puter authentication SDK is loading. Please try again in a moment.");
   }
 
   try {
-    const url = `${API_BASE_URL}/api/auth/preferences`;
-    const res = await fetch(url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(preferences),
-    });
+    // Triggers Puter / Google Auth Popup
+    await window.puter.auth.signIn();
+    const puterUser = await window.puter.auth.getUser();
 
-    const data = await res.json().catch(() => null);
-    if (!res.ok) {
-      throw new Error(data?.error || "Failed to update taste profile.");
+    if (!puterUser) {
+      throw new Error("Could not retrieve user profile.");
     }
 
-    setSession(token, data.user);
-    return data.user;
-  } catch {
-    const updated = { ...currentUser, ...preferences };
-    setSession(token, updated);
-    return updated;
+    const chefUser = {
+      id: puterUser.uuid || `puter-${Date.now()}`,
+      name: puterUser.username || "Chef",
+      email: puterUser.email || `${puterUser.username}@puter.com`,
+      avatar: "🧑‍🍳",
+      provider: "puter",
+      dietaryPreferences: [],
+      spicePreference: "Medium Balanced",
+      kitchenStaples: ["Olive Oil", "Flake Sea Salt", "Garlic", "Butter"],
+    };
+
+    // Try to load user's taste preferences and cloud cookbook from Puter KV
+    try {
+      const savedPrefs = await window.puter.kv.get("mise_taste_prefs");
+      if (savedPrefs) {
+        const parsed = typeof savedPrefs === "string" ? JSON.parse(savedPrefs) : savedPrefs;
+        chefUser.dietaryPreferences = parsed.dietaryPreferences || chefUser.dietaryPreferences;
+        chefUser.spicePreference = parsed.spicePreference || chefUser.spicePreference;
+        chefUser.kitchenStaples = parsed.kitchenStaples || chefUser.kitchenStaples;
+      }
+    } catch {
+      // Ignored if empty
+    }
+
+    setLocalSession(chefUser);
+    return chefUser;
+  } catch (err) {
+    console.error("Puter Auth error:", err);
+    throw new Error(err?.message || "Sign in cancelled or failed.");
   }
 }
 
 /**
- * Sync guest recipes to cloud profile.
+ * 1-Click Instant Demo / Guest Chef Login (No popups, zero hassle).
  */
-export async function syncGuestRecipes(recipes) {
-  const token = getAuthToken();
-  if (!token || !Array.isArray(recipes) || recipes.length === 0) return;
+export function signInAsDemoChef(name = "Chef Durga") {
+  const demoUser = {
+    id: `demo-${Date.now()}`,
+    name: name,
+    email: "chef@mise.kitchen",
+    avatar: "👨‍🍳",
+    provider: "demo",
+    dietaryPreferences: ["High Protein", "Gluten-Friendly"],
+    spicePreference: "Bold & Smoky",
+    kitchenStaples: ["Cultured Butter", "Garlic Confit", "Smoked Flake Salt", "Chili Crisp"],
+  };
 
+  setLocalSession(demoUser);
+  return demoUser;
+}
+
+/**
+ * Sign Out from Puter and clear session.
+ */
+export async function signOutChef() {
   try {
-    const url = `${API_BASE_URL}/api/auth/sync-recipes`;
-    await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ recipes }),
-    });
-  } catch (err) {
-    console.warn("Recipe sync notice:", err.message);
+    if (typeof window !== "undefined" && window.puter?.auth?.signOut) {
+      await window.puter.auth.signOut().catch(() => {});
+    }
+  } catch {
+    // Ignore signOut errors
   }
+
+  setLocalSession(null);
+}
+
+/**
+ * Saves or updates taste & dietary preferences in Puter KV & local storage.
+ */
+export async function updateTastePreferences(preferences) {
+  const currentUser = getCurrentUser() || {};
+  const updatedUser = { ...currentUser, ...preferences };
+
+  setLocalSession(updatedUser);
+
+  // Sync to Puter Cloud KV if connected
+  if (typeof window !== "undefined" && window.puter?.kv?.set) {
+    try {
+      await window.puter.kv.set("mise_taste_prefs", JSON.stringify({
+        dietaryPreferences: updatedUser.dietaryPreferences,
+        spicePreference: updatedUser.spicePreference,
+        kitchenStaples: updatedUser.kitchenStaples,
+      }));
+    } catch (err) {
+      console.warn("Puter KV sync notice:", err.message);
+    }
+  }
+
+  return updatedUser;
+}
+
+/**
+ * Syncs saved cookbook recipes to Puter Cloud Key-Value storage.
+ */
+export async function syncCookbookToPuterCloud(recipes) {
+  if (typeof window !== "undefined" && window.puter?.kv?.set && Array.isArray(recipes)) {
+    try {
+      await window.puter.kv.set("mise_cloud_cookbook", JSON.stringify(recipes));
+    } catch (err) {
+      console.warn("Cloud cookbook sync notice:", err.message);
+    }
+  }
+}
+
+/**
+ * Loads cloud cookbook recipes from Puter KV on sign in.
+ */
+export async function loadCookbookFromPuterCloud() {
+  if (typeof window !== "undefined" && window.puter?.kv?.get) {
+    try {
+      const raw = await window.puter.kv.get("mise_cloud_cookbook");
+      if (raw) {
+        return typeof raw === "string" ? JSON.parse(raw) : raw;
+      }
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }

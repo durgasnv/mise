@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getSavedRecipes } from "../lib/savedRecipes";
-import { getCurrentUser, logoutChef } from "../lib/auth";
+import { getCurrentUser, signOutChef } from "../lib/auth";
 import { AuthModal } from "./AuthModal";
 import { TasteProfileModal } from "./TasteProfileModal";
 
@@ -41,8 +41,8 @@ export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemo
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function handleLogout() {
-    logoutChef();
+  async function handleLogout() {
+    await signOutChef();
     setUser(null);
     setMenuOpen(false);
   }
