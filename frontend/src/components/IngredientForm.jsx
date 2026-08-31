@@ -120,6 +120,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
 
     if (list.length === 0 && !imagePreview) return;
 
+    const stylePrompt = selectedStyle ? ` Prepared with a ${selectedStyle.replace(/^[^\w]+/, "")} technique.` : "";
     let notePrompt = dietaryNote.trim() ? ` Dietary note: ${dietaryNote.trim()}.` : "";
     const user = getCurrentUser();
     if (user?.dietaryPreferences?.length > 0) {
