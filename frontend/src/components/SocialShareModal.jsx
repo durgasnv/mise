@@ -14,30 +14,30 @@ export function SocialShareModal({ recipe, onClose }) {
     canvas.height = 1000;
 
     // Background Canvas
-    ctx.fillStyle = "#FBF0DF";
+    ctx.fillStyle = "#F5E6CC";
     ctx.fillRect(0, 0, 800, 1000);
 
     // Inner decorative border
-    ctx.strokeStyle = "#334D66";
+    ctx.strokeStyle = "#201B17";
     ctx.lineWidth = 3;
     ctx.strokeRect(30, 30, 740, 940);
 
-    ctx.strokeStyle = "#E56960";
+    ctx.strokeStyle = "#F2382F";
     ctx.lineWidth = 1;
     ctx.strokeRect(36, 36, 728, 928);
 
     // Top Header Banner
-    ctx.fillStyle = "#334D66";
+    ctx.fillStyle = "#201B17";
     ctx.fillRect(36, 36, 728, 70);
 
-    ctx.fillStyle = "#FBF0DF";
-    ctx.font = "bold 16px Courier, monospace";
+    ctx.fillStyle = "#F5E6CC";
+    ctx.font = "bold 16px IBM Plex Mono, monospace";
     ctx.textAlign = "center";
     ctx.fillText("MISE KITCHEN • ARTISANAL AI PANTRY RECIPE", 400, 78);
 
     // Dish Title
-    ctx.fillStyle = "#334D66";
-    ctx.font = "bold 32px Georgia, serif";
+    ctx.fillStyle = "#201B17";
+    ctx.font = "bold 32px Bodoni Moda, serif";
     ctx.textAlign = "center";
 
     // Wrap title if long
@@ -59,13 +59,13 @@ export function SocialShareModal({ recipe, onClose }) {
 
     // Meta Badge Line
     y += 35;
-    ctx.fillStyle = "#E56960";
-    ctx.font = "bold 14px Courier, monospace";
+    ctx.fillStyle = "#F2382F";
+    ctx.font = "bold 14px IBM Plex Mono, monospace";
     ctx.fillText(`⏱️ PREP: ${recipe.prepTime || "15m"}  •  👥 ${recipe.servings || "2 PORTIONS"}  •  🔥 FRESH HEARTH`, 400, y);
 
     // Divider Line
     y += 25;
-    ctx.strokeStyle = "#EDE3D3";
+    ctx.strokeStyle = "#E3CFB1";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(60, y);
@@ -74,14 +74,14 @@ export function SocialShareModal({ recipe, onClose }) {
 
     // Ingredients Section
     y += 40;
-    ctx.fillStyle = "#334D66";
-    ctx.font = "bold 18px Georgia, serif";
+    ctx.fillStyle = "#201B17";
+    ctx.font = "bold 18px Bodoni Moda, serif";
     ctx.textAlign = "left";
     ctx.fillText("PANTRY INGREDIENTS:", 60, y);
 
     y += 25;
-    ctx.fillStyle = "#494E3B";
-    ctx.font = "15px Courier, monospace";
+    ctx.fillStyle = "#513E32";
+    ctx.font = "15px IBM Plex Mono, monospace";
     (recipe.ingredients || []).slice(0, 5).forEach((ing) => {
       ctx.fillText(`• ${ing.length > 55 ? ing.substring(0, 52) + "..." : ing}`, 60, y);
       y += 24;
@@ -89,13 +89,13 @@ export function SocialShareModal({ recipe, onClose }) {
 
     // Method Summary
     y += 25;
-    ctx.fillStyle = "#334D66";
-    ctx.font = "bold 18px Georgia, serif";
+    ctx.fillStyle = "#201B17";
+    ctx.font = "bold 18px Bodoni Moda, serif";
     ctx.fillText("METHOD & COOKING:", 60, y);
 
     y += 25;
-    ctx.fillStyle = "#334D66";
-    ctx.font = "14px Georgia, serif";
+    ctx.fillStyle = "#201B17";
+    ctx.font = "14px Bodoni Moda, serif";
     (recipe.instructions || []).slice(0, 4).forEach((step, idx) => {
       const stepText = `${idx + 1}. ${step.length > 70 ? step.substring(0, 68) + "..." : step}`;
       ctx.fillText(stepText, 60, y);
@@ -104,24 +104,24 @@ export function SocialShareModal({ recipe, onClose }) {
 
     // Beverage Pairing Quote
     y += 25;
-    ctx.fillStyle = "#FFF3EE";
+    ctx.fillStyle = "#FFF0E4";
     ctx.fillRect(60, y, 680, 80);
-    ctx.strokeStyle = "#E56960";
+    ctx.strokeStyle = "#F2382F";
     ctx.lineWidth = 1;
     ctx.strokeRect(60, y, 680, 80);
 
-    ctx.fillStyle = "#E56960";
-    ctx.font = "bold 12px Courier, monospace";
+    ctx.fillStyle = "#F2382F";
+    ctx.font = "bold 12px IBM Plex Mono, monospace";
     ctx.fillText("✨ CHEF PAIRING & TASTING NOTE", 80, y + 25);
 
-    ctx.fillStyle = "#334D66";
-    ctx.font = "italic 13px Georgia, serif";
+    ctx.fillStyle = "#201B17";
+    ctx.font = "italic 13px Bodoni Moda, serif";
     const noteText = recipe.pairing ? `Drink: ${recipe.pairing}` : recipe.chefNote || "Serve hot with flaky salt.";
     ctx.fillText(noteText.length > 75 ? noteText.substring(0, 72) + "..." : noteText, 80, y + 52);
 
     // Footer
-    ctx.fillStyle = "#636951";
-    ctx.font = "11px Courier, monospace";
+    ctx.fillStyle = "#6D5545";
+    ctx.font = "11px IBM Plex Mono, monospace";
     ctx.textAlign = "center";
     ctx.fillText("Crafted with Fridge2Feast • Turn 3 Ingredients into a Feast", 400, 940);
 
@@ -152,25 +152,25 @@ export function SocialShareModal({ recipe, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-[#FFFDF9] rounded-loro-lg border border-[#EDE3D3] shadow-loro-lg max-w-lg w-full p-6 space-y-6 my-8 animate-toast-enter">
+    <div className="editorial-modal-backdrop fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+      <div className="editorial-modal share-dialog bg-[#FFF8EC] rounded-loro-lg border border-[#E3CFB1] shadow-loro-lg max-w-lg w-full p-6 space-y-6 my-8 animate-toast-enter">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#EDE3D3] pb-4">
+        <div className="flex items-center justify-between border-b border-[#E3CFB1] pb-4">
           <div>
-            <span className="text-xs font-typewriter font-bold uppercase tracking-wider text-[#E56960]">
+            <span className="text-xs font-typewriter font-bold uppercase tracking-wider text-[#F2382F]">
               📸 Export Vintage Menu Card
             </span>
-            <h3 className="font-display text-2xl text-[#334D66] mt-0.5">
+            <h3 className="font-display text-2xl text-[#201B17] mt-0.5">
               Share Your Feast
             </h3>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-[#334D66] text-base p-1">
+          <button onClick={onClose} className="text-gray-400 hover:text-[#201B17] text-base p-1">
             ✕
           </button>
         </div>
 
         {/* Canvas Visual Preview */}
-        <div className="flex justify-center border border-[#EDE3D3] rounded-loro overflow-hidden shadow-inner bg-[#FBF0DF]">
+        <div className="flex justify-center border border-[#E3CFB1] rounded-loro overflow-hidden shadow-inner bg-[#F5E6CC]">
           <canvas
             ref={canvasRef}
             className="w-full max-w-[360px] h-auto rounded shadow-sm"
@@ -183,20 +183,20 @@ export function SocialShareModal({ recipe, onClose }) {
             <a
               href={downloadUrl}
               download={`${recipe?.title ? recipe.title.replace(/\s+/g, "_").toLowerCase() : "recipe"}_card.png`}
-              className="py-3 px-4 rounded-loro text-xs font-bold font-typewriter uppercase tracking-wider text-center text-white bg-[#E56960] hover:bg-[#C94F46] shadow-loro-coral btn-shimmer transition-all"
+              className="py-3 px-4 rounded-loro text-xs font-bold font-typewriter uppercase tracking-wider text-center text-white bg-[#F2382F] hover:bg-[#CF2A23] shadow-loro-coral btn-shimmer transition-all"
             >
               📥 Download PNG
             </a>
 
             <button
               onClick={handleNativeShare}
-              className="py-3 px-4 rounded-loro text-xs font-bold font-typewriter uppercase tracking-wider text-center text-[#334D66] bg-[#EDE3D3] hover:bg-[#e0d4c0] transition-all"
+              className="py-3 px-4 rounded-loro text-xs font-bold font-typewriter uppercase tracking-wider text-center text-[#201B17] bg-[#E3CFB1] hover:bg-[#e0d4c0] transition-all"
             >
               🚀 Share Card
             </button>
           </div>
 
-          <p className="text-center text-[11px] font-typewriter text-[#636951]">
+          <p className="text-center text-[11px] font-typewriter text-[#6D5545]">
             Ready to post to Instagram stories, WhatsApp, or iMessage!
           </p>
         </div>

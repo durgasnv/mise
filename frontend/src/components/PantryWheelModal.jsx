@@ -76,19 +76,19 @@ export function PantryWheelModal({ onSelectCombo, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-[#FFFDF9] rounded-loro-lg border border-[#EDE3D3] shadow-loro-lg max-w-lg w-full p-6 sm:p-8 space-y-6 animate-toast-enter text-center">
+    <div className="editorial-modal-backdrop fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="editorial-modal wheel-dialog bg-[#FFF8EC] rounded-loro-lg border border-[#E3CFB1] shadow-loro-lg max-w-lg w-full p-6 sm:p-8 space-y-6 animate-toast-enter text-center">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#EDE3D3] pb-4">
+        <div className="flex items-center justify-between border-b border-[#E3CFB1] pb-4">
           <div className="text-left">
-            <span className="text-xs font-typewriter font-bold uppercase tracking-wider text-[#E56960] flex items-center gap-1">
+            <span className="text-xs font-typewriter font-bold uppercase tracking-wider text-[#F2382F] flex items-center gap-1">
               <span>🎰</span> Culinary Mystery Roulette
             </span>
-            <h3 className="font-display text-2xl sm:text-3xl text-[#334D66]">
+            <h3 className="font-display text-2xl sm:text-3xl text-[#201B17]">
               Mystery Pantry Wheel
             </h3>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-[#334D66] text-base p-1">
+          <button onClick={onClose} className="text-gray-400 hover:text-[#201B17] text-base p-1">
             ✕
           </button>
         </div>
@@ -96,31 +96,31 @@ export function PantryWheelModal({ onSelectCombo, onClose }) {
         {/* 3 Slot Reels */}
         <div className="grid grid-cols-3 gap-3 py-4">
           {/* Reel 1 */}
-          <div className="bg-[#FBF0DF] border-2 border-[#334D66] rounded-loro p-4 h-32 flex flex-col justify-center items-center shadow-inner overflow-hidden">
-            <span className="text-[10px] font-typewriter font-bold text-[#636951] uppercase mb-1">
+          <div className="bg-[#F5E6CC] border-2 border-[#201B17] rounded-loro p-4 h-32 flex flex-col justify-center items-center shadow-inner overflow-hidden">
+            <span className="text-[10px] font-typewriter font-bold text-[#6D5545] uppercase mb-1">
               Base / Protein
             </span>
-            <span className={`font-display text-base sm:text-lg text-[#334D66] leading-tight transition-transform ${isSpinning ? "blur-[1px] scale-110" : ""}`}>
+            <span className={`font-display text-base sm:text-lg text-[#201B17] leading-tight transition-transform ${isSpinning ? "blur-[1px] scale-110" : ""}`}>
               {slot1}
             </span>
           </div>
 
           {/* Reel 2 */}
-          <div className="bg-[#FBF0DF] border-2 border-[#334D66] rounded-loro p-4 h-32 flex flex-col justify-center items-center shadow-inner overflow-hidden">
-            <span className="text-[10px] font-typewriter font-bold text-[#636951] uppercase mb-1">
+          <div className="bg-[#F5E6CC] border-2 border-[#201B17] rounded-loro p-4 h-32 flex flex-col justify-center items-center shadow-inner overflow-hidden">
+            <span className="text-[10px] font-typewriter font-bold text-[#6D5545] uppercase mb-1">
               Produce / Veg
             </span>
-            <span className={`font-display text-base sm:text-lg text-[#334D66] leading-tight transition-transform ${isSpinning ? "blur-[1px] scale-110" : ""}`}>
+            <span className={`font-display text-base sm:text-lg text-[#201B17] leading-tight transition-transform ${isSpinning ? "blur-[1px] scale-110" : ""}`}>
               {slot2}
             </span>
           </div>
 
           {/* Reel 3 */}
-          <div className="bg-[#FBF0DF] border-2 border-[#334D66] rounded-loro p-4 h-32 flex flex-col justify-center items-center shadow-inner overflow-hidden">
-            <span className="text-[10px] font-typewriter font-bold text-[#636951] uppercase mb-1">
+          <div className="bg-[#F5E6CC] border-2 border-[#201B17] rounded-loro p-4 h-32 flex flex-col justify-center items-center shadow-inner overflow-hidden">
+            <span className="text-[10px] font-typewriter font-bold text-[#6D5545] uppercase mb-1">
               Flavor Accent
             </span>
-            <span className={`font-display text-base sm:text-lg text-[#334D66] leading-tight transition-transform ${isSpinning ? "blur-[1px] scale-110" : ""}`}>
+            <span className={`font-display text-base sm:text-lg text-[#201B17] leading-tight transition-transform ${isSpinning ? "blur-[1px] scale-110" : ""}`}>
               {slot3}
             </span>
           </div>
@@ -133,7 +133,7 @@ export function PantryWheelModal({ onSelectCombo, onClose }) {
               type="button"
               onClick={spinWheel}
               disabled={isSpinning}
-              className={`py-3.5 px-4 rounded-loro text-xs font-bold font-typewriter uppercase tracking-wider text-[#334D66] bg-[#EDE3D3] hover:bg-[#e2d5c2] border border-[#EDE3D3] transition-all flex items-center justify-center gap-2 ${
+              className={`py-3.5 px-4 rounded-loro text-xs font-bold font-typewriter uppercase tracking-wider text-[#201B17] bg-[#E3CFB1] hover:bg-[#e2d5c2] border border-[#E3CFB1] transition-all flex items-center justify-center gap-2 ${
                 isSpinning ? "opacity-50 cursor-not-allowed" : "active:scale-95"
               }`}
             >
@@ -144,13 +144,13 @@ export function PantryWheelModal({ onSelectCombo, onClose }) {
               type="button"
               onClick={handleCookNow}
               disabled={isSpinning}
-              className="py-3.5 px-4 rounded-loro text-xs font-bold uppercase tracking-wider text-white bg-[#E56960] hover:bg-[#C94F46] shadow-loro-coral btn-shimmer transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="py-3.5 px-4 rounded-loro text-xs font-bold uppercase tracking-wider text-white bg-[#F2382F] hover:bg-[#CF2A23] shadow-loro-coral btn-shimmer transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               <span>🔥 Cook This Feast →</span>
             </button>
           </div>
 
-          <p className="text-[11px] font-typewriter text-[#636951]">
+          <p className="text-[11px] font-typewriter text-[#6D5545]">
             Can our AI pitmaster turn this random combo into a 5-star meal? You bet!
           </p>
         </div>

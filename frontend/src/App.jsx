@@ -103,7 +103,7 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-screen flex flex-col bg-[#FBF0DF] text-[#334D66]">
+      <div className="min-h-screen flex flex-col bg-[#F5E6CC] text-[#201B17]">
         <Navbar
           currentView={view}
           onNavigate={(v) => handleNavigate(v)}

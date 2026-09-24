@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getSavedRecipes } from "../lib/savedRecipes";
 import { getCurrentUser, signOutChef } from "../lib/auth";
 import { AuthModal } from "./AuthModal";
@@ -9,22 +9,20 @@ export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemo
   const [user, setUser] = useState(getCurrentUser());
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showTasteModal, setShowTasteModal] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
     function updateCount() {
-      const list = getSavedRecipes();
-      setSavedCount(list.length);
+      setSavedCount(getSavedRecipes().length);
     }
-    function updateAuth(e) {
-      setUser(e.detail?.user || getCurrentUser());
+    function updateAuth(event) {
+      setUser(event.detail?.user || getCurrentUser());
     }
-
     updateCount();
     window.addEventListener("storage", updateCount);
     window.addEventListener("mise-auth-change", updateAuth);
-
     return () => {
       window.removeEventListener("storage", updateCount);
       window.removeEventListener("mise-auth-change", updateAuth);
@@ -32,196 +30,83 @@ export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemo
   }, [currentView]);
 
   useEffect(() => {
-    function handleClickOutside(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setMenuOpen(false);
-      }
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) setProfileOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  function navigate(view) {
+    setMobileOpen(false);
+    onNavigate(view);
+  }
+
   async function handleLogout() {
     await signOutChef();
     setUser(null);
-    setMenuOpen(false);
+    setProfileOpen(false);
+    setMobileOpen(false);
   }
 
   return (
-    <header className="sticky top-0 z-40 bg-[#FBF0DF]/95 backdrop-blur-md border-b border-[#EDE3D3] transition-all">
-      {/* Top feature banner ribbon */}
-      <div className="bg-[#334D66] text-[#FBF0DF] text-[11px] font-medium tracking-wider uppercase py-1.5 px-4 text-center flex items-center justify-center gap-4 flex-wrap">
-        <span>🔥 AI Smokehouse Studio</span>
-        <span className="opacity-40">•</span>
-        <span>📸 AI Fridge Vision</span>
-        <span className="opacity-40">•</span>
-        <span>🎰 Mystery Wheel</span>
-        <span className="opacity-40">•</span>
-        <span>⏱️ Hands-Free Cooking Mode</span>
-        {user && (
-          <>
-            <span className="opacity-40">•</span>
-            <span className="text-[#FFBDA6] font-bold">☁️ Cloud Synced ({user.name})</span>
-          </>
-        )}
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Brand Logo */}
-          <button
-            onClick={() => onNavigate("landing")}
-            className="flex items-center gap-3 text-left group focus:outline-none"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#E56960] flex items-center justify-center text-white font-bold text-xl shadow-loro-coral group-hover:scale-105 transition-transform">
-              <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" stroke="currentColor" strokeWidth="0.5">
-                <circle cx="12" cy="14" r="5" fill="#FBF0DF" />
-                <path d="M12 4v3M4.93 6.93l2.12 2.12M2 14h3M4.93 21.07l2.12-2.12M19.07 6.93l-2.12 2.12M22 14h-3M19.07 21.07l-2.12-2.12" stroke="#FBF0DF" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-
-            <div>
-              <span className="font-display text-2xl sm:text-3xl text-[#334D66] tracking-tight group-hover:text-[#E56960] transition-colors leading-none block">
-                MISE<span className="text-[#E56960] font-serif italic text-lg ml-1">kitchen</span>
-              </span>
-              <span className="text-[10px] font-typewriter tracking-widest text-[#636951] uppercase block mt-0.5">
-                Mise en Place • Artisanal AI Kitchen
-              </span>
-            </div>
+    <>
+      <header className="mise-navbar">
+        <div className="mise-nav-inner">
+          <button className="mise-wordmark" type="button" onClick={() => navigate("landing")} aria-label="Mise home">
+            MISE<span>kitchen</span>
           </button>
 
-          {/* Navigation Links with Action Buttons & Auth Profile */}
-          <nav className="flex items-center gap-2 sm:gap-3">
-            <button
-              onClick={() => onNavigate("ask")}
-              className={`px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                currentView === "ask"
-                  ? "bg-[#334D66] text-[#FBF0DF] shadow-loro font-bold"
-                  : "text-[#334D66] hover:bg-[#EDE3D3]/70 font-medium"
-              }`}
-            >
-              <span>🍳 The Kitchen</span>
-            </button>
+          <nav className="mise-desktop-nav" aria-label="Primary navigation">
+            <button type="button" className={currentView === "landing" ? "active" : ""} onClick={() => navigate("landing")}>About</button>
+            <button type="button" className={currentView === "ask" ? "active" : ""} onClick={() => navigate("ask")}>The kitchen</button>
+            <button type="button" onClick={onOpenMysteryWheel}>Surprise me</button>
+          </nav>
 
-            {/* Mystery Wheel button */}
-            <button
-              onClick={onOpenMysteryWheel}
-              className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-typewriter font-bold rounded-md bg-[#EDE3D3] hover:bg-[#e0d3c0] text-[#334D66] transition-all"
-              title="Spin the Mystery Roulette"
-            >
-              <span>🎰 Mystery Wheel</span>
-            </button>
-
-            {/* Demo Cooking Mode button */}
-            <button
-              onClick={onOpenDemoCookingMode}
-              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-typewriter font-bold rounded-md bg-[#FBF0DF] border border-[#334D66]/30 hover:border-[#E56960] text-[#334D66] hover:text-[#E56960] transition-all"
-              title="Test the hands-free cooking assistant"
-            >
-              <span>⏱️ Cooking Mode</span>
-            </button>
-
-            <button
-              onClick={() => onNavigate("saved")}
-              className={`relative px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                currentView === "saved" || currentView === "saved-recipe"
-                  ? "bg-[#334D66] text-[#FBF0DF] shadow-loro font-bold"
-                  : "text-[#334D66] hover:bg-[#EDE3D3]/70 font-medium"
-              }`}
-            >
-              <span>Cookbook</span>
-              {savedCount > 0 && (
-                <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold font-typewriter rounded-full bg-[#E56960] text-white">
-                  {savedCount}
-                </span>
-              )}
-            </button>
-
-            {/* User Profile / Auth Button */}
+          <div className="mise-nav-actions">
+            <button type="button" className="cookbook-link" onClick={() => navigate("saved")}>Cookbook{savedCount > 0 && <sup>{savedCount}</sup>}</button>
             {user ? (
-              <div className="relative" ref={menuRef}>
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full bg-[#EDE3D3] hover:bg-[#e0d3c0] border border-[#EDE3D3] transition-all"
-                >
-                  <span className="w-7 h-7 rounded-full bg-[#334D66] text-white flex items-center justify-center text-sm shadow-sm">
-                    {user.avatar || "🧑‍🍳"}
-                  </span>
-                  <span className="text-xs font-bold font-typewriter text-[#334D66] hidden sm:inline">
-                    {user.name.split(" ")[0]}
-                  </span>
-                  <span className="text-[10px] text-[#636951]">▼</span>
+              <div className="mise-profile" ref={menuRef}>
+                <button type="button" className="profile-trigger" onClick={() => setProfileOpen((open) => !open)} aria-expanded={profileOpen}>
+                  <span>{user.avatar || "M"}</span>
+                  <em>{user.name.split(" ")[0]}</em>
                 </button>
-
-                {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-[#FFFDF9] rounded-loro-lg border border-[#EDE3D3] shadow-loro-lg py-2 z-50 animate-toast-enter">
-                    <div className="px-4 py-2 border-b border-[#EDE3D3]">
-                      <div className="text-xs font-bold text-[#334D66]">{user.name}</div>
-                      <div className="text-[11px] font-typewriter text-[#636951] truncate">{user.email}</div>
-                      <div className="mt-1 flex items-center gap-1 text-[10px] font-typewriter text-[#E56960] font-bold">
-                        <span>☁️ Cloud Synced</span>
-                      </div>
+                {profileOpen && (
+                  <div className="mise-profile-menu">
+                    <div className="profile-menu-head">
+                      <strong>{user.name}</strong>
+                      <span>{user.email}</span>
                     </div>
-
-                    <button
-                      onClick={() => { setShowTasteModal(true); setMenuOpen(false); }}
-                      className="w-full text-left px-4 py-2 text-xs text-[#334D66] hover:bg-[#FBF0DF] flex items-center gap-2"
-                    >
-                      <span>🎯</span> Taste Profile & Diets
-                    </button>
-
-                    <button
-                      onClick={() => { onNavigate("saved"); setMenuOpen(false); }}
-                      className="w-full text-left px-4 py-2 text-xs text-[#334D66] hover:bg-[#FBF0DF] flex items-center gap-2"
-                    >
-                      <span>📖</span> Cloud Cookbook ({savedCount})
-                    </button>
-
-                    <div className="border-t border-[#EDE3D3] my-1" />
-
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-xs text-[#E56960] hover:bg-[#FFF3EE] flex items-center gap-2 font-semibold"
-                    >
-                      <span>🚪</span> Sign Out
-                    </button>
+                    <button type="button" onClick={() => { setShowTasteModal(true); setProfileOpen(false); }}>Taste profile</button>
+                    <button type="button" onClick={() => navigate("saved")}>Saved recipes ({savedCount})</button>
+                    <button type="button" className="signout" onClick={handleLogout}>Sign out</button>
                   </div>
                 )}
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => setShowAuthModal(true)}
-                className="px-3 py-2 text-xs font-bold font-typewriter uppercase tracking-wider text-[#334D66] bg-[#EDE3D3] hover:bg-[#e0d3c0] rounded-md transition-all flex items-center gap-1"
-              >
-                <span>🧑‍🍳 Sign In</span>
-              </button>
+              <button type="button" className="sign-in-link" onClick={() => setShowAuthModal(true)}>Sign in</button>
             )}
-
-            <button
-              onClick={() => onNavigate("ask")}
-              className="inline-flex items-center gap-1.5 bg-[#E56960] hover:bg-[#C94F46] text-white text-xs sm:text-sm font-bold px-3.5 sm:px-4 py-2 rounded-md shadow-loro-coral btn-shimmer transition-all hover:scale-102"
-            >
-              <span>+ New Feast</span>
+            <button type="button" className="nav-cta" onClick={() => navigate("ask")}>Start cooking <span>↗</span></button>
+            <button type="button" className="menu-toggle" onClick={() => setMobileOpen((open) => !open)} aria-label="Toggle menu" aria-expanded={mobileOpen}>
+              <span /><span />
             </button>
-          </nav>
+          </div>
         </div>
-      </div>
 
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={(u) => setUser(u)}
-      />
+        {mobileOpen && (
+          <nav className="mise-mobile-nav" aria-label="Mobile navigation">
+            <button type="button" onClick={() => navigate("landing")}><span>01</span>About</button>
+            <button type="button" onClick={() => navigate("ask")}><span>02</span>The kitchen</button>
+            <button type="button" onClick={() => navigate("saved")}><span>03</span>Cookbook {savedCount > 0 && `(${savedCount})`}</button>
+            <button type="button" onClick={() => { setMobileOpen(false); onOpenMysteryWheel(); }}><span>04</span>Mystery wheel</button>
+            <button type="button" onClick={() => { setMobileOpen(false); onOpenDemoCookingMode(); }}><span>05</span>Cooking mode</button>
+            {!user && <button type="button" onClick={() => { setMobileOpen(false); setShowAuthModal(true); }}><span>06</span>Sign in</button>}
+          </nav>
+        )}
+      </header>
 
-      {/* Taste Profile Modal */}
-      <TasteProfileModal
-        isOpen={showTasteModal}
-        onClose={() => setShowTasteModal(false)}
-        onSave={(u) => setUser(u)}
-      />
-    </header>
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onAuthSuccess={(nextUser) => setUser(nextUser)} />
+      <TasteProfileModal isOpen={showTasteModal} onClose={() => setShowTasteModal(false)} onSave={(nextUser) => setUser(nextUser)} />
+    </>
   );
 }

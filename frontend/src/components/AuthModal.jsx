@@ -52,26 +52,26 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-[#FFFDF9] rounded-loro-lg border border-[#EDE3D3] shadow-loro-lg max-w-md w-full p-6 sm:p-8 space-y-6 animate-toast-enter">
+    <div className="editorial-modal-backdrop fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="editorial-modal auth-dialog bg-[#FFF8EC] rounded-loro-lg border border-[#E3CFB1] shadow-loro-lg max-w-md w-full p-6 sm:p-8 space-y-6 animate-toast-enter">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#EDE3D3] pb-4">
+        <div className="flex items-center justify-between border-b border-[#E3CFB1] pb-4">
           <div>
-            <span className="text-[11px] font-typewriter font-bold uppercase tracking-wider text-[#E56960] flex items-center gap-1">
+            <span className="text-[11px] font-typewriter font-bold uppercase tracking-wider text-[#F2382F] flex items-center gap-1">
               <span>🍳</span> Mise Cloud Account
             </span>
-            <h3 className="font-display text-2xl text-[#334D66]">
+            <h3 className="font-display text-2xl text-[#201B17]">
               Sign In to Your Kitchen
             </h3>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-[#334D66] text-base p-1">
+          <button onClick={onClose} className="text-gray-400 hover:text-[#201B17] text-base p-1">
             ✕
           </button>
         </div>
 
         {/* Feature Lock Prompt Notice */}
         {promptMessage && (
-          <div className="p-3.5 rounded-loro bg-[#FFF3EE] border border-[#E56960] text-xs font-semibold text-[#334D66] flex items-center gap-2.5">
+          <div className="p-3.5 rounded-loro bg-[#FFF0E4] border border-[#F2382F] text-xs font-semibold text-[#201B17] flex items-center gap-2.5">
             <span className="text-base">🔒</span>
             <span>{promptMessage}</span>
           </div>
@@ -79,7 +79,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
 
         {/* Error Notice if any */}
         {error && (
-          <div className="p-3 rounded-loro bg-[#FFF3EE] border border-[#E56960] text-[#E56960] text-xs font-medium">
+          <div className="p-3 rounded-loro bg-[#FFF0E4] border border-[#F2382F] text-[#F2382F] text-xs font-medium">
             {error}
           </div>
         )}
@@ -91,7 +91,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
             type="button"
             onClick={handlePuterSignIn}
             disabled={loading}
-            className="w-full py-3.5 px-4 rounded-loro font-bold text-xs uppercase tracking-wider text-white bg-[#E56960] hover:bg-[#C94F46] shadow-loro-coral btn-shimmer transition-all flex items-center justify-center gap-3 active:scale-98"
+            className="w-full py-3.5 px-4 rounded-loro font-bold text-xs uppercase tracking-wider text-white bg-[#F2382F] hover:bg-[#CF2A23] shadow-loro-coral btn-shimmer transition-all flex items-center justify-center gap-3 active:scale-98"
           >
             {loading ? (
               <span className="font-typewriter">AUTHENTICATING...</span>
@@ -117,7 +117,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                     />
                   </svg>
-                  <span className="font-bold text-[#334D66]">Google</span>
+                  <span className="font-bold text-[#201B17]">Google</span>
                 </div>
                 <span>Continue with Google / Puter →</span>
               </>
@@ -126,9 +126,9 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
 
           <div className="relative py-2 text-center">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#EDE3D3]"></div>
+              <div className="w-full border-t border-[#E3CFB1]"></div>
             </div>
-            <span className="relative bg-[#FFFDF9] px-3 text-[11px] font-typewriter text-[#636951] uppercase">
+            <span className="relative bg-[#FFF8EC] px-3 text-[11px] font-typewriter text-[#6D5545] uppercase">
               or instant demo
             </span>
           </div>
@@ -138,34 +138,34 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
             type="button"
             onClick={() => handleDemoSignIn("Chef Durga")}
             disabled={loading}
-            className="w-full py-3 px-4 bg-[#334D66] hover:bg-[#1F3144] text-[#FBF0DF] rounded-loro text-xs font-typewriter font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
+            className="w-full py-3 px-4 bg-[#201B17] hover:bg-[#100E0C] text-[#F5E6CC] rounded-loro text-xs font-typewriter font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
           >
             <span>🧑‍🍳 1-Click Demo Profile (Chef Durga)</span>
           </button>
         </div>
 
         {/* Cloud Benefit Points */}
-        <div className="p-4 bg-[#FBF0DF]/70 rounded-loro border border-[#EDE3D3] space-y-2">
-          <span className="text-[11px] font-typewriter font-bold uppercase tracking-wider text-[#334D66] block">
+        <div className="p-4 bg-[#F5E6CC]/70 rounded-loro border border-[#E3CFB1] space-y-2">
+          <span className="text-[11px] font-typewriter font-bold uppercase tracking-wider text-[#201B17] block">
             ☁️ Free Cloud Kitchen Perks:
           </span>
-          <ul className="text-xs text-[#636951] space-y-1.5 font-medium">
+          <ul className="text-xs text-[#6D5545] space-y-1.5 font-medium">
             <li className="flex items-center gap-2">
-              <span className="text-[#E56960]">✓</span>
+              <span className="text-[#F2382F]">✓</span>
               <span>Sync cookbook across mobile, iPad, and desktop</span>
             </li>
             <li className="flex items-center gap-2">
-              <span className="text-[#E56960]">✓</span>
+              <span className="text-[#F2382F]">✓</span>
               <span>Remember dietary restrictions & spice preference</span>
             </li>
             <li className="flex items-center gap-2">
-              <span className="text-[#E56960]">✓</span>
+              <span className="text-[#F2382F]">✓</span>
               <span>Instant hands-free cooking mode & smart timers</span>
             </li>
           </ul>
         </div>
 
-        <p className="text-[11px] font-typewriter text-center text-[#636951]">
+        <p className="text-[11px] font-typewriter text-center text-[#6D5545]">
           Zero passwords required • Powered by Puter Cloud & Google OAuth
         </p>
       </div>

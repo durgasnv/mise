@@ -83,26 +83,26 @@ export function TasteProfileModal({ isOpen, onClose, onSave }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-[#FFFDF9] rounded-loro-lg border border-[#EDE3D3] shadow-loro-lg max-w-lg w-full p-6 sm:p-8 space-y-6 animate-toast-enter max-h-[90vh] overflow-y-auto">
+    <div className="editorial-modal-backdrop fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="editorial-modal taste-dialog bg-[#FFF8EC] rounded-loro-lg border border-[#E3CFB1] shadow-loro-lg max-w-lg w-full p-6 sm:p-8 space-y-6 animate-toast-enter max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#EDE3D3] pb-4">
+        <div className="flex items-center justify-between border-b border-[#E3CFB1] pb-4">
           <div>
-            <span className="text-[11px] font-typewriter font-bold uppercase tracking-wider text-[#E56960]">
+            <span className="text-[11px] font-typewriter font-bold uppercase tracking-wider text-[#F2382F]">
               Personalized Taste Profile
             </span>
-            <h3 className="font-display text-2xl text-[#334D66]">
+            <h3 className="font-display text-2xl text-[#201B17]">
               Chef Taste & Dietary Notes
             </h3>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-[#334D66] text-base p-1">
+          <button onClick={onClose} className="text-gray-400 hover:text-[#201B17] text-base p-1">
             ✕
           </button>
         </div>
 
         {/* Dietary Preferences */}
         <div className="space-y-2">
-          <label className="block text-xs font-typewriter font-bold text-[#334D66] uppercase">
+          <label className="block text-xs font-typewriter font-bold text-[#201B17] uppercase">
             Dietary Preferences & Health Goals:
           </label>
           <div className="flex flex-wrap gap-1.5">
@@ -115,8 +115,8 @@ export function TasteProfileModal({ isOpen, onClose, onSave }) {
                   onClick={() => toggleDiet(d)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                     active
-                      ? "bg-[#E56960] text-white border-[#E56960] shadow-sm"
-                      : "bg-[#FBF0DF] text-[#334D66] border-[#EDE3D3] hover:bg-[#EDE3D3]"
+                      ? "bg-[#F2382F] text-white border-[#F2382F] shadow-sm"
+                      : "bg-[#F5E6CC] text-[#201B17] border-[#E3CFB1] hover:bg-[#E3CFB1]"
                   }`}
                 >
                   {active ? "✓ " : "+ "}
@@ -129,7 +129,7 @@ export function TasteProfileModal({ isOpen, onClose, onSave }) {
 
         {/* Spice Level */}
         <div className="space-y-2">
-          <label className="block text-xs font-typewriter font-bold text-[#334D66] uppercase">
+          <label className="block text-xs font-typewriter font-bold text-[#201B17] uppercase">
             Preferred Spice Level:
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -140,8 +140,8 @@ export function TasteProfileModal({ isOpen, onClose, onSave }) {
                 onClick={() => setSpice(level)}
                 className={`p-2.5 rounded-loro text-xs font-typewriter font-bold text-left border transition-all ${
                   spice === level
-                    ? "bg-[#334D66] text-[#FBF0DF] border-[#334D66] shadow-sm"
-                    : "bg-white text-[#334D66] border-[#EDE3D3] hover:bg-[#FBF0DF]"
+                    ? "bg-[#201B17] text-[#F5E6CC] border-[#201B17] shadow-sm"
+                    : "bg-white text-[#201B17] border-[#E3CFB1] hover:bg-[#F5E6CC]"
                 }`}
               >
                 {level}
@@ -153,25 +153,25 @@ export function TasteProfileModal({ isOpen, onClose, onSave }) {
         {/* Permanent Kitchen Staples */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="block text-xs font-typewriter font-bold text-[#334D66] uppercase">
+            <label className="block text-xs font-typewriter font-bold text-[#201B17] uppercase">
               Permanent Kitchen Staples:
             </label>
-            <span className="text-[10px] font-typewriter text-[#636951]">
+            <span className="text-[10px] font-typewriter text-[#6D5545]">
               Always in your pantry
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 min-h-[40px] p-2.5 bg-[#FBF0DF] rounded-loro border border-[#EDE3D3]">
+          <div className="flex flex-wrap gap-1.5 min-h-[40px] p-2.5 bg-[#F5E6CC] rounded-loro border border-[#E3CFB1]">
             {staples.map((st) => (
               <span
                 key={st}
-                className="inline-flex items-center gap-1.5 bg-white text-[#334D66] px-2.5 py-1 rounded-md text-xs font-medium border border-[#EDE3D3]"
+                className="inline-flex items-center gap-1.5 bg-white text-[#201B17] px-2.5 py-1 rounded-md text-xs font-medium border border-[#E3CFB1]"
               >
                 <span>{st}</span>
                 <button
                   type="button"
                   onClick={() => removeStaple(st)}
-                  className="text-gray-400 hover:text-[#E56960] text-xs font-bold"
+                  className="text-gray-400 hover:text-[#F2382F] text-xs font-bold"
                 >
                   ✕
                 </button>
@@ -187,12 +187,12 @@ export function TasteProfileModal({ isOpen, onClose, onSave }) {
               onChange={(e) => setNewStaple(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addStaple(newStaple.trim()); } }}
               placeholder="Add staple (e.g. Miso paste, Honey)"
-              className="flex-1 bg-white border border-[#EDE3D3] rounded-md px-3 py-1.5 text-xs text-[#334D66] outline-none focus:border-[#E56960]"
+              className="flex-1 bg-white border border-[#E3CFB1] rounded-md px-3 py-1.5 text-xs text-[#201B17] outline-none focus:border-[#F2382F]"
             />
             <button
               type="button"
               onClick={() => addStaple(newStaple.trim())}
-              className="px-3 py-1.5 rounded-md bg-[#334D66] text-[#FBF0DF] text-xs font-typewriter font-bold uppercase"
+              className="px-3 py-1.5 rounded-md bg-[#201B17] text-[#F5E6CC] text-xs font-typewriter font-bold uppercase"
             >
               + Add
             </button>
@@ -204,7 +204,7 @@ export function TasteProfileModal({ isOpen, onClose, onSave }) {
                 key={s}
                 type="button"
                 onClick={() => addStaple(s)}
-                className="text-[10px] font-typewriter text-[#636951] hover:text-[#E56960] bg-white border border-[#EDE3D3] px-2 py-0.5 rounded"
+                className="text-[10px] font-typewriter text-[#6D5545] hover:text-[#F2382F] bg-white border border-[#E3CFB1] px-2 py-0.5 rounded"
               >
                 + {s}
               </button>
@@ -213,12 +213,12 @@ export function TasteProfileModal({ isOpen, onClose, onSave }) {
         </div>
 
         {/* Save Button */}
-        <div className="pt-3 border-t border-[#EDE3D3]">
+        <div className="pt-3 border-t border-[#E3CFB1]">
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="w-full py-3.5 px-4 rounded-loro font-bold text-xs uppercase tracking-wider text-white bg-[#E56960] hover:bg-[#C94F46] shadow-loro-coral btn-shimmer transition-all"
+            className="w-full py-3.5 px-4 rounded-loro font-bold text-xs uppercase tracking-wider text-white bg-[#F2382F] hover:bg-[#CF2A23] shadow-loro-coral btn-shimmer transition-all"
           >
             {saving ? "SAVING PREFERENCES..." : "Save Taste Profile →"}
           </button>

@@ -128,23 +128,23 @@ export function CookingModeModal({ recipe, onClose }) {
   const progressPercent = ((currentStepIndex + 1) / steps.length) * 100;
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#1F3144] text-[#FBF0DF] flex flex-col justify-between overflow-y-auto">
+    <div className="cooking-mode fixed inset-0 z-50 bg-[#100E0C] text-[#F5E6CC] flex flex-col justify-between overflow-y-auto">
       {/* Top Bar with Progress */}
-      <div className="border-b border-[#334D66] bg-[#1A2837] px-6 py-4">
+      <div className="border-b border-[#201B17] bg-[#17120F] px-6 py-4">
         {/* Progress Bar */}
-        <div className="w-full bg-[#334D66] h-1.5 rounded-full overflow-hidden mb-3">
+        <div className="w-full bg-[#201B17] h-1.5 rounded-full overflow-hidden mb-3">
           <div
-            className="bg-[#E56960] h-full transition-all duration-300"
+            className="bg-[#F2382F] h-full transition-all duration-300"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
 
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="px-2.5 py-1 rounded bg-[#E56960] text-white text-xs font-bold font-typewriter uppercase tracking-wider">
+            <span className="px-2.5 py-1 rounded bg-[#F2382F] text-white text-xs font-bold font-typewriter uppercase tracking-wider">
               🔥 Hands-Free Cooking Mode
             </span>
-            <span className="text-xs font-typewriter text-[#FFBDA6] hidden sm:inline truncate max-w-sm">
+            <span className="text-xs font-typewriter text-[#F3C694] hidden sm:inline truncate max-w-sm">
               {recipe.title}
             </span>
           </div>
@@ -154,8 +154,8 @@ export function CookingModeModal({ recipe, onClose }) {
               onClick={readStepAloud}
               className={`px-3 py-1.5 rounded-md text-xs font-typewriter font-bold flex items-center gap-1.5 transition-all ${
                 isSpeaking
-                  ? "bg-[#E56960] text-white animate-pulse"
-                  : "bg-[#334D66] text-[#FBF0DF] hover:bg-[#4A6987]"
+                  ? "bg-[#F2382F] text-white animate-pulse"
+                  : "bg-[#201B17] text-[#F5E6CC] hover:bg-[#5E4A3D]"
               }`}
             >
               <span>{isSpeaking ? "⏹ Stop Voice" : "🔊 Read Step"}</span>
@@ -163,7 +163,7 @@ export function CookingModeModal({ recipe, onClose }) {
 
             <button
               onClick={onClose}
-              className="px-3 py-1.5 rounded-md text-xs font-typewriter font-bold bg-[#334D66] text-[#FBF0DF] hover:bg-[#E56960] transition-colors"
+              className="px-3 py-1.5 rounded-md text-xs font-typewriter font-bold bg-[#201B17] text-[#F5E6CC] hover:bg-[#F2382F] transition-colors"
             >
               ✕ Exit Mode
             </button>
@@ -174,22 +174,22 @@ export function CookingModeModal({ recipe, onClose }) {
       {/* Main Step Center Display */}
       <div className="max-w-4xl mx-auto px-6 py-10 my-auto text-center space-y-8">
         {/* Step Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[#334D66] text-[#FFBDA6] text-sm font-typewriter font-bold">
+        <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[#201B17] text-[#F3C694] text-sm font-typewriter font-bold">
           <span>STEP {currentStepIndex + 1} OF {steps.length}</span>
         </div>
 
         {/* Big Step Instruction Text */}
-        <p className="font-serif text-2xl sm:text-4xl lg:text-5xl leading-tight text-[#FBF0DF] transition-all">
+        <p className="font-serif text-2xl sm:text-4xl lg:text-5xl leading-tight text-[#F5E6CC] transition-all">
           {currentStep}
         </p>
 
         {/* Smart Timer Display (if step has timing or preset) */}
         <div className="pt-4 flex flex-col items-center justify-center gap-3">
           {timerSeconds !== null ? (
-            <div className="bg-[#1A2837] border border-[#334D66] rounded-loro-lg p-5 flex flex-col sm:flex-row items-center gap-5 shadow-loro">
+            <div className="bg-[#17120F] border border-[#201B17] rounded-loro-lg p-5 flex flex-col sm:flex-row items-center gap-5 shadow-loro">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{timerRunning ? "⏱️" : "⏳"}</span>
-                <span className="font-typewriter text-4xl sm:text-5xl font-bold tracking-widest text-[#E56960]">
+                <span className="font-typewriter text-4xl sm:text-5xl font-bold tracking-widest text-[#F2382F]">
                   {formatTime(timerSeconds)}
                 </span>
               </div>
@@ -200,8 +200,8 @@ export function CookingModeModal({ recipe, onClose }) {
                   onClick={() => setTimerRunning((r) => !r)}
                   className={`px-5 py-2.5 rounded-lg text-xs font-typewriter font-bold uppercase tracking-wider text-white transition-all ${
                     timerRunning
-                      ? "bg-[#636951] hover:bg-[#494E3B]"
-                      : "bg-[#E56960] hover:bg-[#C94F46] shadow-loro-coral"
+                      ? "bg-[#6D5545] hover:bg-[#513E32]"
+                      : "bg-[#F2382F] hover:bg-[#CF2A23] shadow-loro-coral"
                   }`}
                 >
                   {timerRunning ? "⏸ Pause" : "▶ Start Timer"}
@@ -213,7 +213,7 @@ export function CookingModeModal({ recipe, onClose }) {
                     setTimerRunning(false);
                     setTimerSeconds(60);
                   }}
-                  className="px-3 py-2.5 rounded-lg text-xs font-typewriter font-bold bg-[#334D66] hover:bg-[#4A6987] text-[#FBF0DF]"
+                  className="px-3 py-2.5 rounded-lg text-xs font-typewriter font-bold bg-[#201B17] hover:bg-[#5E4A3D] text-[#F5E6CC]"
                 >
                   +1m
                 </button>
@@ -224,7 +224,7 @@ export function CookingModeModal({ recipe, onClose }) {
                     setTimerRunning(false);
                     setTimerSeconds(180);
                   }}
-                  className="px-3 py-2.5 rounded-lg text-xs font-typewriter font-bold bg-[#334D66] hover:bg-[#4A6987] text-[#FBF0DF]"
+                  className="px-3 py-2.5 rounded-lg text-xs font-typewriter font-bold bg-[#201B17] hover:bg-[#5E4A3D] text-[#F5E6CC]"
                 >
                   +3m
                 </button>
@@ -235,7 +235,7 @@ export function CookingModeModal({ recipe, onClose }) {
                     setTimerRunning(false);
                     setTimerSeconds(0);
                   }}
-                  className="px-3 py-2.5 rounded-lg text-xs font-typewriter font-bold bg-[#334D66] hover:bg-[#4A6987] text-[#8EA4B8]"
+                  className="px-3 py-2.5 rounded-lg text-xs font-typewriter font-bold bg-[#201B17] hover:bg-[#5E4A3D] text-[#9C806D]"
                 >
                   Reset
                 </button>
@@ -244,7 +244,7 @@ export function CookingModeModal({ recipe, onClose }) {
           ) : (
             <button
               onClick={() => setTimerSeconds(180)}
-              className="text-xs font-typewriter text-[#FFBDA6] hover:text-white underline underline-offset-4"
+              className="text-xs font-typewriter text-[#F3C694] hover:text-white underline underline-offset-4"
             >
               + Add 3-Minute Kitchen Timer for this step
             </button>
@@ -253,28 +253,28 @@ export function CookingModeModal({ recipe, onClose }) {
       </div>
 
       {/* Bottom Large Nav Controls */}
-      <div className="border-t border-[#334D66] bg-[#1A2837] px-6 py-6">
+      <div className="border-t border-[#201B17] bg-[#17120F] px-6 py-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
           <button
             onClick={prevStep}
             disabled={currentStepIndex === 0}
             className={`px-6 sm:px-10 py-4 rounded-loro text-sm sm:text-base font-bold font-typewriter uppercase tracking-wider transition-all flex items-center gap-2 ${
               currentStepIndex === 0
-                ? "bg-[#334D66]/30 text-[#8EA4B8] cursor-not-allowed"
-                : "bg-[#334D66] text-[#FBF0DF] hover:bg-[#4A6987] active:scale-95"
+                ? "bg-[#201B17]/30 text-[#9C806D] cursor-not-allowed"
+                : "bg-[#201B17] text-[#F5E6CC] hover:bg-[#5E4A3D] active:scale-95"
             }`}
           >
             <span>← Previous</span>
           </button>
 
-          <span className="text-xs font-typewriter text-[#8EA4B8] hidden sm:inline">
+          <span className="text-xs font-typewriter text-[#9C806D] hidden sm:inline">
             Tip: Press Space to toggle timer, Arrow keys to navigate
           </span>
 
           {currentStepIndex < steps.length - 1 ? (
             <button
               onClick={nextStep}
-              className="px-8 sm:px-12 py-4 rounded-loro text-sm sm:text-base font-bold uppercase tracking-wider text-white bg-[#E56960] hover:bg-[#C94F46] shadow-loro-coral btn-shimmer transition-all active:scale-95 flex items-center gap-2"
+              className="px-8 sm:px-12 py-4 rounded-loro text-sm sm:text-base font-bold uppercase tracking-wider text-white bg-[#F2382F] hover:bg-[#CF2A23] shadow-loro-coral btn-shimmer transition-all active:scale-95 flex items-center gap-2"
             >
               <span>Next Step →</span>
             </button>
@@ -284,7 +284,7 @@ export function CookingModeModal({ recipe, onClose }) {
                 playChimeSound();
                 onClose();
               }}
-              className="px-8 sm:px-12 py-4 rounded-loro text-sm sm:text-base font-bold uppercase tracking-wider text-white bg-[#636951] hover:bg-[#494E3B] shadow-loro transition-all active:scale-95 flex items-center gap-2"
+              className="px-8 sm:px-12 py-4 rounded-loro text-sm sm:text-base font-bold uppercase tracking-wider text-white bg-[#6D5545] hover:bg-[#513E32] shadow-loro transition-all active:scale-95 flex items-center gap-2"
             >
               <span>🎉 Feast Complete!</span>
             </button>

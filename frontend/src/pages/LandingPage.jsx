@@ -1,349 +1,295 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 
-const FEATURE_CARDS = [
+const FEATURES = [
   {
-    icon: "⏱️",
-    title: "Hands-Free Cooking Mode",
-    desc: "Giant text for the stove, auto-detecting kitchen timers with sound chimes, and voice step readers.",
-    badge: "Interactive Assistant",
+    number: "01",
+    title: "See what is already there",
+    desc: "Type a few ingredients, dictate them, or let the fridge scanner identify what is ready to use.",
+    action: "Scan the fridge",
+    kind: "scan",
   },
   {
-    icon: "📸",
-    title: "AI Fridge Photo Scanner",
-    desc: "Take a picture of your open fridge or pantry; AI vision identifies your 3 best ingredients instantly.",
-    badge: "Groq Vision",
+    number: "02",
+    title: "Get three real directions",
+    desc: "Mise creates three distinct recipes—not minor variations—balanced around your time and taste.",
+    action: "Enter the kitchen",
+    kind: "spark",
   },
   {
-    icon: "🎰",
-    title: "Mystery Pantry Wheel",
-    desc: "Spin 3 randomized culinary slot reels across proteins, produce, and seasonings for fun cooking challenges.",
-    badge: "Roulette Game",
-  },
-  {
-    icon: "⚖️",
-    title: "Dynamic Portion Scaler",
-    desc: "Scale recipes instantly from 1 serving up to an 8-person feast with automated fraction & gram math.",
-    badge: "Auto Measurement",
-  },
-  {
-    icon: "🔄",
-    title: "Smart Swap Substitutions",
-    desc: "Missing an ingredient? Click any item to view 3 chef-curated replacements and swap them into the recipe.",
-    badge: "Pantry Advisor",
-  },
-  {
-    icon: "🍷",
-    title: "Smokehouse Drink & Side Pairings",
-    desc: "Every dish comes paired with a craft highball, iced tea, or cocktail, plus a 2-ingredient companion side.",
-    badge: "Sommelier Engine",
+    number: "03",
+    title: "Cook without the clutter",
+    desc: "Large-format steps, spoken guidance, smart timers, and instant portion scaling stay beside you.",
+    action: "Try cooking mode",
+    kind: "timer",
   },
 ];
 
 const FEATURED_DISHES = [
   {
-    title: "Smoked Butter Sweet Corn & Scallion Crisp",
-    tag: "Smokehouse Star",
-    time: "15 Mins",
-    ingredients: ["Sweet Corn", "Cultured Butter", "Charred Scallions"],
-    desc: "Plump corn kernels blistered in smoky brown butter, finished with crisp scallion ribbons and flake salt.",
+    number: "01",
+    title: "Gochujang glazed shiitake noodles",
+    meta: "18 min · bold & spicy",
+    ingredients: "Noodles / Shiitake / Gochujang",
+    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=88",
   },
   {
-    title: "Cast-Iron Chicken with Rosemary Jus",
-    tag: "Comfort Feast",
-    time: "25 Mins",
-    ingredients: ["Chicken Thighs", "Woody Rosemary", "Shallots"],
-    desc: "Golden shatteringly-crisp chicken rendered slowly in cast iron with aromatic rosemary reduction.",
+    number: "02",
+    title: "Charred corn with scallion butter",
+    meta: "15 min · smoky cast-iron",
+    ingredients: "Sweet corn / Butter / Scallion",
+    image: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=1200&q=88",
   },
   {
-    title: "Gochujang Glazed Shiitake Ramen Sauté",
-    tag: "Asian Fusion",
-    time: "18 Mins",
-    ingredients: ["Ramen Noodles", "Shiitake Mushrooms", "Gochujang"],
-    desc: "Springy noodles tossed in caramelized Korean chili glaze with deeply savory seared mushrooms.",
+    number: "03",
+    title: "Crisp chicken with rosemary jus",
+    meta: "25 min · slow comfort",
+    ingredients: "Chicken / Rosemary / Shallot",
+    image: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=1200&q=88",
   },
 ];
 
-const MARQUEE_ITEMS = [
-  "SWEET CORN",
-  "CAST-IRON SMOKE",
-  "GARLIC CONFIT",
-  "TOASTED SESAME",
-  "CHILI CRISP",
-  "CHARRED LIME",
-  "ROSEMARY BUTTER",
-  "CRISPY TOFU",
-  "AGED SOY",
-  "SHALLOT CONFIT",
-  "FLAKE SEA SALT",
-];
+const MARQUEE_ITEMS = ["NAME IT", "MAKE IT", "TASTE IT", "SAVE IT"];
+
+function LineIcon({ kind }) {
+  if (kind === "scan") {
+    return (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M12 23V12h11M41 12h11v11M52 41v11H41M23 52H12V41" />
+        <path d="M20 37c6-13 18-13 24 0M24 29c3-4 5-6 8-6s6 2 8 6" />
+      </svg>
+    );
+  }
+  if (kind === "timer") {
+    return (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="35" r="18" /><path d="M32 17V9M25 9h14M32 35l9-7M48 20l4-4" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <path d="M32 8c2 14 9 21 23 23-14 2-21 9-23 23-2-14-9-21-23-23 14-2 21-9 23-23Z" />
+      <path d="M50 7c.7 4 3 6.3 7 7-4 .7-6.3 3-7 7-.7-4-3-6.3-7-7 4-.7 6.3-3 7-7Z" />
+    </svg>
+  );
+}
 
 export function LandingPage({ user, onEnter, onViewSaved, onOpenMysteryWheel, onOpenDemoCookingMode, onRequestAuth }) {
-  const [quick1, setQuick1] = useState("Sweet Corn");
+  const [quick1, setQuick1] = useState("Sweet corn");
   const [quick2, setQuick2] = useState("Garlic");
   const [quick3, setQuick3] = useState("Butter");
 
   function handleQuickStart(e) {
     e.preventDefault();
     if (!user) {
-      if (onRequestAuth) onRequestAuth("Sign in to cook with these ingredients!");
+      onRequestAuth?.("Sign in to turn this pantry trio into dinner.");
       return;
     }
     onEnter({ quickItems: [quick1, quick2, quick3] });
   }
 
-  function handleFeatureClick() {
+  function handleFeatureAction(kind) {
+    if (kind === "timer") {
+      onOpenDemoCookingMode();
+      return;
+    }
     if (!user) {
-      if (onRequestAuth) onRequestAuth("Sign in or use 1-Click Demo to unlock this feature!");
+      onRequestAuth?.("Sign in or use the demo account to open the Mise kitchen.");
       return;
     }
     onEnter();
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Top Hero Section */}
-      <section className="relative pt-10 pb-16 sm:pt-16 sm:pb-24 overflow-hidden">
-        {/* Decorative ambient gradients */}
-        <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-96 h-96 sm:w-[500px] sm:h-[500px] rounded-full bg-[#E56960]/6 pointer-events-none blur-3xl" />
-        <div className="absolute bottom-0 left-0 translate-y-12 -translate-x-1/3 w-96 h-96 rounded-full bg-[#636951]/6 pointer-events-none blur-3xl" />
+    <div className="mise-landing">
+      <section className="editorial-hero">
+        <div className="hero-grid-lines" aria-hidden="true" />
+        <motion.div
+          className="editorial-shell hero-layout"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.55 }}
+        >
+          <div className="hero-kicker">
+            <span>AI culinary studio</span>
+            <span>Est. 2026</span>
+          </div>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8">
-          <div className="text-center max-w-3xl mx-auto space-y-5">
-            {/* Tagline Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#334D66]/10 text-[#334D66] border border-[#334D66]/20 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-[#E56960] animate-pulse" />
-              <span className="text-xs font-typewriter font-bold uppercase tracking-widest">
-                Artisanal AI Culinary Smokehouse
-              </span>
-            </div>
-
-            {/* Main Headline */}
-            <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl text-[#334D66] tracking-tight leading-[1.08]">
-              Turn Any <span className="text-[#E56960] italic">3 Pantry Items</span> Into A Chef's Feast.
+          <div className="hero-heading-wrap">
+            <h1 className="hero-heading">
+              <span>Cook with</span>
+              <span className="hero-heading-indent">what you <em>have.</em></span>
             </h1>
+          </div>
 
-            {/* Subtitle */}
-            <p className="text-base sm:text-xl text-[#636951] font-serif leading-relaxed max-w-2xl mx-auto">
-              Inspired by the bold flavors, wood smoke, and effortless hospitality of great artisanal kitchens. No grocery run needed—just pick what you have.
+          <div className="hero-visual" aria-label="A fresh noodle dish ready to serve">
+            <img
+              src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1400&q=90"
+              alt="Colorful Asian-inspired dish with vegetables"
+            />
+            <span className="ingredient-note ingredient-note-one">Tonight's odds & ends</span>
+            <span className="ingredient-note ingredient-note-two">One very good dinner</span>
+          </div>
+
+          <div className="hero-copy">
+            <p>
+              A thoughtful cooking companion that turns the ingredients you already own into clear, beautiful recipes.
             </p>
-
-            {/* Feature Action Buttons Bar */}
-            <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
-              <button
-                onClick={() => onEnter()}
-                className="px-8 py-4 rounded-loro text-base font-bold uppercase tracking-wider text-white bg-[#E56960] hover:bg-[#C94F46] shadow-loro-coral btn-shimmer transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2.5"
-              >
-                <span>🔥 Enter The Kitchen</span>
-                <span className="text-xs font-typewriter opacity-90">→</span>
-              </button>
-
-              <button
-                onClick={onOpenMysteryWheel}
-                className="px-6 py-4 rounded-loro text-sm font-bold font-typewriter uppercase tracking-wider text-[#334D66] bg-[#EDE3D3] hover:bg-[#e0d3c0] border border-[#EDE3D3] shadow-loro-sm transition-all flex items-center gap-2"
-              >
-                <span>🎰 Spin Mystery Wheel</span>
-              </button>
-
-              <button
-                onClick={onOpenDemoCookingMode}
-                className="px-6 py-4 rounded-loro text-sm font-bold font-typewriter uppercase tracking-wider text-[#334D66] bg-[#FFFDF9] hover:bg-[#EDE3D3] border border-[#EDE3D3] shadow-loro-sm transition-all flex items-center gap-2"
-              >
-                <span>⏱️ Hands-Free Cooking Mode</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Direct Interactive 3-Ingredient Quick Box */}
-          <div className="max-w-3xl mx-auto bg-[#FFFDF9] p-6 sm:p-8 rounded-loro-lg border border-[#EDE3D3] shadow-loro-lg">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-[#EDE3D3]">
-              <span className="text-xs font-typewriter font-bold uppercase tracking-wider text-[#E56960] flex items-center gap-1.5">
-                <span>⚡</span> Quick Pantry Launcher
-              </span>
-              <span className="text-xs font-typewriter text-[#636951]">
-                Try this trio or edit any slot
-              </span>
-            </div>
-
-            <form onSubmit={handleQuickStart} className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-              <input
-                type="text"
-                value={quick1}
-                onChange={(e) => setQuick1(e.target.value)}
-                placeholder="1. Protein/Base"
-                className="bg-[#FBF0DF]/60 border border-[#EDE3D3] focus:border-[#E56960] text-sm text-[#334D66] font-medium rounded-lg px-3.5 py-2.5 outline-none"
-              />
-              <input
-                type="text"
-                value={quick2}
-                onChange={(e) => setQuick2(e.target.value)}
-                placeholder="2. Produce/Veg"
-                className="bg-[#FBF0DF]/60 border border-[#EDE3D3] focus:border-[#E56960] text-sm text-[#334D66] font-medium rounded-lg px-3.5 py-2.5 outline-none"
-              />
-              <input
-                type="text"
-                value={quick3}
-                onChange={(e) => setQuick3(e.target.value)}
-                placeholder="3. Accent/Sauce"
-                className="bg-[#FBF0DF]/60 border border-[#EDE3D3] focus:border-[#E56960] text-sm text-[#334D66] font-medium rounded-lg px-3.5 py-2.5 outline-none"
-              />
-              <button
-                type="submit"
-                className="bg-[#334D66] hover:bg-[#1F3144] text-white font-bold text-xs font-typewriter uppercase tracking-wider rounded-lg px-4 py-2.5 shadow-sm transition-all"
-              >
-                Cook Now →
-              </button>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      {/* Marquee Ticker Ribbon */}
-      <section className="border-y border-[#EDE3D3] bg-[#334D66] py-3 overflow-hidden">
-        <div className="animate-marquee flex items-center gap-8 whitespace-nowrap">
-          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, idx) => (
-            <div key={idx} className="flex items-center gap-8">
-              <span className="text-xs font-typewriter font-bold tracking-widest text-[#FBF0DF] uppercase">
-                {item}
-              </span>
-              <span className="text-[#E56960] text-xs">✦</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* All New Built-In Kitchen Features Showcase Grid */}
-      <section className="py-16 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs font-typewriter font-bold text-[#E56960] uppercase tracking-widest">
-            Complete Kitchen Suite
-          </span>
-          <h2 className="font-display text-3xl sm:text-4xl text-[#334D66] mt-1">
-            Built for Real Home Cooks
-          </h2>
-          <p className="text-sm font-serif text-[#636951] mt-2">
-            Every feature is designed to make cooking effortless, interactive, and delicious.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {FEATURE_CARDS.map((feat, idx) => (
-            <div
-              key={idx}
-              className="paper-card p-6 rounded-loro border border-[#EDE3D3] hover:border-[#E56960] hover:shadow-loro transition-all flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-3xl">{feat.icon}</span>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-typewriter font-bold uppercase bg-[#EDE3D3] text-[#334D66]">
-                    {feat.badge}
-                  </span>
-                </div>
-                <h3 className="font-display text-xl text-[#334D66] mb-2">
-                  {feat.title}
-                </h3>
-                <p className="text-xs text-[#636951] leading-relaxed">
-                  {feat.desc}
-                </p>
-              </div>
-
-              <div className="pt-4 mt-4 border-t border-[#EDE3D3]">
-                <button
-                  onClick={handleFeatureClick}
-                  className="text-xs font-typewriter font-bold text-[#E56960] hover:text-[#C94F46] flex items-center gap-1"
-                >
-                  {user ? "Open in Kitchen →" : "Sign In to Unlock →"}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured Signature Dishes Showcase */}
-      <section className="py-16 sm:py-24 bg-[#FFFDF9]/60 border-t border-[#EDE3D3]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 pb-4 border-b border-[#EDE3D3]">
-            <div>
-              <span className="text-xs font-typewriter font-bold text-[#636951] uppercase tracking-widest">
-                From The Smokehouse Archives
-              </span>
-              <h2 className="font-display text-3xl sm:text-4xl text-[#334D66] mt-1">
-                Sample 3-Ingredient Feasts
-              </h2>
-            </div>
-
-            <button
-              onClick={() => onEnter()}
-              className="text-xs font-typewriter font-bold text-[#E56960] hover:text-[#C94F46] uppercase tracking-wider self-start sm:self-auto"
-            >
-              Create Your Own →
+            <button type="button" className="text-link" onClick={() => onEnter()}>
+              Enter the kitchen <span aria-hidden="true">↗</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {FEATURED_DISHES.map((dish, i) => (
-              <div
-                key={i}
-                className="paper-card p-6 rounded-loro border border-[#EDE3D3] flex flex-col justify-between hover:shadow-loro transition-all"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-typewriter font-bold bg-[#E56960]/10 text-[#E56960]">
-                      {dish.tag}
-                    </span>
-                    <span className="text-xs font-typewriter text-[#636951]">
-                      ⏱️ {dish.time}
-                    </span>
-                  </div>
-
-                  <h3 className="font-display text-xl text-[#334D66] mb-2 leading-snug">
-                    {dish.title}
-                  </h3>
-
-                  <p className="text-xs text-[#636951] leading-relaxed mb-4">
-                    {dish.desc}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-[#EDE3D3]">
-                  <div className="text-[11px] font-typewriter text-[#334D66] font-bold uppercase tracking-wider mb-1">
-                    Key Ingredients:
-                  </div>
-                  <div className="text-xs text-[#636951]">
-                    {dish.ingredients.join(" • ")}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Big Bottom CTA Banner */}
-          <div className="mt-16 bg-[#334D66] rounded-loro-lg p-8 sm:p-12 text-center text-[#FBF0DF] relative overflow-hidden shadow-loro-lg">
-            <div className="relative z-10 max-w-2xl mx-auto space-y-4">
-              <h3 className="font-display text-3xl sm:text-4xl text-white">
-                Ready to see what your kitchen can do?
-              </h3>
-              <p className="text-sm sm:text-base text-[#FFBDA6] font-serif">
-                Open your fridge, name three ingredients, and let the AI pitmaster craft your meal in seconds.
-              </p>
-              <div className="pt-2">
-                <button
-                  onClick={() => onEnter()}
-                  className="px-8 py-3.5 bg-[#E56960] hover:bg-[#C94F46] text-white font-bold text-sm uppercase tracking-wider rounded-loro shadow-loro-coral btn-shimmer transition-all"
-                >
-                  🔥 Start Cooking Now
-                </button>
-              </div>
+          <form className="pantry-strip" onSubmit={handleQuickStart}>
+            <div className="pantry-strip-title">
+              <span className="micro-label">Quick start / 3 ingredients</span>
+              <strong>What is in your kitchen?</strong>
             </div>
+            {[quick1, quick2, quick3].map((value, index) => (
+              <label className="pantry-field" key={index}>
+                <span>0{index + 1}</span>
+                <input
+                  value={value}
+                  onChange={(event) => [setQuick1, setQuick2, setQuick3][index](event.target.value)}
+                  aria-label={`Ingredient ${index + 1}`}
+                />
+              </label>
+            ))}
+            <button className="pantry-submit" type="submit">
+              Make dinner <span aria-hidden="true">→</span>
+            </button>
+          </form>
+        </motion.div>
+      </section>
+
+      <section className="manifesto-section">
+        <div className="editorial-shell manifesto-grid">
+          <div className="manifesto-title">
+            <span className="micro-label">The Mise method</span>
+            <h2>Less waste.<br /><em>More possibility.</em></h2>
+          </div>
+          <div className="manifesto-lead">
+            <p>Good cooking does not begin with a shopping list. It begins by paying attention.</p>
+          </div>
+          <div className="manifesto-body">
+            <p>
+              Mise reads the room—your ingredients, your appetite, your time—and builds a way forward. Every suggestion is practical enough for a Tuesday and considered enough to feel special.
+            </p>
+            <button type="button" className="round-action" onClick={onOpenMysteryWheel}>
+              <span>Surprise me</span><span aria-hidden="true">↗</span>
+            </button>
+          </div>
+          <div className="manifesto-stamp" aria-hidden="true">
+            <span>MISE</span><small>Everything in its place</small>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-[#EDE3D3] bg-[#EDE3D3]/40 py-8 text-center text-xs font-typewriter text-[#636951]">
-        <div className="max-w-6xl mx-auto px-4 space-y-2">
-          <p>© 2026 Mise Kitchen • Inspired by the craft of Loro Asian Smokehouse & Bar</p>
-          <p>Powered by Groq Cloud & MongoDB Atlas • Mise en place for every kitchen</p>
+      <section className="feature-section" id="how-it-works">
+        <div className="editorial-shell">
+          <div className="section-heading-row">
+            <span className="micro-label">From fridge to feast</span>
+            <h2>One calm flow from<br /><em>idea to first bite.</em></h2>
+            <p>No tabs to juggle, no recipe essays to decode. Just the useful part, beautifully organized.</p>
+          </div>
+          <div className="feature-list">
+            {FEATURES.map((feature) => (
+              <article className="feature-row" key={feature.number}>
+                <span className="feature-number">({feature.number})</span>
+                <div className="feature-icon"><LineIcon kind={feature.kind} /></div>
+                <h3>{feature.title}</h3>
+                <p>{feature.desc}</p>
+                <button type="button" onClick={() => handleFeatureAction(feature.kind)}>
+                  {feature.action} <span aria-hidden="true">↗</span>
+                </button>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="dish-section">
+        <div className="editorial-shell">
+          <div className="dish-heading">
+            <div>
+              <span className="micro-label">Made from almost nothing</span>
+              <h2>Small lists.<br /><em>Big dinners.</em></h2>
+            </div>
+            <button type="button" className="cream-link" onClick={() => onEnter()}>
+              Create your own <span aria-hidden="true">→</span>
+            </button>
+          </div>
+
+          <div className="dish-grid">
+            {FEATURED_DISHES.map((dish) => (
+              <article className="dish-card" key={dish.number}>
+                <div className="dish-image-wrap">
+                  <img src={dish.image} alt={dish.title} loading="lazy" />
+                  <span>{dish.number}</span>
+                </div>
+                <div className="dish-card-copy">
+                  <p>{dish.ingredients}</p>
+                  <h3>{dish.title}</h3>
+                  <span>{dish.meta}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="tools-section">
+        <div className="tools-photo">
+          <img
+            src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=1600&q=88"
+            alt="Cook preparing food in a warm kitchen"
+            loading="lazy"
+          />
+        </div>
+        <div className="tools-copy">
+          <span className="micro-label">Stay in the moment</span>
+          <h2>Your hands are busy.<br /><em>Mise is not.</em></h2>
+          <p>
+            Keep your screen awake, hear each step aloud, launch timers from the recipe, and scale every quantity without doing the math.
+          </p>
+          <button type="button" className="outline-button" onClick={onOpenDemoCookingMode}>
+            Preview cooking mode <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>
+
+      <section className="marquee-band" aria-label="Mise process">
+        <div className="editorial-marquee">
+          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, index) => (
+            <span key={`${item}-${index}`}>{item} <i>✦</i></span>
+          ))}
+        </div>
+      </section>
+
+      <section className="final-cta">
+        <div className="editorial-shell final-cta-grid">
+          <span className="micro-label">Your fridge is full of ideas</span>
+          <h2>So, what are we<br /><em>making tonight?</em></h2>
+          <div className="final-cta-actions">
+            <button type="button" className="solid-button" onClick={() => onEnter()}>
+              Open the kitchen <span aria-hidden="true">→</span>
+            </button>
+            <button type="button" className="text-link" onClick={onViewSaved}>
+              Browse your cookbook
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <footer className="editorial-footer">
+        <div className="editorial-shell footer-grid">
+          <div className="footer-brand">MISE<em>kitchen</em></div>
+          <p>Intelligent recipes for the food you already have.</p>
+          <div className="footer-meta">
+            <span>Made for curious home cooks</span>
+            <span>© 2026 Mise Kitchen</span>
+          </div>
         </div>
       </footer>
     </div>
