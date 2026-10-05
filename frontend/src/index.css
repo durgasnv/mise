@@ -826,6 +826,12 @@ textarea:focus-visible {
   font: inherit;
 }
 
+/* Keep Bodoni's hairlines readable instead of thinning them at display sizes. */
+.mise-landing :is(h1, h2, h3, .pantry-strip-title strong, .manifesto-lead, .manifesto-stamp span, .editorial-marquee, .footer-brand, .footer-grid > p) {
+  font-optical-sizing: none;
+  font-variation-settings: "opsz" 24;
+}
+
 .editorial-shell {
   width: min(100% - 40px, 1280px);
   margin-inline: auto;
@@ -1055,7 +1061,7 @@ textarea:focus-visible {
   color: var(--mise-red);
   font-family: "Bodoni Moda", "Times New Roman", serif;
   font-size: clamp(70px, 10.6vw, 168px);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.07em;
   line-height: 0.69;
   text-transform: uppercase;
@@ -1071,7 +1077,7 @@ textarea:focus-visible {
 .dish-heading em,
 .tools-copy em,
 .final-cta em {
-  font-weight: 400;
+  font-weight: 500;
   text-transform: none;
 }
 
@@ -1251,7 +1257,7 @@ textarea:focus-visible {
   margin: 18px 0 0;
   font-family: "Bodoni Moda", "Times New Roman", serif;
   font-size: clamp(54px, 7vw, 102px);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -.055em;
   line-height: .82;
   text-transform: uppercase;
