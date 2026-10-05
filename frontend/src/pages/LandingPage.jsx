@@ -104,7 +104,6 @@ export function LandingPage({ user, onEnter, onViewSaved, onOpenMysteryWheel, on
   return (
     <div className="mise-landing">
       <section className="editorial-hero">
-        <div className="hero-grid-lines" aria-hidden="true" />
         <motion.div
           className="editorial-shell hero-layout"
           initial={{ opacity: 0 }}
