@@ -1,4 +1,5 @@
 import { getLeftovers, addLeftover, consumeLeftover, removeLeftover } from '../lib/leftovers.js';
+import { WorkspaceSyncPanel } from '../components/WorkspaceSyncPanel.jsx';
 import { useEffect, useState } from 'react';
 import { cookbookOwner, getSavedRecipes } from '../lib/savedRecipes.js';
 import { getPantry } from '../lib/pantryInventory.js';
@@ -20,6 +21,7 @@ export function MealPlanPage({ onBack, onOpenRecipe }) {
   return <main className="app-shell max-w-5xl mx-auto px-4 py-10 space-y-6"><button className="underline" onClick={onBack}>← Kitchen</button><h1 className="font-display text-4xl">Meal plan & shopping list</h1>
     <p>Plan dinners from your cookbook. Ingredient ranges use the higher amount when calculating groceries. Plans are saved locally and can sync with your Puter account.</p>
     <label className="block">Week starting <input aria-label="Week starting" type="date" className="border p-2" value={week} onChange={e => { if (e.target.value) { const start = weekStartDate(e.target.value); setWeek(start); setDate(start); } }} /></label>
+    <WorkspaceSyncPanel />
     {error && <p role="alert">{error}</p>}
     <form onSubmit={add} className="paper-card p-5 flex flex-wrap items-end gap-4">
       <label>Date<input required type="date" className="block border p-2" value={date} onChange={e => setDate(e.target.value)} /></label>

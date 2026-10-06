@@ -1,4 +1,5 @@
 import { getCurrentUser } from '../lib/auth.js';
+import { WorkspaceSyncPanel } from '../components/WorkspaceSyncPanel.jsx';
 import { ResumeCooking } from "../components/ResumeCooking.jsx";
 import { cookbookOwner } from "../lib/savedRecipes.js";
 import { recordMealEvent } from "../lib/mealActivity.js";
@@ -138,6 +139,7 @@ export function HomePage({ onBack, onViewSaved, onViewPantry, onViewPlan, onView
           </div>
           <button type="button" className="underline" disabled={!readiness} onClick={refreshReadiness}>Check connection</button>
         </section>
+        <WorkspaceSyncPanel />
         {onOpenRecipe && <ResumeCooking onOpenRecipe={onOpenRecipe} />}
         {/* Top Grid: Form + Kitchen Tips */}
         <div className="kitchen-grid grid grid-cols-1 lg:grid-cols-12 gap-8">

@@ -1,7 +1,7 @@
 import { canonicalName, comparable, UNITS } from '../../../shared/pantry.js';
 import { readAccountData, writeAccountData, newId } from './accountStore.js';
 const EMPTY = { version: 1, items: [], staples: [], deductions: [] };
-function validate(book) {
+export function validatePantry(book) {
   if (book?.version !== 1 || !Array.isArray(book.items) || book.items.length > 100 || !Array.isArray(book.staples) || book.staples.some(s => typeof s !== 'string' || s.length > 120) || !Array.isArray(book.deductions)) throw new Error('Invalid pantry data.');
   const names = new Set(), ids = new Set();
   for (const i of book.items) {
@@ -12,17 +12,17 @@ function validate(book) {
   }
   if (book.deductions.some(d => typeof d.sessionId !== 'string')) throw new Error('Invalid pantry deduction record.');
 }
-export function getPantry(owner) { return readAccountData('pantry_v1', EMPTY, validate, owner); }
+export function getPantry(owner) { return readAccountData('pantry_v1', EMPTY, validatePantry, owner); }
 export function activePantry(owner) { return getPantry(owner).items.filter(i => i.quantity !== 0); }
 export function savePantryItem(item, owner) {
   const book = getPantry(owner), match = book.items.find(i => i.id === item.id || canonicalName(i.name) === canonicalName(item.name));
   const next = { id: match?.id || newId(), name: item.name.trim(), quantity: item.quantity, unit: item.unit, expiresOn: item.expiresOn ?? match?.expiresOn ?? null };
   book.items = match ? book.items.map(i => i.id === match.id ? next : i) : [...book.items, next];
-  return writeAccountData('pantry_v1', book, validate, owner);
+  return writeAccountData('pantry_v1', book, validatePantry, owner);
 }
 export function removePantryItem(id, owner) {
   const book = getPantry(owner); book.items = book.items.filter(i => i.id !== id);
-  return writeAccountData('pantry_v1', book, validate, owner);
+  return writeAccountData('pantry_v1', book, validatePantry, owner);
 }
 export function saveFormPantry(items, staples, owner) {
   const book = getPantry(owner);
@@ -31,7 +31,7 @@ export function saveFormPantry(items, staples, owner) {
     if (prior) Object.assign(prior, item);
     else book.items.push({ ...item, id: newId(), expiresOn: null });
   }
-  book.staples = [...staples]; return writeAccountData('pantry_v1', book, validate, owner);
+  book.staples = [...staples]; return writeAccountData('pantry_v1', book, validatePantry, owner);
 }
 export function expiryStatus(date, today = new Date().toISOString().slice(0, 10)) {
   if (!date) return '';
@@ -60,5 +60,5 @@ export function deductPantry(sessionId, lines, owner) {
   }
   for (const line of lines) book.items.find(i => i.id === line.id).quantity = Number((book.items.find(i => i.id === line.id).quantity - line.used).toFixed(6));
   book.deductions.push({ sessionId, at: new Date().toISOString(), lines: structuredClone(lines) });
-  return { book: writeAccountData('pantry_v1', book, validate, owner), alreadyApplied: false };
+  return { book: writeAccountData('pantry_v1', book, validatePantry, owner), alreadyApplied: false };
 }

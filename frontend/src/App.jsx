@@ -1,3 +1,4 @@
+import { startWorkspaceSync } from './lib/workspaceSync.js';
 import { MeasurementsPage } from './pages/MeasurementsPage.jsx';
 import { startMeasurementSync } from './lib/measurements.js';
 import { MealPlanPage } from "./pages/MealPlanPage.jsx";
@@ -33,6 +34,7 @@ export default function App() {
   const [prefilledIngredients, setPrefilledIngredients] = useState(null);
 
   useEffect(() => startCookbookSync(), []);
+  useEffect(() => startWorkspaceSync(), []);
   useEffect(() => startMeasurementSync(), []);
 
   useEffect(() => {

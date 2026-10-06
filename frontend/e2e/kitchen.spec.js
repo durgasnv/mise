@@ -118,3 +118,22 @@ test('leftover planning avoids groceries and repeating a week does not duplicate
   await expect(page.getByText('Skillet potatoes: 2 portions remaining')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
 });
+
+test('pantry conflict review keeps the chosen stock version after refresh', async ({ page }) => {
+  await page.addInitScript(() => {
+    const base = { id:'stock',name:'potato',quantity:500,unit:'g',expiresOn:null };
+    localStorage.setItem('mise_pantry_v1:puter%3Abrowser-chef',JSON.stringify({version:1,items:[{...base,quantity:400}],staples:[],deductions:[]}));
+    localStorage.setItem('mise_workspace_v1:puter%3Abrowser-chef',JSON.stringify([
+      {opId:'base',entity:'pantry_v1/item/potato',parents:[],value:base},
+      {opId:'left',entity:'pantry_v1/item/potato',parents:['base'],value:{...base,quantity:400}},
+      {opId:'right',entity:'pantry_v1/item/potato',parents:['base'],value:{...base,quantity:300}},
+    ]));
+  });
+  await page.goto('/',{waitUntil:'domcontentloaded'});
+  await page.getByText('Review changes: Pantry: potato',{exact:true}).click();
+  await expect(page.getByText('potato: 300 g',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Keep version 2',exact:true}).click();
+  await expect(page.getByText('Review changes: Pantry: potato',{exact:true})).toHaveCount(0);
+  await page.getByRole('button',{name:'Manage pantry'}).click();
+  await expect(page.getByText('300 g',{exact:true})).toBeVisible();
+});
