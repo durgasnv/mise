@@ -53,7 +53,7 @@ export async function reserveMongoBucket(collection, bucket) {
   }
 }
 
-async function getQuotaCollection() {
+export async function getQuotaCollection() {
   const connection = await connectDB();
   if (!connection?.db) throw new Error("Shared quota database unavailable");
   if (!indexPromises.has(connection.db)) {

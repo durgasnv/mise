@@ -41,3 +41,7 @@ npm run check:release
 `check:release` performs read-only model checks and, when `MISE_STAGING_URL` exists, health and anonymous-access checks. Setting `MISE_RUN_LIVE_GENERATION=true` with both `PUTER_TEST_TOKEN_A/B` enables two billable, quota-counted text requests. Credentials and account IDs are excluded from its JSON report. `MISE_RELEASE_REPORT_PATH` optionally saves the report. The command exits unsuccessfully while checks remain pending; it cannot certify manual device tests or a provider cap.
 
 No deployment, production configuration or provider cap has been changed by this implementation.
+
+## Local MongoDB verification
+
+The development preview now has a loopback-only MongoDB Community instance configured. Connection, application quota-index initialization and real quota concurrency checks passed against local databases. A recipe-handler smoke test passed with real MongoDB and mocked identity/provider. This does not establish hosted staging connectivity or verify paid provider generation with a real account; the staging checks above remain pending.

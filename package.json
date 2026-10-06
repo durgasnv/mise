@@ -7,7 +7,9 @@
     "build": "if [ -d frontend ]; then (cd frontend && npm install && npm run build && cd .. && rm -rf dist && cp -r frontend/dist ./dist); else (npm install && npm run build); fi",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
-    "start": "node backend/server.js"
+    "start": "node backend/server.js",
+    "dev:db": "npm --prefix backend run dev:db",
+    "check:db": "npm --prefix backend run check:db"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

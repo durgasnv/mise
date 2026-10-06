@@ -11,3 +11,6 @@ coverage/
 
 test-results/
 playwright-report/
+
+# Local development database files
+.local/

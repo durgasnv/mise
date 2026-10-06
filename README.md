@@ -34,6 +34,8 @@ npm run dev:frontend
 
 The frontend normally runs at `http://localhost:5173`; the backend uses port 5000. Keep both terminals running. Leave `VITE_API_URL` empty for local development: Vite proxies same-origin `/api` requests to the backend. Set an HTTPS API origin at build time only if the deployed API is hosted separately. Recipe generation also requires Puter sign-in, a server Groq key and `MONGODB_URI` for shared account limits.
 
+For a local database, install [MongoDB Community](https://www.mongodb.com/docs/v8.0/tutorial/install-mongodb-on-ubuntu-tarball/) and set `MONGODB_URI=mongodb://127.0.0.1:27017/mise_local` in `backend/.env`. Set `MONGOD_BIN` if its executable is not on PATH. Run `npm run dev:db` in a third terminal, then `npm run check:db`. The database binds to loopback and stores its data in ignored `backend/.local/mongodb/`. Restart the backend after changing its environment. A hosted database can instead use its own `MONGODB_URI`; no local database process is needed.
+
 Backend configuration:
 
 | Variable | Purpose |

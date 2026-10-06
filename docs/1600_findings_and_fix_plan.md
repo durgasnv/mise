@@ -217,3 +217,11 @@ The local preview was configured to call localhost:5000 directly while the backe
 Network failures now return an actionable connection message with NETWORK_UNAVAILABLE rather than the browser's raw Failed to fetch text. Requests are not automatically retried. Frontend regression tests and the production build passed. Desktop and mobile browser tests simulate a connection failure, verify all ingredients remain, and verify an explicit retry using a mocked successful response.
 
 Actual generation remains unverified: this local backend has no MongoDB connection configured for mandatory shared quotas. Configure MONGODB_URI in backend/.env and sign in with Puter before checking a real generation.
+
+## Local quota database setup
+
+The subsequent QUOTA_UNAVAILABLE response was caused by the missing MongoDB configuration. Set up MongoDB Community 8.0.32 from its official Ubuntu 24.04 archive after checking the published SHA-256, bound it to 127.0.0.1:27017, and configured the ignored backend/.env with mongodb://127.0.0.1:27017/mise_local. Development data lives in ignored backend/.local/mongodb. The executable currently lives at /tmp/mise-mongodb/bin/mongod; reinstall or update MONGOD_BIN if temporary files are cleared. Restarted the backend with the new configuration. This resolves the local MongoDB blocker described above; hosted deployment configuration is separate.
+
+Added npm run dev:db to start an installed mongod (or MONGOD_BIN executable) and npm run check:db to check the connection and initialize the application's quota index. Existing quota enforcement remains in place. The real concurrent MongoDB test admitted exactly five of forty requests across two clients, and all seven targeted quota checks passed. A recipe-handler smoke check using real MongoDB quotas with mocked identity/provider returned 200 with a validated recipe; the preview API health also returned 200. Paid provider generation with a real signed-in user remains unverified.
+
+Enabling a local database exposed an unintended metrics write in generation unit tests, which left a database connection open. Mocked the observation dependency in those tests. The backend suite then completed with 57 cases passing; its optional MongoDB case was skipped in the default run and passed separately against the dedicated local test database.
