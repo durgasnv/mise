@@ -125,271 +125,82 @@ export function scaleRecipeIngredients(ingredients, targetPortions = 2, basePort
   });
 }
 
-/**
- * Parses a single recipe markdown chunk into a structured object.
- */
-export function parseSingleRecipeChunk(cleanChunk, originalIngredients = [], fallbackIndex = 0) {
-  const lines = cleanChunk.split("\n").map((l) => l.trim()).filter(Boolean);
-
-  let title = "";
-  let prepTime = "15 mins";
-  let cookTime = "15 mins";
-  let servings = "2 portions";
-  let calories = "~480 kcal";
-  let chefNote = "";
-  let pairing = "Charred Citrus Highball or Iced Smoky Green Tea";
-  let quickSide = "Whipped Garlic-Miso Butter with warm flatbread";
+/** Parse only supplied recipe content; never fabricate cooking instructions. */
+export function parseSingleRecipeChunk(chunk, originalIngredients = [], index = 0) {
+  const lines = chunk.split("\n").map((line) => line.trim()).filter(Boolean);
+  const titleLine = lines.find((line) => /^#\s+/.test(line));
+  const title = titleLine?.replace(/^#\s+/, "").replace(/\*\*/g, "").trim();
   const ingredients = [];
   const instructions = [];
+  const metadata = { prepTime: "Not provided", cookTime: "Not provided", servings: "Not provided", calories: "Not provided" };
+  let section = "header";
+  let pairing = "Not provided";
+  let quickSide = "Not provided";
+  let chefNote = "";
 
-  let currentSection = "header";
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    if (!title && (line.startsWith("#") || line.startsWith("**") || i === 0)) {
-      const cleanTitle = line.replace(/^[#*\s]+|[#*\s]+$/g, "").replace(/^Recipe\s*\d*:?\s*/i, "").replace(/^Option\s*\d*:?\s*/i, "");
-      if (cleanTitle && !cleanTitle.toLowerCase().includes("ingredient") && !cleanTitle.toLowerCase().includes("instruction")) {
-        title = cleanTitle;
-        continue;
-      }
-    }
-
-    const prepMatch = line.match(/(?:Prep\s*Time):\s*([^\n|*]+)/i);
-    if (prepMatch) prepTime = prepMatch[1].replace(/[*_]/g, "").trim();
-
-    const cookMatch = line.match(/(?:Cook\s*Time):\s*([^\n|*]+)/i);
-    if (cookMatch) cookTime = cookMatch[1].replace(/[*_]/g, "").trim();
-
-    const servMatch = line.match(/(?:Servings|Yield|Portions):\s*([^\n|*]+)/i);
-    if (servMatch) servings = servMatch[1].replace(/[*_]/g, "").trim();
-
-    const calMatch = line.match(/(?:Calories|Cal):\s*([^\n|*]+)/i);
-    if (calMatch) calories = calMatch[1].replace(/[*_]/g, "").trim();
-
-    const lower = line.toLowerCase();
-    if (lower.includes("ingredient")) {
-      currentSection = "ingredients";
-      continue;
-    } else if (lower.includes("instruction") || lower.includes("method") || lower.includes("step") || lower.includes("directions")) {
-      currentSection = "instructions";
-      continue;
-    } else if (lower.includes("pairing") || lower.includes("beverage")) {
-      currentSection = "pairing";
-      continue;
-    } else if (lower.includes("chef's note") || lower.includes("tasting note") || lower.includes("tip:")) {
-      currentSection = "notes";
+  for (const line of lines) {
+    if (line === titleLine) continue;
+    const plain = line.replace(/\*\*/g, "");
+    if (/^#{2,6}\s+/.test(line)) {
+      const heading = plain.replace(/^#{2,6}\s+/, "").toLowerCase();
+      section = heading === "ingredients" ? "ingredients"
+        : /^(instructions|method|directions)$/.test(heading) ? "instructions"
+          : /pairing|beverage/.test(heading) ? "pairing"
+            : /tasting note|chef.s note/.test(heading) ? "notes" : "other";
       continue;
     }
-
-    if (currentSection === "ingredients") {
-      if (/^[-*•]\s+/.test(line) || /^\d+\.\s+/.test(line)) {
-        ingredients.push(line.replace(/^[-*•\d.]+\s+/, "").replace(/[*_]/g, "").trim());
-      } else if (line.length > 2 && !line.startsWith("#")) {
-        ingredients.push(line.replace(/[*_]/g, "").trim());
+    if (section === "header") {
+      for (const [key, label] of [["prepTime", "Prep Time"], ["cookTime", "Cook Time"], ["servings", "Servings|Yield|Portions"], ["calories", "Calories|Cal"]]) {
+        const match = plain.match(new RegExp(`(?:${label}):\\s*([^|]+)`, "i"));
+        if (match) metadata[key] = match[1].trim();
       }
-    } else if (currentSection === "instructions") {
-      if (/^\d+[\.\)]\s+/.test(line) || /^[-*•]\s+/.test(line) || /^Step\s+\d+/i.test(line)) {
-        instructions.push(line.replace(/^(?:Step\s*\d+:?|\d+[\.\)]|[-*•])\s*/i, "").replace(/[*_]/g, "").trim());
-      } else if (line.length > 5 && !line.startsWith("#")) {
-        instructions.push(line.replace(/[*_]/g, "").trim());
-      }
-    } else if (currentSection === "pairing") {
-      if (lower.includes("drink") || lower.includes("beverage") || lower.includes("cocktail")) {
-        pairing = line.replace(/^(?:[-*•]\s*)?(?:\*\*|\*)?(?:Craft Drink|Drink|Beverage):\s*/i, "").replace(/[*_]/g, "").trim();
-      } else if (lower.includes("side") || lower.includes("companion")) {
-        quickSide = line.replace(/^(?:[-*•]\s*)?(?:\*\*|\*)?(?:Quick Companion Side|Side|Companion Side):\s*/i, "").replace(/[*_]/g, "").trim();
-      }
-    } else if (currentSection === "notes") {
-      chefNote += (chefNote ? " " : "") + line.replace(/^(?:Chef's Note:?|Tip:?|Note:?)\s*/i, "").replace(/[*_]/g, "");
+    } else if (section === "ingredients" && /^[-*•]\s+/.test(line)) {
+      ingredients.push(plain.replace(/^[-*•]\s+/, "").trim());
+    } else if (section === "instructions" && /^(?:\d+[.)]|[-*•])\s+/.test(line)) {
+      instructions.push(plain.replace(/^(?:\d+[.)]|[-*•])\s+/, "").trim());
+    } else if (section === "pairing") {
+      const drink = plain.match(/^(?:[-*•]\s*)?(?:Craft Drink|Drink|Beverage):\s*(.+)$/i);
+      const side = plain.match(/^(?:[-*•]\s*)?(?:Quick Companion Side|Side|Companion Side):\s*(.+)$/i);
+      if (drink) pairing = drink[1];
+      if (side) quickSide = side[1];
+    } else if (section === "notes") {
+      chefNote += (chefNote ? " " : "") + plain;
     }
   }
 
-  const techniqueTags = [
-    ["Quick Sauté", "High-Heat Sear", "Chef's Pick"],
-    ["Comfort Bowl", "Slow Braise", "Umami Rich"],
-    ["Crispy Cast-Iron", "Golden Roast", "Smokehouse Classic"],
-  ];
-
-  if (!title) {
-    const titles = [
-      `Artisanal ${originalIngredients.slice(0, 2).map(capitalize).join(" & ")} Sauté`,
-      `Comforting ${originalIngredients.slice(0, 2).map(capitalize).join(" & ")} Hearth Bowl`,
-      `Cast-Iron Crispy ${originalIngredients.slice(0, 2).map(capitalize).join(" & ")} Roast`,
-    ];
-    title = titles[fallbackIndex % titles.length];
+  if (!title || !ingredients.length || !instructions.length) {
+    throw new Error("The recipe response was incomplete. Please try again.");
   }
-
-  if (ingredients.length === 0) {
-    if (originalIngredients.length > 0) {
-      originalIngredients.forEach((ing) => ingredients.push(`2 cups Fresh ${capitalize(ing)}`));
-      ingredients.push("2 tbsp Cultured butter or house olive oil");
-      ingredients.push("Pinch of smoked sea salt & freshly cracked pepper");
-    } else {
-      ingredients.push("200g Core pantry ingredients");
-      ingredients.push("2 tbsp House cooking fat & aromatics");
-      ingredients.push("Seasoning blend & fresh herbs");
-    }
-  }
-
-  if (instructions.length === 0) {
-    instructions.push("Preheat a heavy cast-iron skillet over medium-high heat with butter or oil.");
-    instructions.push("Prep and slice ingredients evenly on a cutting board.");
-    instructions.push("Sear undisturbed for 3-4 minutes until deeply browned and aromatic.");
-    instructions.push("Season with flaky salt, finish with fresh herbs, and serve hot from the hearth.");
-  }
-
+  const portions = Number(metadata.servings.match(/\d+(?:\.\d+)?/)?.[0]);
   return {
-    id: `recipe-${Date.now()}-${fallbackIndex}-${Math.random().toString(36).substring(2, 6)}`,
+    id: `recipe-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
     title,
-    prepTime,
-    cookTime,
-    servings,
-    basePortions: 2,
-    calories,
+    ...metadata,
+    basePortions: portions > 0 ? portions : 2,
     ingredients,
     instructions,
-    pairing: pairing || "Charred Citrus Highball or Smoky Iced Jasmine Tea",
-    quickSide: quickSide || "Whipped Garlic Butter with warm charred flatbread",
-    chefNote: chefNote || "Finish with a splash of fresh lime or rice vinegar to awaken all rich flavors.",
-    tags: techniqueTags[fallbackIndex % techniqueTags.length],
+    pairing,
+    quickSide,
+    chefNote,
+    tags: [`Option ${index + 1}`],
     createdAt: new Date().toISOString(),
-    rawText: cleanChunk,
+    rawText: chunk,
   };
 }
 
-/**
- * Parses raw LLM text into an array of Top 3 distinct recipe objects.
- * @param {string} rawText
- * @param {string[]} [originalIngredients=[]]
- * @returns {Array<object>}
- */
+/** Return only complete recipes supplied by the provider, up to three. */
 export function parseRecipeResponse(rawText, originalIngredients = []) {
-  if (!rawText || typeof rawText !== "string") {
-    return createFallbackRecipes(originalIngredients);
+  if (typeof rawText !== "string" || !rawText.trim()) {
+    throw new Error("The kitchen returned no recipes. Please try again.");
   }
-
-  let chunks = [];
-
-  if (rawText.includes("---RECIPE_DIVIDER---")) {
-    chunks = rawText.split("---RECIPE_DIVIDER---").map((c) => c.trim()).filter(Boolean);
-  } else if (rawText.includes("===RECIPE_SPLIT===")) {
-    chunks = rawText.split("===RECIPE_SPLIT===").map((c) => c.trim()).filter(Boolean);
-  } else {
-    // Try splitting by top-level markdown headers like # Recipe 1 or # Title
-    const headerSplit = rawText.split(/\n(?=# )/g).map((c) => c.trim()).filter(Boolean);
-    if (headerSplit.length >= 2) {
-      chunks = headerSplit;
-    } else {
-      chunks = [rawText];
-    }
+  const chunks = rawText.includes("---RECIPE_DIVIDER---")
+    ? rawText.split("---RECIPE_DIVIDER---")
+    : rawText.includes("===RECIPE_SPLIT===")
+      ? rawText.split("===RECIPE_SPLIT===")
+      : rawText.trim().split(/\n(?=# )/);
+  const content = chunks.map((chunk) => chunk.trim()).filter(Boolean);
+  if (content.length > 3) {
+    throw new Error("The recipe response had an unexpected format. Please try again.");
   }
-
-  const recipes = chunks.map((chunk, idx) => parseSingleRecipeChunk(chunk, originalIngredients, idx));
-
-  // Ensure we always provide 3 distinct recipes
-  while (recipes.length < 3) {
-    const nextIdx = recipes.length;
-    recipes.push(createSingleFallbackRecipe(originalIngredients, nextIdx));
-  }
-
-  return recipes.slice(0, 3);
-}
-
-function capitalize(str) {
-  if (!str) return "";
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-export function createSingleFallbackRecipe(ingredients = ["Garlic", "Sweet Corn", "Butter"], index = 0) {
-  const safeIngs = ingredients.length > 0 ? ingredients : ["Garlic", "Sweet Corn", "Butter"];
-  const name1 = capitalize(safeIngs[0] || "Garlic");
-  const name2 = capitalize(safeIngs[1] || "Sweet Corn");
-
-  const variations = [
-    {
-      title: `Smokehouse ${name1} & ${name2} High-Heat Sauté`,
-      prepTime: "10 mins",
-      cookTime: "12 mins",
-      servings: "2 portions",
-      calories: "~460 kcal",
-      ingredients: [
-        ...safeIngs.map((i) => `250g Fresh ${capitalize(i)}`),
-        "2 tbsp Cultured butter or olive oil",
-        "Pinch of kosher flake sea salt & black pepper",
-      ],
-      instructions: [
-        `Gently slice and prepare your fresh ${name1} and ${name2}.`,
-        "Heat a cast-iron skillet over medium-high heat with butter until bubbling.",
-        "Sauté aromatics until fragrant and deeply caramelized around the edges.",
-        "Toss together, season with sea salt, and serve sizzling hot.",
-      ],
-      pairing: "Smoky Lemon Iced Green Tea",
-      quickSide: "Pickled Cucumber Ribbons with toasted sesame",
-      chefNote: "A tiny splash of lime balances the rich butter.",
-      tags: ["Quick Sauté", "High-Heat Sear", "Chef's Pick"],
-    },
-    {
-      title: `Comforting ${name1} & ${name2} Hearth Braised Bowl`,
-      prepTime: "15 mins",
-      cookTime: "20 mins",
-      servings: "2 portions",
-      calories: "~490 kcal",
-      ingredients: [
-        ...safeIngs.map((i) => `200g Fresh ${capitalize(i)}`),
-        "1.5 cups Savory vegetable or chicken broth",
-        "1 tbsp Soy sauce or miso paste",
-        "Scallion greens for garnish",
-      ],
-      instructions: [
-        "Lightly toast ingredients in a deep pan with a drizzle of oil.",
-        "Pour in warm broth and soy sauce, bringing to a gentle simmer.",
-        "Cover and braise on low for 12 minutes to meld flavors into a rich savory jus.",
-        "Ladle into warm ceramic bowls and top with fresh scallions.",
-      ],
-      pairing: "Charred Citrus Highball with mint",
-      quickSide: "Whipped Miso Butter with crusty bread",
-      chefNote: "Letting the broth simmer slowly draws out maximum umami.",
-      tags: ["Comfort Bowl", "Slow Braise", "Umami Rich"],
-    },
-    {
-      title: `Crispy Cast-Iron ${name1} & ${name2} Golden Hash`,
-      prepTime: "15 mins",
-      cookTime: "18 mins",
-      servings: "2-3 portions",
-      calories: "~510 kcal",
-      ingredients: [
-        ...safeIngs.map((i) => `250g Diced ${capitalize(i)}`),
-        "2 tbsp High-heat cooking oil or ghee",
-        "Smoked sea salt & cracked chili flakes",
-      ],
-      instructions: [
-        "Dice ingredients into uniform bite-sized cubes.",
-        "Press firmly into a hot, oiled skillet and leave undisturbed for 5 minutes for a golden crust.",
-        "Flip in sections to crisp all sides until deeply crunchy.",
-        "Finish with smoked salt and chili flakes right before serving.",
-      ],
-      pairing: "Ginger-Yuzu Sparkling Tonic",
-      quickSide: "Charred Lime Crema Dipping Sauce",
-      chefNote: "Do not stir too often; patience creates the crispy crust.",
-      tags: ["Crispy Cast-Iron", "Golden Roast", "Smokehouse Classic"],
-    },
-  ];
-
-  const recipe = variations[index % variations.length];
-  return {
-    id: `fallback-${Date.now()}-${index}`,
-    ...recipe,
-    basePortions: 2,
-    createdAt: new Date().toISOString(),
-    rawText: "Fallback Recipe",
-  };
-}
-
-export function createFallbackRecipes(ingredients = ["Garlic", "Sweet Corn", "Butter"]) {
-  return [
-    createSingleFallbackRecipe(ingredients, 0),
-    createSingleFallbackRecipe(ingredients, 1),
-    createSingleFallbackRecipe(ingredients, 2),
-  ];
+  return content.map((chunk, index) => parseSingleRecipeChunk(chunk, originalIngredients, index));
 }

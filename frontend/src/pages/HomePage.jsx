@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { IngredientForm } from "../components/IngredientForm";
 import { MultiRecipeStack } from "../components/MultiRecipeStack";
 import { generateRecipeApi } from "../lib/api";
-import { parseRecipeResponse, createFallbackRecipes } from "../lib/parseRecipes";
+import { parseRecipeResponse } from "../lib/parseRecipes";
 
 const KITCHEN_TIPS = [
   {
@@ -35,10 +35,15 @@ export function HomePage({ onBack, onViewSaved, initialIngredients }) {
   const [recipes, setRecipes] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+  const [generationError, setGenerationError] = useState("");
   const recipeRef = useRef(null);
 
   async function handleGenerate({ question, ingredients, image }) {
+    if (isLoading) return;
     setIsLoading(true);
+    setGenerationError("");
+    setRecipes(null);
+    setLoadingMessageIndex(0);
 
     const timer = setInterval(() => {
       setLoadingMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
@@ -53,13 +58,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients }) {
         recipeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     } catch (err) {
-      console.warn("API notice, applying hearth fallback:", err.message);
-      const fallbacks = createFallbackRecipes(ingredients);
-      setRecipes(fallbacks);
-
-      setTimeout(() => {
-        recipeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
+      setGenerationError(err.message || "We could not generate recipes. Please try again.");
     } finally {
       clearInterval(timer);
       setIsLoading(false);
@@ -163,6 +162,14 @@ export function HomePage({ onBack, onViewSaved, initialIngredients }) {
             </div>
           </aside>
         </div>
+
+        {generationError && (
+          <div role="alert" className="border border-[#F2382F] bg-[#FFF8EC] p-5 text-[#201B17]">
+            <p className="font-semibold">Your recipes could not be generated</p>
+            <p className="mt-2 text-sm">{generationError}</p>
+            <p className="mt-2 text-sm">Your ingredients are still in the form. Adjust them if needed, then choose Create three recipes again.</p>
+          </div>
+        )}
 
         {/* Loading Live Display */}
         {isLoading && (
