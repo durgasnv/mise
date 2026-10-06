@@ -29,10 +29,11 @@ Inspired by the craft, wood smoke, and effortless hospitality of **Loro Asian Sm
 - **Voice Step Reader**: Reads the instructions aloud using the browser's Text-to-Speech Web Speech API.
 - **Keyboard Shortcuts**: Navigate with `Left / Right Arrow Keys` and toggle timers with `Spacebar`.
 
-### 4. 🧑‍🍳 Authentication & 1-Click Fast Demo Profile
-- **Built-in JWT + MongoDB Auth**: Secure account registration and password hashing with `bcryptjs`.
-- **⚡ 1-Click Demo Login (`Chef Durga`)**: Instant authentication for rapid testing and hackathon presentations.
-- **Guest-to-Cloud Sync**: Automatically merges all locally saved recipes into the user's cloud account upon login.
+### 4. 🧑‍🍳 Puter Sign-In & Demo Preview
+- **Generation authentication**: The browser sends its current Puter token; the backend verifies it with Puter and uses the returned account ID. Local profiles and legacy JWTs do not authorize generation.
+- **Demo profile (`Chef Durga`)**: Explore the interface, saved starter recipes, and cooking previews. Live generation requires a permanent Puter account.
+- **Shared usage limits**: MongoDB reserves per-account minute/day quotas and a global daily quota before contacting the generation provider.
+- **Legacy password routes**: Disabled by default. Explicit enablement requires a random JWT secret of at least 32 characters; production also requires MongoDB. Public demo token issuance is disabled.
 
 ### 5. 🎯 Personalized Taste & Dietary Profile
 - Configure dietary preferences (*Vegetarian, Vegan, Gluten-Free, Dairy-Free, Halal, Kosher, Nut-Free, High Protein, Low Carb / Keto, Under 500 kcal*).
@@ -140,7 +141,7 @@ fridge2feast/
 ### Prerequisites
 - **Node.js**: `>= 18.0.0`
 - **Groq API Key**: Configure it server-side. Text defaults to `openai/gpt-oss-20b`; model IDs can be changed through environment variables.
-- **MongoDB Atlas Connection** (Optional — fully operational with in-memory fallback)
+- **MongoDB connection**: Required for shared generation quotas. An unavailable quota database stops generation; there is no memory fallback for quotas.
 
 ---
 
@@ -159,7 +160,11 @@ GROQ_TEXT_MODEL=openai/gpt-oss-20b
 # Optional: choose a supported vision model available to your Groq account.
 GROQ_VISION_MODEL=
 JWT_SECRET=your_long_random_secret
-# Optional MongoDB URI:
+ENABLE_LEGACY_AUTH=false
+GENERATION_USER_MINUTE_LIMIT=5
+GENERATION_USER_DAY_LIMIT=20
+GENERATION_GLOBAL_DAY_LIMIT=200
+# Required for generation quotas:
 # MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/mise
 ```
 
@@ -171,7 +176,11 @@ npm run dev
 
 Run `npm run check:models` from `backend/` to check configured model availability without generating recipes. Availability does not verify image capability; confirm that in provider documentation.
 
-Generation now rejects invalid/oversized inputs and displays provider failures instead of substituting generic recipes. The endpoint has a process-local limit of 20 requests per minute and a 4,096-token output bound. The local limit does not provide shared serverless quotas, verified identity, or a provider spending cap. Production protection and remaining fixes are tracked in [the findings and implementation plan](docs/1600_findings_and_fix_plan.md).
+Generation rejects invalid/oversized inputs and displays provider failures instead of substituting generic recipes. It requires verified Puter identity, reserves shared MongoDB quotas, retains a process-local admission limit of 20 requests per minute, and bounds output to 4,096 completion tokens. Default shared limits are 5 requests per account per minute, 20 per account per UTC day, and 200 globally per UTC day. Failed admitted attempts consume quota; quota reservations are not refunded. Limits must be configured consistently across deployment instances. A global request allowance is not a monetary provider spending cap—configure that separately in the provider account.
+
+Set `MONGODB_URI` (or `MONGO_URI`) on the backend/deployment. Its database user needs read/write access to `generation_quotas` and permission to create its TTL index. Index setup and quota-storage errors stop generation. The TTL index removes old buckets; window IDs determine reset times independently of deletion timing.
+
+Run `npm --prefix backend test` and `npm --prefix frontend test` for mocked regression checks. To run the live quota concurrency test against an explicitly chosen test database, set `MONGO_QUOTA_TEST_URI` before the backend tests. That test uses and cleans up only a uniquely named collection, and never defaults to the application's database URI. See [the findings and implementation plan](docs/1600_findings_and_fix_plan.md) for verification results and remaining fixes.
 
 ---
 

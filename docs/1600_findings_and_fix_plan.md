@@ -11,7 +11,7 @@ Reviewed: 2026-10-05. This document separates observed defects from product hypo
 | R3 | P0 | `HomePage.jsx` replaces all API failures with generic recipes, concealing outages, limits, and photo errors. | Show an accessible error, preserve inputs, clear stale results, and allow a normal retry. | Implemented; regression checked |
 | R4 | P0 | `parseRecipes.js` fabricates missing ingredients, instructions, calories, and extra recipes. | Reject incomplete responses; display only recipes actually returned, and label missing optional metadata as unavailable. | Implemented; regression checked |
 | R5 | P0 | The generation handler accepts unchecked value types and large payloads; local `server.js` buffers bodies without a limit. | Validate question/image types and sizes before provider calls, reject unsupported image formats, bound HTTP request bodies and provider output. | Implemented; regression checked |
-| R6 | P0 | Generation has no server-side identity verification or usage limits. Frontend auth is Puter/local demo, whereas backend auth uses a separate JWT flow. | Add basic process-local request admission now. Next, integrate verified Puter identity and a restricted guest policy with shared atomic per-user quotas. Do not assume localStorage identity is trustworthy. Configure provider spend limits. | Local admission implemented; production protection pending |
+| R6 | P0 | Generation has no server-side identity verification or usage limits. Frontend auth is Puter/local demo, whereas backend auth uses a separate JWT flow. | Add basic process-local request admission now. Next, integrate verified Puter identity and a restricted guest policy with shared atomic per-user quotas. Do not assume localStorage identity is trustworthy. Configure provider spend limits. | Verified Puter identity and shared quota code implemented; live deployment checks and provider spend cap pending |
 | R7 | P0 | Dietary preferences are prompt text only; swaps do not account for restrictions. | Send structured restrictions, validate ingredients and compound products independently, block known conflicts and request confirmation for uncertain labels. Validate swaps too. This cannot guarantee freedom from allergens or cross-contact. | Pending |
 | R8 | P0 | Starter chicken instructions say “until done” without a thermometer endpoint. Generated/fallback instructions lack dependable safety enforcement. | Review starter recipes and apply reviewed food-specific temperature/handling rules to validated generated recipes. Add adversarial safety cases and cooking review. | Pending |
 | R9 | P1 | The prompt permits unconfirmed butter, lemon, and other staples despite the zero-grocery promise. | Collect confirmed staples and strict ingredient mode; compare structured recipe ingredients with inventory and disclose required missing items. Avoid claiming prompt wording alone enforces availability. | Pending |
@@ -19,7 +19,7 @@ Reviewed: 2026-10-05. This document separates observed defects from product hypo
 | R11 | P1 | Swaps replace ingredient text without consistently adapting quantities or instructions. | Treat swaps as recipe adaptations; regenerate affected quantities and steps, then repeat dietary and safety validation. | Pending |
 | R12 | P1 | Cookbook uses one browser-wide key, shared by different signed-in accounts. | Scope local data to verified account identity, define guest migration explicitly, and verify cloud merge/sign-out/account-switch behavior. Preserve legacy data without silently assigning it to another account. | Pending |
 | R13 | P1 | Portion scaling replaces every number in ingredient text and matches integers before fractions. | Parse quantity/unit fields rather than arbitrary numbers; test fractions, ranges, package sizes, and quantities that should not scale. | Pending |
-| R14 | P1 | Backend auth has a known fallback JWT secret and public demo tokens. README describes stronger/different auth behavior than the current frontend. | Remove production fallback secrets; make demo access explicit and limited; reconcile auth documentation after identity integration. | Pending |
+| R14 | P1 | Backend auth has a known fallback JWT secret and public demo tokens. README describes stronger/different auth behavior than the current frontend. | Remove production fallback secrets; make demo access explicit and limited; reconcile auth documentation after identity integration. | Implemented; legacy password routes disabled by default |
 
 ## Product hypotheses and validation work
 
@@ -92,5 +92,41 @@ Configuration and remaining work:
 
 - Set `GROQ_API_KEY` on the backend/deployment, optionally override `GROQ_TEXT_MODEL`, and explicitly select a supported image-capable `GROQ_VISION_MODEL` to enable photo scanning. A missing vision setting produces an honest unavailable message; text entry remains usable.
 - Run `npm run check:models` from `backend/` before deployment and after changing provider configuration. Verify vision capability separately.
-- Next: verified frontend-provider identity and shared atomic quotas, removal of legacy insecure JWT/demo defaults, structured restrictions and inventory, independent dietary and safety validation.
-- R7–R14 and the product hypotheses remain open. Existing swaps, saved data isolation, portion scaling, and starter safety instructions have not been repaired by this first batch.
+- Identity and quota implementation follows below. Next: structured restrictions and inventory, independent dietary and safety validation.
+- R7–R13 and the product hypotheses remain open; R14 remediation follows below. Existing swaps, saved data isolation, portion scaling, and starter safety instructions have not been repaired by this first batch.
+
+
+## Second batch: identity and shared quotas
+
+Implemented on 2026-10-06:
+
+- Generation now requires a bounded Bearer credential, verified on every request by Puter's fixed HTTPS `/whoami` endpoint. Only the returned account ID determines quotas; browser profile IDs and legacy JWTs are not accepted as generation identities. Temporary Puter accounts are rejected. Tokens and emails are not stored by the verifier, and redirects are rejected.
+- The browser reads its current token from the Puter SDK rather than copying credentials into the saved profile. Missing/expired credentials show a sign-in action while preserving the ingredient form.
+- MongoDB `generation_quotas` stores atomic per-account minute/day and global daily reservations. Defaults are 5 per account per minute, 20 per account per UTC day, and 200 globally per UTC day. Deterministic bucket IDs use hashed account IDs, conditional increments and the unique `_id` index prevent over-reservation, and a TTL index cleans old buckets.
+- Quota operations require majority write acknowledgement. Database/index/verification failures stop generation with an actionable error. The existing process-local admission limit remains an additional bound, not the shared quota mechanism.
+- Each admitted attempt consumes quota even if the provider later fails. Reservations across minute/day/global buckets are deliberately conservative rather than transactional: a later rejection or storage failure can leave an earlier reservation consumed. No credits are refunded, avoiding concurrent retry/refund bypasses.
+- Password routes require `ENABLE_LEGACY_AUTH=true` and a non-placeholder secret of at least 32 characters. Legacy JWTs pin HS256, issuer, and audience. Known seeded demo credentials and public demo token issuance were removed. Production password routes stop when MongoDB is unavailable; in-memory password accounts are development-only.
+- Demo profiles continue to support browsing, starter recipes, and cooking previews, but cannot generate recipes. The sign-in modal explains this distinction.
+
+Required deployment configuration:
+
+1. Set `MONGODB_URI` or `MONGO_URI`. The database user must be able to read/write `generation_quotas` and create its TTL index. Missing configuration deliberately disables generation rather than bypassing quotas.
+2. Optionally set `GENERATION_USER_MINUTE_LIMIT`, `GENERATION_USER_DAY_LIMIT`, and `GENERATION_GLOBAL_DAY_LIMIT` to positive integers. Keep limits consistent across instances and use a separate database for staging.
+3. Keep legacy password auth disabled unless it is specifically needed. If enabling it, configure a random `JWT_SECRET` of at least 32 characters; the previously documented fallback is rejected.
+4. Configure a monetary cap in the generation provider account separately. The global request cap bounds attempts, not currency, and does not prevent account-creation abuse or replace edge abuse protection.
+5. Before deployment, verify a real Puter sign-in and run the optional live concurrency test against a dedicated MongoDB test database with `MONGO_QUOTA_TEST_URI`. Local regressions mock identity and storage and do not establish live provider compatibility or database permissions.
+
+Sources for the integration:
+
+- [Puter auth SDK source](https://github.com/HeyPuter/puter/blob/main/src/puter-js/src/modules/Auth.js): current SDK token and `/whoami` identity request.
+- [Puter request implementation](https://github.com/HeyPuter/puter/blob/main/src/puter-js/src/lib/networkUtils.js): Bearer authorization behavior.
+- [MongoDB write atomicity](https://www.mongodb.com/docs/manual/core/write-operations-atomicity/): conditional single-document updates under concurrency.
+- [MongoDB TTL indexes](https://www.mongodb.com/docs/manual/core/index-ttl/): expiration cleanup is separate from quota-window enforcement.
+
+Verification:
+
+- 45 mocked/unit regression cases passed across backend and frontend: 32 backend cases (identity verification, quota concurrency, handler ordering, legacy auth, and request-body checks) and 13 frontend cases (API errors, live-token selection/sign-out, and parsing).
+- The optional live MongoDB concurrency test was skipped because `MONGO_QUOTA_TEST_URI` was not configured. Live Puter sign-in, deployed database permissions, and provider monetary caps were not exercised or changed.
+- Production frontend build, backend syntax checks, and whitespace checks passed.
+- No live deployment configuration has been changed. These code changes require the MongoDB configuration above before generation can run in deployment.
+- R7–R13 remain pending. The next implementation batch is structured recipe data and explicit inventory/household constraints, followed by independent dietary and cooking-safety checks.
