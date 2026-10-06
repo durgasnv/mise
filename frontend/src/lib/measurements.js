@@ -35,7 +35,16 @@ export function syncMeasurements() {
     let data = measurementSettings(owner);
     if (data.withdrawalPending) { await accountRequest('measurements',{ action: 'consent', enabled: false }); persist({ ...data, enabled: false, withdrawalPending: false, queue: [] },owner); return; }
     if (!data.enabled || !data.queue.length) return;
-    const batch = data.queue.slice(0,20), result = await accountRequest('measurements',{ action: 'events', consentVersion: data.consentVersion, events: batch });
+    const batch = data.queue.slice(0,20), version = data.consentVersion;
+    let result;
+    try { result = await accountRequest('measurements',{ action: 'events', consentVersion: version, events: batch }); }
+    catch(error) {
+      if (error.code === 'CONSENT_REQUIRED' && owner === cookbookOwner()) {
+        const latest = measurementSettings(owner);
+        if (latest.consentVersion === version && !latest.withdrawalPending) persist({ ...latest,enabled:false,queue:[] },owner);
+      }
+      throw error;
+    }
     if (owner !== cookbookOwner()) return;
     data = measurementSettings(owner);
     if (data.enabled && !data.withdrawalPending) persist({ ...data, queue: data.queue.filter(e => !result.accepted.includes(e.id) || !batch.some(sent => sent.id === e.id && JSON.stringify(sent) === JSON.stringify(e))) },owner);

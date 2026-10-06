@@ -16,6 +16,10 @@ test('offline opt-out immediately stops collection and retries server deletion o
   queueMeasurement('generated');assert.equal(measurementSettings().queue.length,0);
   globalThis.fetch=async(_url,options)=>{assert.equal(JSON.parse(options.body).enabled,false);return {ok:true,json:async()=>({accountId:'puter:a',enabled:false})};};await syncMeasurements();assert.equal(measurementSettings().withdrawalPending,false);
 });
+test('remote consent revocation stops this device and clears an older queue',async()=>{
+  globalThis.fetch=async()=>({ok:true,json:async()=>({accountId:'puter:a',enabled:true,consentVersion:'new-consent'})});await setMeasurementConsent(true);queueMeasurement('generated');
+  globalThis.fetch=async()=>({ok:false,json:async()=>({code:'CONSENT_REQUIRED',error:'Consent changed'})});await assert.rejects(syncMeasurements());assert.equal(measurementSettings().enabled,false);assert.equal(measurementSettings().queue.length,0);
+});
 test('accounts cannot read another account queue and corrupt settings are preserved',()=>{
   store.set('mise_active_chef_user_v3',JSON.stringify({...profile,id:'b'}));assert.equal(measurementSettings().enabled,false);
   const key='mise_measurements_v1:puter%3Ab';store.set(key,'{"broken":true}');assert.throws(()=>measurementSettings());assert.equal(store.get(key),'{"broken":true}');
