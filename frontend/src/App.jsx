@@ -143,6 +143,7 @@ export default function App() {
                   onViewSaved={() => handleNavigate("saved")}
                   onViewPantry={() => handleNavigate("pantry")}
                   onViewPlan={() => handleNavigate("plan")}
+                  onOpenRecipe={openSavedRecipe}
                   initialIngredients={prefilledIngredients}
                   onRequestAuth={(msg) => { setAuthPromptMessage(msg); setShowAuthModal(true); }}
                 />

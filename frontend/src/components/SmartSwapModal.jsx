@@ -1,3 +1,4 @@
+import { useDialog } from "../lib/useDialog.js";
 import { useState } from 'react';
 import { UNITS } from '../../../shared/pantry.js';
 import { ingredientConflict } from '../../../shared/recipe-safety.js';
@@ -8,6 +9,7 @@ export function SmartSwapModal({ ingredient, recipe, onSelectSwap, onClose }) {
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('g');
   const [pending, setPending] = useState(false);
+  const dialog = useDialog(onClose, pending);
   const [error, setError] = useState('');
   const choices = (recipe.constraints?.pantry || []).filter(i => i.name !== ingredient?.name && !ingredientConflict(i.name, recipe.constraints?.restrictions || [], recipe.constraints?.excludedIngredients || []));
   async function submit(e) {
@@ -23,7 +25,7 @@ export function SmartSwapModal({ ingredient, recipe, onSelectSwap, onClose }) {
     finally { setPending(false); }
   }
   return <div className="editorial-modal-backdrop fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-    <div role="dialog" aria-modal="true" aria-labelledby="swap-title" className="editorial-modal bg-[#FFF8EC] rounded-lg max-w-md w-full p-6 space-y-4">
+    <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="swap-title" className="editorial-modal bg-[#FFF8EC] rounded-lg max-w-md w-full p-6 space-y-4">
       <h3 id="swap-title" className="font-display text-2xl">Replace {ingredient?.name}</h3>
       <p className="text-sm">Confirm what you have. Mise will revise the complete method and quantities, then check your pantry and restrictions again.</p>
       {choices.length > 0 && <div className="flex gap-2 flex-wrap">{choices.map(i => <button key={i.name} type="button" disabled={pending} className="border p-2 text-sm" onClick={() => { setName(i.name); setQuantity(i.quantity === null ? '' : String(i.quantity)); setUnit(i.unit); }}>{i.name}</button>)}</div>}

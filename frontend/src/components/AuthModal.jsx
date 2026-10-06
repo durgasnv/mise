@@ -1,3 +1,4 @@
+import { useDialog } from "../lib/useDialog.js";
 import { useState } from "react";
 import { signInWithPuter, signInAsDemoChef } from "../lib/auth";
 import { syncCookbook } from "../lib/cookbookSync.js";
@@ -6,6 +7,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const dialog = useDialog(onClose, loading, isOpen);
   if (!isOpen) return null;
 
   async function handlePuterSignIn() {
@@ -45,7 +47,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
 
   return (
     <div className="editorial-modal-backdrop fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="editorial-modal auth-dialog bg-[#FFF8EC] rounded-loro-lg border border-[#E3CFB1] shadow-loro-lg max-w-md w-full p-6 sm:p-8 space-y-6 animate-toast-enter">
+      <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Sign in" className="editorial-modal auth-dialog bg-[#FFF8EC] rounded-loro-lg border border-[#E3CFB1] shadow-loro-lg max-w-md w-full p-6 sm:p-8 space-y-6 animate-toast-enter">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#E3CFB1] pb-4">
           <div>
@@ -56,7 +58,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
               Sign In to Your Kitchen
             </h3>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-[#201B17] text-base p-1">
+          <button aria-label="Close sign in" onClick={onClose} className="text-gray-400 hover:text-[#201B17] text-base p-1">
             ✕
           </button>
         </div>

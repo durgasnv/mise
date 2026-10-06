@@ -1,3 +1,4 @@
+import { useDialog } from "../lib/useDialog.js";
 import { newId } from "../lib/accountStore.js";
 import { useState } from 'react';
 import { EQUIPMENT, UNITS, DEFAULT_CONSTRAINTS } from '../../../shared/pantry.js';
@@ -13,6 +14,7 @@ export function RecipeEditor({ recipe, onSave, onClose }) {
   const [maxMinutes, setMaxMinutes] = useState(recipe.constraints?.maxMinutes || 1440);
   const [strict, setStrict] = useState(recipe.constraints?.strictPantry ?? false);
   const [pending, setPending] = useState(false), [error, setError] = useState(''), [reviewed, setReviewed] = useState(false);
+  const dialog = useDialog(onClose, pending);
   async function convert() {
     setPending(true); setError('');
     try {
@@ -40,7 +42,7 @@ export function RecipeEditor({ recipe, onSave, onClose }) {
     } catch(e) { setError(e.message); }
   }
   const change = (key, value) => setDraft(d => ({ ...d, [key]: value }));
-  return <div className="editorial-modal-backdrop fixed inset-0 z-50 bg-black/60 p-4 overflow-auto"><section role="dialog" aria-modal="true" aria-labelledby="editor-title" className="editorial-modal bg-[#FFF8EC] max-w-3xl mx-auto my-4 rounded-lg p-5 space-y-4">
+  return <div className="editorial-modal-backdrop fixed inset-0 z-50 bg-black/60 p-4 overflow-auto"><section ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="editor-title" className="editorial-modal bg-[#FFF8EC] max-w-3xl mx-auto my-4 rounded-lg p-5 space-y-4">
     <div className="flex justify-between gap-3"><h2 id="editor-title" className="font-display text-3xl">{recipe.structured ? 'Edit recipe' : 'Review legacy conversion'}</h2><button aria-label="Close recipe editor" disabled={pending} onClick={onClose}>✕</button></div>
     {!recipe.structured && <details><summary>Original recipe (preserved)</summary><p>{recipe.title}</p><ul>{recipe.ingredients.map((i,n) => <li key={n}>{i}</li>)}</ul><ol>{recipe.instructions.map((s,n) => <li key={n}>{s}</li>)}</ol></details>}
     {!draft ? <div className="space-y-3"><p>Convert this text recipe into quantities and linked instructions. Review all proposed amounts and cooking guidance before saving a separate structured copy.</p><p className="text-sm">Conversion uses one generation request. The original recipe stays in your cookbook.</p><button className="editorial-button" disabled={pending} onClick={convert}>{pending ? 'Preparing conversion…' : 'Prepare conversion'}</button></div> :

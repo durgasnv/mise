@@ -1,9 +1,10 @@
+import { findCookingSession, createCookingSession, updateCookingSession } from "../lib/cookingProgress.js";
 import { RecipeEditor } from "./RecipeEditor.jsx";
 import { PantryDeduction } from "./PantryDeduction.jsx";
 import { recipeText } from "../../../shared/recipe-export.js";
 import { recordMealEvent } from "../lib/mealActivity.js";
 import { cookbookOwner } from "../lib/savedRecipes.js";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toggleSaveRecipe, isRecipeSaved } from "../lib/savedRecipes";
 import { scaledRecipeView } from "../../../shared/recipe-scaling.js";
 import { CookingModeModal } from "./CookingModeModal";
@@ -12,35 +13,42 @@ import { SocialShareModal } from "./SocialShareModal";
 
 export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother }) {
   const [activityOwner] = useState(cookbookOwner);
-  const [mealSession, setMealSession] = useState(null);
+  const [restored] = useState(() => { try { return providedRecipe ? findCookingSession(providedRecipe) : null; } catch { return null; } });
+  const [mealSession, setMealSession] = useState(restored?.sessionId || null);
   const [mealFinished, setMealFinished] = useState(false);
   const [mealRating, setMealRating] = useState('');
   const [shopping, setShopping] = useState('');
   const [activityMessage, setActivityMessage] = useState('');
   function record(type, data) {
-    try { recordMealEvent(type, { ...data, owner: activityOwner }); }
-    catch { setActivityMessage('Meal activity could not be saved on this device.'); }
+    try { return recordMealEvent(type, { ...data, owner: activityOwner }); }
+    catch { setActivityMessage('Meal activity could not be saved on this device.'); return false; }
   }
   function startCooking() {
-    const sessionId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
-    setMealSession(sessionId); setMealFinished(false); setMealRating(''); setShopping('');
-    record('cookingStarted', { sessionId, recipeId: (adaptedRecipe || providedRecipe).id }); setShowCookingMode(true);
+    let session;
+    try {
+      session = createCookingSession(recipe, activityOwner);
+      const isResume = session.phase === 'cooking';
+      updateCookingSession(session.sessionId, { phase: 'cooking' }, activityOwner);
+      if (!isResume) record('cookingStarted', { sessionId: session.sessionId, recipeId: recipe.id });
+    } catch { setActivityMessage('Cooking progress could not be saved on this device.'); session = { sessionId: `temporary-${Date.now()}` }; record('cookingStarted', { sessionId: session.sessionId, recipeId: recipe.id }); }
+    setMealSession(session.sessionId); setMealFinished(false); setMealRating(''); setShopping(''); setShowCookingMode(true);
   }
   function completeMeal() {
-    record('mealCompleted', { sessionId: mealSession, recipeId: (adaptedRecipe || providedRecipe).id }); setMealFinished(true);
+    if (record('mealCompleted', { sessionId: mealSession, recipeId: (adaptedRecipe || providedRecipe).id })) setMealFinished(true); else setActivityMessage('Your meal could not be recorded on this device.');
   }
   const [showEditor, setShowEditor] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [reviewConfirmed, setReviewConfirmed] = useState(false);
+  const [reviewConfirmed, setReviewConfirmed] = useState(restored?.reviewConfirmed || false);
   const [copied, setCopied] = useState(false);
   const [portionCount, setPortionCount] = useState(providedRecipe?.basePortions || 2);
-  const [checkedIngredients, setCheckedIngredients] = useState({});
-  const [completedSteps, setCompletedSteps] = useState({});
+  const [checkedIngredients, setCheckedIngredients] = useState(restored?.checkedIngredients || {});
+  const [completedSteps, setCompletedSteps] = useState(restored?.completedSteps || {});
   const [showCookingMode, setShowCookingMode] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [swapTarget, setSwapTarget] = useState(null);
   const [adaptedRecipe, setAdaptedRecipe] = useState(null);
 
+  useEffect(() => { if (providedRecipe?.resumeCooking && restored?.phase === 'cooking') setShowCookingMode(true); }, []);
   if (!providedRecipe) return null;
   const baseRecipe = adaptedRecipe || providedRecipe;
   const recipe = scaledRecipeView(baseRecipe, portionCount);
@@ -68,18 +76,16 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
     setTimeout(() => setCopied(false), 2000);
   }
 
+  function checkpoint(patch) {
+    try { const s = createCookingSession(recipe, activityOwner); updateCookingSession(s.sessionId, patch, activityOwner); }
+    catch { setActivityMessage('Checklist progress could not be saved on this device.'); }
+  }
   function toggleIngredient(idx) {
-    setCheckedIngredients((prev) => ({
-      ...prev,
-      [idx]: !prev[idx],
-    }));
+    const next = { ...checkedIngredients, [idx]: !checkedIngredients[idx] }; setCheckedIngredients(next); checkpoint({ checkedIngredients: next });
   }
 
   function toggleStep(idx) {
-    setCompletedSteps((prev) => ({
-      ...prev,
-      [idx]: !prev[idx],
-    }));
+    const next = { ...completedSteps, [idx]: !completedSteps[idx] }; setCompletedSteps(next); checkpoint({ completedSteps: next });
   }
 
   function applyIngredientSwap(adapted) {
@@ -114,7 +120,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
         {recipe.review && <section aria-label="Pantry review" className="bg-[#FFF8EC] border p-4 space-y-2">
           {recipe.review.missing?.length > 0 && <p className="font-semibold">Missing or insufficient ingredients</p>}
           {[...(recipe.review.missing || []), ...(recipe.review.quantityChecks || []), ...(recipe.review.labelChecks || [])].map((note, i) => <p className="text-sm" key={i}>{note}</p>)}
-          {[...(recipe.review.missing || []), ...(recipe.review.quantityChecks || []), ...(recipe.review.labelChecks || [])].length > 0 && <label className="block text-sm"><input type="checkbox" checked={reviewConfirmed} onChange={e => setReviewConfirmed(e.target.checked)} /> I checked quantities, obtained missing items, and verified ingredient labels for my restrictions.</label>}
+          {[...(recipe.review.missing || []), ...(recipe.review.quantityChecks || []), ...(recipe.review.labelChecks || [])].length > 0 && <label className="block text-sm"><input type="checkbox" checked={reviewConfirmed} onChange={e => { setReviewConfirmed(e.target.checked); checkpoint({ reviewConfirmed: e.target.checked }); }} /> I checked quantities, obtained missing items, and verified ingredient labels for my restrictions.</label>}
           {recipe.review.safetyNotes?.map((note, i) => <p key={`safety-${i}`} className="text-sm font-semibold">{note}</p>)}
           <p className="text-sm">Equipment: {recipe.structured?.equipment.join(', ')}</p>
         </section>}
@@ -204,13 +210,14 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
                     }`}
                   >
                     <div
-                      onClick={() => toggleIngredient(idx)}
+                      onClick={e => { if (e.target.tagName !== "INPUT") toggleIngredient(idx); }}
                       className="flex items-start gap-2.5 flex-1 cursor-pointer"
                     >
                       <input
                         type="checkbox"
                         checked={Boolean(isChecked)}
-                        onChange={() => {}}
+                        aria-label={`Check ${item}`}
+                        onChange={() => toggleIngredient(idx)}
                         className="mt-1 h-4 w-4 rounded border-[#E3CFB1] text-[#F2382F] focus:ring-[#F2382F] cursor-pointer"
                       />
                       <span className="text-sm font-medium leading-relaxed">{item}</span>
@@ -253,6 +260,8 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
                   return (
                     <li
                       key={idx}
+                      role="button" tabIndex={0} aria-label={`Mark step ${idx + 1} ${isDone ? "unfinished" : "complete"}`}
+                      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleStep(idx); } }}
                       onClick={() => toggleStep(idx)}
                       className={`p-4 rounded-loro border transition-all cursor-pointer ${
                         isDone
@@ -395,6 +404,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
       {showCookingMode && (
         <CookingModeModal
           recipe={{ ...recipe, ingredients: scaledIngredients }}
+          sessionId={mealSession?.startsWith("temporary-") ? undefined : mealSession}
           onComplete={completeMeal}
           onClose={() => setShowCookingMode(false)}
         />

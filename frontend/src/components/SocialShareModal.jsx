@@ -1,7 +1,9 @@
+import { useDialog } from "../lib/useDialog.js";
 import { recipeText } from "../../../shared/recipe-export.js";
 import { useRef, useEffect, useState } from "react";
 
 export function SocialShareModal({ recipe, onClose }) {
+  const dialog = useDialog(onClose);
   const canvasRef = useRef(null);
   const [downloadUrl, setDownloadUrl] = useState("");
 
@@ -153,7 +155,7 @@ export function SocialShareModal({ recipe, onClose }) {
 
   return (
     <div className="editorial-modal-backdrop fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="editorial-modal share-dialog bg-[#FFF8EC] rounded-loro-lg border border-[#E3CFB1] shadow-loro-lg max-w-lg w-full p-6 space-y-6 my-8 animate-toast-enter">
+      <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Share recipe" className="editorial-modal share-dialog bg-[#FFF8EC] rounded-loro-lg border border-[#E3CFB1] shadow-loro-lg max-w-lg w-full p-6 space-y-6 my-8 animate-toast-enter">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#E3CFB1] pb-4">
           <div>
@@ -164,7 +166,7 @@ export function SocialShareModal({ recipe, onClose }) {
               Share Your Feast
             </h3>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-[#201B17] text-base p-1">
+          <button aria-label="Close share recipe" onClick={onClose} className="text-gray-400 hover:text-[#201B17] text-base p-1">
             ✕
           </button>
         </div>

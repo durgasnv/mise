@@ -1,3 +1,4 @@
+import { useDialog } from "../lib/useDialog.js";
 import { useState, useEffect } from "react";
 
 const WHEEL_1 = [
@@ -40,6 +41,7 @@ const WHEEL_3 = [
 ];
 
 export function PantryWheelModal({ onSelectCombo, onClose }) {
+  const dialog = useDialog(onClose);
   const [slot1, setSlot1] = useState(WHEEL_1[0]);
   const [slot2, setSlot2] = useState(WHEEL_2[0]);
   const [slot3, setSlot3] = useState(WHEEL_3[0]);
@@ -77,7 +79,7 @@ export function PantryWheelModal({ onSelectCombo, onClose }) {
 
   return (
     <div className="editorial-modal-backdrop fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="editorial-modal wheel-dialog bg-[#FFF8EC] rounded-loro-lg border border-[#E3CFB1] shadow-loro-lg max-w-lg w-full p-6 sm:p-8 space-y-6 animate-toast-enter text-center">
+      <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Mystery pantry wheel" className="editorial-modal wheel-dialog bg-[#FFF8EC] rounded-loro-lg border border-[#E3CFB1] shadow-loro-lg max-w-lg w-full p-6 sm:p-8 space-y-6 animate-toast-enter text-center">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#E3CFB1] pb-4">
           <div className="text-left">
@@ -88,7 +90,7 @@ export function PantryWheelModal({ onSelectCombo, onClose }) {
               Mystery Pantry Wheel
             </h3>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-[#201B17] text-base p-1">
+          <button aria-label="Close mystery pantry wheel" onClick={onClose} className="text-gray-400 hover:text-[#201B17] text-base p-1">
             ✕
           </button>
         </div>
