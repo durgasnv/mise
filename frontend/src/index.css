@@ -1671,3 +1671,20 @@ textarea:focus-visible {
     }
   }
 }
+
+/* Keyboard visibility and touch controls throughout the kitchen. */
+:where(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid #9f3028;
+  outline-offset: 3px;
+}
+@media (pointer: coarse) {
+  :where(button, summary, input:not([type="checkbox"]), select) { min-height: 44px; }
+  input[type="checkbox"] { width: 22px; height: 22px; }
+}
+.app-shell :where(input, select, textarea) { max-width: 100%; }
+@media (max-width: 640px) {
+  .app-shell :where(input, select, textarea) { font-size: 16px; }
+}
+
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 200; padding: 12px; background: #fff8ec; color: #201b17; transform: translateY(-150%); }
+.skip-link:focus { transform: translateY(0); }

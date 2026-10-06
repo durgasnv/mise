@@ -427,6 +427,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
               List what you have
             </label>
             <textarea
+              aria-label="Pantry ingredients"
               rows={4}
               value={freeformText}
               onChange={(e) => setFreeformText(e.target.value)}
@@ -440,11 +441,12 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {slots.map((val, idx) => (
                 <div key={idx} className="space-y-1">
-                  <label className="block text-[11px] font-typewriter font-bold text-[#201B17] uppercase">
+                  <label htmlFor={`pantry-ingredient-${idx}`} className="block text-[11px] font-typewriter font-bold text-[#201B17] uppercase">
                     Ingredient {String(idx + 1).padStart(2, "0")}
                   </label>
                   <div className="relative flex items-center">
                     <input
+                      id={`pantry-ingredient-${idx}`}
                       type="text"
                       value={val}
                       onChange={(e) => handleSlotChange(idx, e.target.value)}
@@ -455,6 +457,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
                     {val && (
                       <button
                         type="button"
+                        aria-label={`Clear ingredient ${idx + 1}`}
                         onClick={() => handleSlotChange(idx, "")}
                         className="absolute right-2 text-gray-400 hover:text-gray-600 text-xs"
                       >

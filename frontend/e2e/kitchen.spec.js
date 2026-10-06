@@ -92,13 +92,12 @@ test('unavailable service blocks generation while preserving editable ingredient
   await page.route('**/api/readiness', route => route.fulfill({ json: { ready: false, message: 'The recipe service is unavailable. Please try again shortly.' } }));
   await page.route('**/api/generate-recipe', route => { generationCalls++; return route.abort(); });
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await page.getByPlaceholder('e.g. Chicken / Tofu', { exact: true }).fill('potato');
+  await page.getByLabel('Ingredient 01', { exact: true }).fill('potato');
   await page.getByRole('button', { name: 'Recommend dinner' }).click();
   await expect(page.getByRole('alert')).toContainText('recipe service is unavailable');
-  await expect(page.getByPlaceholder('e.g. Chicken / Tofu', { exact: true })).toHaveValue('potato');
+  await expect(page.getByLabel('Ingredient 01', { exact: true })).toHaveValue('potato');
   expect(generationCalls).toBe(0);
 });
-
 test('leftover planning avoids groceries and repeating a week does not duplicate dinners', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'Plan meals & groceries' }).click();
@@ -117,6 +116,16 @@ test('leftover planning avoids groceries and repeating a week does not duplicate
   await page.reload(); await page.getByRole('button', { name: 'Plan meals & groceries' }).click();
   await expect(page.getByText('Skillet potatoes: 2 portions remaining')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+});
+test('keyboard skip navigation and ingredient labels expose usable controls', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  const skip = page.getByRole('link', { name: 'Skip to main content' });
+  await skip.focus(); await expect(skip).toBeVisible(); await page.keyboard.press('Enter');
+  await expect(page.locator('#main-content')).toBeFocused();
+  await expect(page.getByLabel('Ingredient 01', { exact: true })).toBeVisible();
+  await page.getByLabel('Ingredient 01', { exact: true }).fill('potato');
+  await page.getByRole('button', { name: 'Clear ingredient 1', exact: true }).click();
+  await expect(page.getByLabel('Ingredient 01', { exact: true })).toHaveValue('');
 });
 
 test('pantry conflict review keeps the chosen stock version after refresh', async ({ page }) => {
@@ -137,7 +146,6 @@ test('pantry conflict review keeps the chosen stock version after refresh', asyn
   await page.getByRole('button',{name:'Manage pantry'}).click();
   await expect(page.getByText('300 g',{exact:true})).toBeVisible();
 });
-
 test('cookbook exposes competing recipe methods and retains an explicit resolution', async ({ page }) => {
   await page.addInitScript(({recipe}) => {
     const base={id:recipe.id,opId:'base',type:'save',at:1,parents:[],recipe};
