@@ -1,3 +1,4 @@
+import { dinner, recipeJSON } from "../../shared/recipe-fixture.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { callGroq, createGenerationHandler } from "../api/generate-recipe.js";
@@ -33,12 +34,12 @@ test("uses a supported default text model and a bounded completion", async () =>
     env, fetchImpl: async (_url, options) => {
       assert.equal(options.headers.Authorization, "Bearer test-key");
       request = JSON.parse(options.body);
-      return result("recipe");
+      return result(recipeJSON);
     },
   });
-  assert.equal(text, "recipe");
+  assert.equal(text, recipeJSON);
   assert.equal(request.model, "openai/gpt-oss-20b");
-  assert.equal(request.max_completion_tokens, 4096);
+  assert.equal(request.max_completion_tokens, 8192);
 });
 
 test("honors configured model IDs and retains the image", async () => {
@@ -46,7 +47,7 @@ test("honors configured model IDs and retains the image", async () => {
     let request;
     await callGroq(input, {
       env: { ...env, GROQ_TEXT_MODEL: "test-text" },
-      fetchImpl: async (_url, options) => { request = JSON.parse(options.body); return result("recipe"); },
+      fetchImpl: async (_url, options) => { request = JSON.parse(options.body); return result(recipeJSON); },
     });
     assert.equal(request.model, input.imageBase64 ? "test-vision" : "test-text");
     if (input.imageBase64) assert.equal(request.messages[1].content[1].image_url.url, photo);
@@ -112,12 +113,12 @@ test("handler rejects invalid inputs and exhausted admission before generation",
 
 test("handler preserves success when optional history fails", async () => {
   const handler = createGenerationHandler({ authenticate: async () => ({ id: "puter:test-user", provider: "puter" }), reserveQuota: async () => {},
-    generate: async () => "real recipe", admit: () => ({ allowed: true }), save: async () => { throw new Error("db offline"); },
+    generate: async () => recipeJSON, admit: () => ({ allowed: true }), save: async () => { throw new Error("db offline"); },
   });
   const res = responseStub();
   await handler({ method: "POST", body: { question: "corn" } }, res);
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.payload, { response: "real recipe" });
+  assert.deepEqual(res.payload, { recipes: [dinner] });
 });
 
 test("handler propagates photo failures and hides unexpected internal errors", async () => {
@@ -184,7 +185,7 @@ test("a real verified identity is reserved before successful generation", async 
     admit: () => ({ allowed: true }),
     authenticate: async () => { events.push("verified"); return { id: "puter:real-user", provider: "puter" }; },
     reserveQuota: async (identity) => { assert.equal(identity.id, "puter:real-user"); events.push("reserved"); },
-    generate: async () => { events.push("generated"); return "recipe"; },
+    generate: async () => { events.push("generated"); return recipeJSON; },
     save: async () => {},
   });
   const res = responseStub();

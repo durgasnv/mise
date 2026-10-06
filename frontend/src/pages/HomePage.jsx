@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { IngredientForm } from "../components/IngredientForm";
 import { MultiRecipeStack } from "../components/MultiRecipeStack";
 import { generateRecipeApi } from "../lib/api";
-import { parseRecipeResponse } from "../lib/parseRecipes";
 
 const KITCHEN_TIPS = [
   {
@@ -52,8 +51,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAut
     }, 2000);
 
     try {
-      const rawResponse = await generateRecipeApi(question, image);
-      const parsedRecipes = parseRecipeResponse(rawResponse, ingredients);
+      const parsedRecipes = await generateRecipeApi(question, image);
       setRecipes(parsedRecipes);
 
       setTimeout(() => {

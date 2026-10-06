@@ -1,3 +1,4 @@
+import { validateRecipes, recipeView } from "../../../shared/recipes.js";
 import { getGenerationAuthorization } from "./auth.js";
 
 const API_BASE_URL = import.meta.env?.VITE_API_URL || "";
@@ -32,11 +33,11 @@ export async function generateRecipeApi(question, image = null) {
       throw error;
     }
 
-    if (typeof data?.response !== "string" || !data.response.trim()) {
+    if (!Array.isArray(data?.recipes)) {
       throw new Error("No recipe response received from the kitchen. Please try again.");
     }
 
-    return data.response;
+    return validateRecipes({ recipes: data.recipes }).map(r => recipeView(r));
   } catch (error) {
     if (error.name === "AbortError") {
       throw new Error("Recipe generation took too long. Please try again.");
