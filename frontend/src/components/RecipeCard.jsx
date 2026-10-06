@@ -1,3 +1,6 @@
+import { getPantry } from '../lib/pantryInventory.js';
+import { accountKey } from '../lib/accountStore.js';
+import { reviewPantry } from '../../../shared/pantry.js';
 import { NutritionPanel } from "./NutritionPanel.jsx";
 import { findCookingSession, createCookingSession, updateCookingSession } from "../lib/cookingProgress.js";
 import { RecipeEditor } from "./RecipeEditor.jsx";
@@ -14,6 +17,8 @@ import { SocialShareModal } from "./SocialShareModal";
 
 export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother }) {
   const [activityOwner] = useState(cookbookOwner);
+  const [,setPantryVersion] = useState(0);
+  useEffect(() => { const refresh = () => { setPantryVersion(n => n + 1); setReviewConfirmed(false); }; window.addEventListener("mise-pantry_v1-change",refresh); window.addEventListener("storage",refresh); return () => { window.removeEventListener("mise-pantry_v1-change",refresh); window.removeEventListener("storage",refresh); }; },[]);
   const [restored] = useState(() => { try { return providedRecipe ? findCookingSession(providedRecipe) : null; } catch { return null; } });
   const [mealSession, setMealSession] = useState(restored?.sessionId || null);
   const [mealFinished, setMealFinished] = useState(false);
@@ -54,6 +59,14 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
   if (!providedRecipe) return null;
   const baseRecipe = { ...(adaptedRecipe || providedRecipe), nutrition };
   const recipe = scaledRecipeView(baseRecipe, portionCount);
+  let pantryError = '';
+  if (recipe.structured && baseRecipe.constraints && localStorage.getItem(accountKey('pantry_v1',activityOwner)) !== null) {
+    try {
+      const stock = getPantry(activityOwner);
+      recipe.review = { ...recipe.review, ...reviewPantry(recipe.structured,{ ...baseRecipe.constraints, servings:portionCount, strictPantry:false,
+        pantry:stock.items.filter(i => i.quantity !== 0).map(({name,quantity,unit}) => ({name,quantity,unit})),staples:stock.staples }) };
+    } catch { pantryError = 'Current pantry data could not be checked. Open Manage pantry to review the preserved data before starting a new meal.'; }
+  }
 
   const isSaved = isRecipeSaved(recipe.id, recipe.title);
   const scaledIngredients = recipe.ingredients || [];
@@ -120,6 +133,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
 
       {/* Main Content Area */}
       <div className="p-6 sm:p-10 space-y-8">
+        {pantryError && <p role="alert">{pantryError}</p>}
         {recipe.review && <section aria-label="Pantry review" className="bg-[#FFF8EC] border p-4 space-y-2">
           {recipe.review.missing?.length > 0 && <p className="font-semibold">Missing or insufficient ingredients</p>}
           {[...(recipe.review.missing || []), ...(recipe.review.quantityChecks || []), ...(recipe.review.labelChecks || [])].map((note, i) => <p className="text-sm" key={i}>{note}</p>)}
@@ -177,7 +191,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
             {/* Launch Hands-Free Cooking Mode Button */}
             <button
               type="button"
-              disabled={Boolean(recipe.review && [...(recipe.review.missing || []), ...(recipe.review.quantityChecks || []), ...(recipe.review.labelChecks || [])].length && !reviewConfirmed)}
+              disabled={Boolean(pantryError || recipe.review && [...(recipe.review.missing || []), ...(recipe.review.quantityChecks || []), ...(recipe.review.labelChecks || [])].length && !reviewConfirmed)}
               onClick={startCooking}
               className="no-print px-4 py-2 rounded-loro bg-[#201B17] hover:bg-[#100E0C] text-[#F5E6CC] text-xs font-typewriter font-bold uppercase tracking-wider shadow-loro flex items-center gap-2 transition-all hover:scale-102"
             >
