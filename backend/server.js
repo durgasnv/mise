@@ -6,17 +6,10 @@ import generateRecipe from "./api/generate-recipe.js";
 import health from "./api/health.js";
 import hello from "./api/hello.js";
 import auth from "./api/auth.js";
+import { GenerationError } from "./lib/generation-guards.js";
+import { readBody } from "./lib/read-request-body.js";
 
 const PORT = process.env.PORT || 5000;
-
-function readBody(req) {
-  return new Promise((resolve, reject) => {
-    let data = "";
-    req.on("data", (chunk) => (data += chunk));
-    req.on("end", () => resolve(data));
-    req.on("error", reject);
-  });
-}
 
 function wrapResponse(res) {
   res.status = function status(code) {
@@ -62,9 +55,9 @@ const server = http.createServer(async (req, res) => {
     req.body = await readBody(req);
     await handler(req, res);
   } catch (error) {
-    console.error("Unhandled error:", error.message);
     if (!res.headersSent) {
-      res.status(500).json({ error: "Internal server error" });
+      const knownError = error instanceof GenerationError;
+      res.status(knownError ? error.status : 500).json({ error: knownError ? error.message : "Internal server error" });
     }
   }
 });
