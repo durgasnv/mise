@@ -50,3 +50,11 @@ test('rejects unvalidated structured data and account mismatches', async () => {
     await withFetch(async () => ({ ok: true, json: async () => payload }), async () => assert.rejects(generateRecipeApi('corn')));
   }
 });
+
+test("network failures provide a connection error without retrying the generation request", async () => {
+  let calls = 0;
+  await withFetch(async () => { calls++; throw new TypeError("Failed to fetch"); },
+    async () => assert.rejects(generateRecipeApi("corn"), (error) =>
+      error.code === "NETWORK_UNAVAILABLE" && /connect to the recipe service/.test(error.message)));
+  assert.equal(calls, 1);
+});

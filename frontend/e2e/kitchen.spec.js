@@ -61,3 +61,27 @@ test('recipe availability uses current pantry stock and source nutrition persist
   await page.getByText('Match ingredients & confirm weights').click();await page.getByRole('button',{name:'Search USDA foods'}).click();await page.getByRole('button',{name:'Mock potato record · SR Legacy'}).click();await page.getByRole('button',{name:'Calculate confirmed weights'}).click();await expect(page.getByText('Energy (kcal): 160',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Save nutrition with recipe'}).click();await page.reload();await page.getByRole('button',{name:'View cookbook'}).click();await page.getByText('Skillet potatoes',{exact:true}).click();await expect(page.getByText('Energy (kcal): 160',{exact:true})).toBeVisible();
 });
+
+test('a failed connection preserves ingredients and allows an explicit retry', async ({ page }) => {
+  let attempts = 0;
+  await page.route('**/api/generate-recipe', async route => {
+    attempts++;
+    if (attempts === 1) return route.abort('connectionrefused');
+    await route.fulfill({ json: { recipes: [dinner], constraints, accountId: 'puter:browser-chef' } });
+  });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  const ingredients = [
+    ['e.g. Chicken / Tofu', 'potato'],
+    ['e.g. Sweet Corn / Veg', 'corn'],
+    ['e.g. Garlic / Butter', 'garlic'],
+  ];
+  for (const [placeholder, value] of ingredients) await page.getByPlaceholder(placeholder, { exact: true }).fill(value);
+  await page.getByRole('button', { name: 'Recommend dinner' }).click();
+  await expect(page.getByRole('alert')).toContainText('We could not connect to the recipe service');
+  for (const [placeholder, value] of ingredients) await expect(page.getByPlaceholder(placeholder, { exact: true })).toHaveValue(value);
+  expect(attempts).toBe(1);
+  await page.getByRole('button', { name: 'Recommend dinner' }).click();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByText('Skillet potatoes', { exact: true }).first()).toBeVisible();
+  expect(attempts).toBe(2);
+});

@@ -29,6 +29,11 @@ export async function generateRecipeApi(question, image = null, constraints = un
       },
       body: JSON.stringify({ question, image, constraints, ...(adaptation || {}) }),
       signal: controller.signal,
+    }).catch((error) => {
+      if (error.name === "AbortError") throw error;
+      const connectionError = new Error("We could not connect to the recipe service. Check your connection and try again shortly.");
+      connectionError.code = "NETWORK_UNAVAILABLE";
+      throw connectionError;
     });
 
     const data = await response.json().catch(() => null);

@@ -209,3 +209,11 @@ Verification: 38 frontend regression cases passed; eight landing and eight exist
 At the user's request, removed the animated Three.js noodle scene and restored the original hero photograph. Featured-dish and tools photographs remain in place, as do GSAP entrances, scroll reveals and reduced-motion support. Removed the renderer, SVG fallback, Three.js dependency and WebGL-specific browser checks. This supersedes the 3D illustration described in the fifth batch above.
 
 Verification: production build passed without the previous renderer chunk warning. Four landing browser cases passed across desktop Chromium and emulated Pixel 7, covering the restored photograph, featured images, quick-start form, reduced motion and horizontal overflow.
+
+## Recipe connection failure
+
+The local preview was configured to call localhost:5000 directly while the backend was stopped, reproducing the reported network failure. Started the backend, changed local configuration to same-origin requests through Vite, and updated the environment example and setup instructions. Both direct API health and proxied health return 200; the proxied recipe route correctly rejects anonymous calls with 401.
+
+Network failures now return an actionable connection message with NETWORK_UNAVAILABLE rather than the browser's raw Failed to fetch text. Requests are not automatically retried. Frontend regression tests and the production build passed. Desktop and mobile browser tests simulate a connection failure, verify all ingredients remain, and verify an explicit retry using a mocked successful response.
+
+Actual generation remains unverified: this local backend has no MongoDB connection configured for mandatory shared quotas. Configure MONGODB_URI in backend/.env and sign in with Puter before checking a real generation.
