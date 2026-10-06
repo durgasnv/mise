@@ -137,7 +137,7 @@ export function CookingModeModal({ recipe, onClose, onComplete, sessionId }) {
           />
         </div>
 
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+        <div className="max-w-5xl mx-auto flex flex-wrap gap-3 items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="px-2.5 py-1 rounded bg-[#F2382F] text-white text-xs font-bold font-typewriter uppercase tracking-wider">
               🔥 Hands-Free Cooking Mode
@@ -171,14 +171,14 @@ export function CookingModeModal({ recipe, onClose, onComplete, sessionId }) {
 
       {progressError && <p role="alert" className="px-6 py-2">{progressError}</p>}
       {/* Main Step Center Display */}
-      <div className="max-w-4xl mx-auto px-6 py-10 my-auto text-center space-y-8">
+      <div className="max-w-4xl w-full mx-auto px-6 py-10 my-auto text-center space-y-8">
         {/* Step Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[#201B17] text-[#F3C694] text-sm font-typewriter font-bold">
           <span>STEP {currentStepIndex + 1} OF {steps.length}</span>
         </div>
 
         {/* Big Step Instruction Text */}
-        <p className="font-serif text-2xl sm:text-4xl lg:text-5xl leading-tight text-[#F5E6CC] transition-all">
+        <p className="font-serif break-words text-2xl sm:text-4xl lg:text-5xl leading-tight text-[#F5E6CC] transition-all">
           {currentStep}
         </p>
 
