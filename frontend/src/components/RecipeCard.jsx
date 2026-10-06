@@ -1,3 +1,5 @@
+import { recordMealEvent } from "../lib/mealActivity.js";
+import { cookbookOwner } from "../lib/savedRecipes.js";
 import { useState } from "react";
 import { toggleSaveRecipe, isRecipeSaved } from "../lib/savedRecipes";
 import { scaledRecipeView } from "../../../shared/recipe-scaling.js";
@@ -6,6 +8,24 @@ import { SmartSwapModal } from "./SmartSwapModal";
 import { SocialShareModal } from "./SocialShareModal";
 
 export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother }) {
+  const [activityOwner] = useState(cookbookOwner);
+  const [mealSession, setMealSession] = useState(null);
+  const [mealFinished, setMealFinished] = useState(false);
+  const [mealRating, setMealRating] = useState('');
+  const [shopping, setShopping] = useState('');
+  const [activityMessage, setActivityMessage] = useState('');
+  function record(type, data) {
+    try { recordMealEvent(type, { ...data, owner: activityOwner }); }
+    catch { setActivityMessage('Meal activity could not be saved on this device.'); }
+  }
+  function startCooking() {
+    const sessionId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+    setMealSession(sessionId); setMealFinished(false); setMealRating(''); setShopping('');
+    record('cookingStarted', { sessionId, recipeId: providedRecipe.id }); setShowCookingMode(true);
+  }
+  function completeMeal() {
+    record('mealCompleted', { sessionId: mealSession, recipeId: providedRecipe.id }); setMealFinished(true);
+  }
   const [saveError, setSaveError] = useState("");
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -28,6 +48,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
   function handleToggleSave() {
     try {
       const res = toggleSaveRecipe(baseRecipe); setSaveError('');
+      if (res.isSaved) record('saved', { recipeId: baseRecipe.id });
       if (onSaveChange) onSaveChange(res.isSaved);
     } catch { setSaveError('Your recipe could not be saved on this device. Free browser storage or open the cookbook to review its data.'); }
   }
@@ -160,7 +181,7 @@ ${recipe.chefNote}
             <button
               type="button"
               disabled={Boolean(recipe.review && [...(recipe.review.missing || []), ...(recipe.review.quantityChecks || []), ...(recipe.review.labelChecks || [])].length && !reviewConfirmed)}
-              onClick={() => setShowCookingMode(true)}
+              onClick={startCooking}
               className="no-print px-4 py-2 rounded-loro bg-[#201B17] hover:bg-[#100E0C] text-[#F5E6CC] text-xs font-typewriter font-bold uppercase tracking-wider shadow-loro flex items-center gap-2 transition-all hover:scale-102"
             >
               <span>Open cooking mode</span>
@@ -314,6 +335,14 @@ ${recipe.chefNote}
           </div>
         </div>
 
+        {mealFinished && <section className="border p-4 space-y-3" aria-label="Meal feedback">
+          <h3 className="font-semibold">Meal recorded. How did it go?</h3>
+          <label className="block">Rating <select className="border p-2" value={mealRating} onChange={e => setMealRating(e.target.value)}><option value="">Choose (optional)</option>{[1,2,3,4,5].map(n => <option key={n} value={n}>{n} / 5</option>)}</select></label>
+          <label className="block">Needed extra ingredients? <select className="border p-2" value={shopping} onChange={e => setShopping(e.target.value)}><option value="">Choose (optional)</option><option value="no">No, used my pantry</option><option value="yes">Yes</option></select></label>
+          <button className="underline text-sm" onClick={() => { record('mealCompleted', { sessionId: mealSession, recipeId: providedRecipe.id, rating: mealRating ? Number(mealRating) : null, neededShopping: shopping ? shopping === 'yes' : null }); setActivityMessage('Feedback saved on this device.'); }}>Save feedback</button>
+          <p className="text-xs">Activity stays in this account’s browser storage.</p>
+        </section>}
+        {activityMessage && <p role="status" className="text-sm">{activityMessage}</p>}
         {saveError && <p role="alert" className="text-sm text-red-700">{saveError}</p>}
         {/* Bottom Action Toolbar */}
         <div className="recipe-toolbar no-print pt-6 border-t border-[#E3CFB1] flex flex-wrap items-center justify-between gap-3">
@@ -375,6 +404,7 @@ ${recipe.chefNote}
       {showCookingMode && (
         <CookingModeModal
           recipe={{ ...recipe, ingredients: scaledIngredients }}
+          onComplete={completeMeal}
           onClose={() => setShowCookingMode(false)}
         />
       )}

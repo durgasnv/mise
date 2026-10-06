@@ -23,7 +23,7 @@ function playChimeSound() {
   }
 }
 
-export function CookingModeModal({ recipe, onClose }) {
+export function CookingModeModal({ recipe, onClose, onComplete }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [timerSeconds, setTimerSeconds] = useState(null);
   const [timerRunning, setTimerRunning] = useState(false);
@@ -282,11 +282,12 @@ export function CookingModeModal({ recipe, onClose }) {
             <button
               onClick={() => {
                 playChimeSound();
+                onComplete?.();
                 onClose();
               }}
               className="px-8 sm:px-12 py-4 rounded-loro text-sm sm:text-base font-bold uppercase tracking-wider text-white bg-[#6D5545] hover:bg-[#513E32] shadow-loro transition-all active:scale-95 flex items-center gap-2"
             >
-              <span>🎉 Feast Complete!</span>
+              <span>I cooked this meal ✓</span>
             </button>
           )}
         </div>

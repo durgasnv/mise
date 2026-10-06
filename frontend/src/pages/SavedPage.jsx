@@ -1,3 +1,4 @@
+import { mealEvents, mealSummary } from "../lib/mealActivity.js";
 import { syncCookbook, getSyncStatus } from "../lib/cookbookSync.js";
 import { useEffect, useState } from "react";
 import { deleteRecipe, getSavedRecipes, saveRecipe, legacyRecipesAvailable, importLegacyCookbook } from "../lib/savedRecipes";
@@ -10,6 +11,7 @@ const FILTERS = [
 
 export function SavedPage({ onBack, onOpenRecipe }) {
   const [recipes, setRecipes] = useState([]);
+  const [meals, setMeals] = useState(null);
   const [syncMessage, setSyncMessage] = useState(getSyncStatus());
   const [storageError, setStorageError] = useState("");
   const [legacyAvailable, setLegacyAvailable] = useState(legacyRecipesAvailable());
@@ -20,10 +22,11 @@ export function SavedPage({ onBack, onOpenRecipe }) {
 
   useEffect(() => {
     const refresh = () => { try { setRecipes(getSavedRecipes()); setStorageError(''); } catch (e) { setStorageError(e.message); } };
+    const refreshMeals = () => { try { setMeals(mealSummary(mealEvents())); } catch (e) { setStorageError(e.message); } };
     const refreshStatus = () => setSyncMessage(getSyncStatus());
-    refresh();
-    window.addEventListener('storage', refresh); window.addEventListener('mise-auth-change', refresh); window.addEventListener('mise-sync-status', refreshStatus);
-    return () => { window.removeEventListener('storage', refresh); window.removeEventListener('mise-auth-change', refresh); window.removeEventListener('mise-sync-status', refreshStatus); };
+    refresh(); refreshMeals();
+    window.addEventListener('mise-meal-activity', refreshMeals); window.addEventListener('mise-auth-change', refreshMeals); window.addEventListener('storage', refresh); window.addEventListener('mise-auth-change', refresh); window.addEventListener('mise-sync-status', refreshStatus);
+    return () => { window.removeEventListener('mise-meal-activity', refreshMeals); window.removeEventListener('mise-auth-change', refreshMeals); window.removeEventListener('storage', refresh); window.removeEventListener('mise-auth-change', refresh); window.removeEventListener('mise-sync-status', refreshStatus); };
   }, []);
 
   function handleDelete(id, event) {
@@ -83,6 +86,12 @@ export function SavedPage({ onBack, onOpenRecipe }) {
           </div>
         </header>
 
+        {meals && <section className="border p-4 space-y-2 text-sm" aria-label="Cooking activity">
+          <h2 className="font-display text-xl">Your cooking, last 30 days</h2>
+          <p>{meals.completedMeals} completed meals · {meals.cookingDays} cooking days · {meals.repeatCookingDays} return cooking days</p>
+          <p>{meals.cookingStarts} cooking starts · {meals.noShoppingMeals} reported pantry-only meals{meals.averageRating !== null ? ` · Average rating ${meals.averageRating}/5` : ''}</p>
+          <p className="text-xs">Counts come from your meal confirmations. Stored on this device for this account; no external analytics are sent.</p>
+        </section>}
         <section className="border p-4 space-y-2 text-sm" aria-label="Cookbook storage">
           <p>{syncMessage}</p>
           {storageError && <p role="alert">{storageError}</p>}

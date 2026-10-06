@@ -1,3 +1,4 @@
+import { recordMealEvent } from "../lib/mealActivity.js";
 import { useState, useRef } from "react";
 import { IngredientForm } from "../components/IngredientForm";
 import { MultiRecipeStack } from "../components/MultiRecipeStack";
@@ -24,8 +25,8 @@ const KITCHEN_TIPS = [
 const LOADING_MESSAGES = [
   "Firing up the culinary hearth...",
   "Balancing acid, smoke, and savory aromatics...",
-  "Crafting 3 distinct cooking methods...",
-  "Pairing craft beverages and companion sides...",
+  "Checking your pantry, time, and equipment...",
+  "Checking quantities and dietary restrictions...",
   "Finishing with pitmaster tasting notes...",
 ];
 
@@ -53,6 +54,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAut
     try {
       const parsedRecipes = await generateRecipeApi(question, image, constraints);
       setRecipes(parsedRecipes);
+      try { recordMealEvent('generated', {}); } catch { /* Recipe generation remains usable if local metrics storage is full. */ }
 
       setTimeout(() => {
         recipeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -111,7 +113,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAut
         <header className="kitchen-intro">
           <span className="micro-label">01 / Pantry composition</span>
           <h1>What are we<br /><em>working with?</em></h1>
-          <p>Name what you have. Mise will find three considered ways to turn it into dinner.</p>
+          <p>Name what you have. Mise will recommend a dinner that fits, with alternatives when useful.</p>
         </header>
         {/* Top Grid: Form + Kitchen Tips */}
         <div className="kitchen-grid grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -168,7 +170,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAut
           <div role="alert" className="border border-[#F2382F] bg-[#FFF8EC] p-5 text-[#201B17]">
             <p className="font-semibold">Your recipes could not be generated</p>
             <p className="mt-2 text-sm">{generationError}</p>
-            <p className="mt-2 text-sm">Your ingredients are still in the form. Adjust them if needed, then choose Create three recipes again.</p>
+            <p className="mt-2 text-sm">Your ingredients are still in the form. Adjust them if needed, then choose Recommend dinner again.</p>
             {["AUTH_REQUIRED", "ACCOUNT_REQUIRED"].includes(generationErrorCode) && onRequestAuth && (
               <button type="button" className="mt-3 text-sm font-semibold underline" onClick={() => onRequestAuth("Sign in with Puter to generate recipes. Your ingredients will stay in the form.")}>
                 Sign in with Puter
@@ -181,7 +183,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAut
         {isLoading && (
           <div className="kitchen-loading py-16 text-center space-y-4 bg-white/80 rounded-loro-lg border border-[#E3CFB1] shadow-loro p-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#F2382F]/10 text-[#F2382F] text-xs font-typewriter font-bold uppercase tracking-wider">
-              <span>02 / Composing three directions</span>
+              <span>02 / Finding your dinner</span>
             </div>
 
             <div className="flex justify-center gap-2 py-3">
@@ -205,7 +207,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAut
           <div ref={recipeRef} className="recipe-results pt-4 scroll-mt-24 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-typewriter font-bold uppercase tracking-wider text-[#6D5545] flex items-center gap-1.5">
-                <span>✦</span> 02 / Choose a direction
+                <span>✦</span> 02 / Your recommended dinner
               </span>
               <button
                 onClick={handleCookAnother}

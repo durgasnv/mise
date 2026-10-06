@@ -141,8 +141,8 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
     }
 
     const question = imagePreview && list.length === 0
-      ? `Identify the best food ingredients in this photo and create 3 distinct elevated recipes.${stylePrompt}${notePrompt}`
-      : `Create 3 distinct elevated recipes using these pantry ingredients: ${list.join(", ")}.${stylePrompt}${notePrompt} Include prep & cook time, full ingredients list with portions, step-by-step instructions, craft beverage pairing, and pitmaster tasting notes.`;
+      ? `Identify the best food ingredients in this photo and recommend a dinner and up to two alternatives.${stylePrompt}${notePrompt}`
+      : `Recommend a dinner and up to two alternatives using these pantry ingredients: ${list.join(", ")}.${stylePrompt}${notePrompt} Include complete structured quantities, equipment and method.`;
 
     onSubmit({
       question,
@@ -581,7 +581,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
               </div>
             ) : (
               <>
-                <span>Create three recipes</span>
+                <span>Recommend dinner</span>
                 <span aria-hidden="true">→</span>
               </>
             )}
