@@ -1,3 +1,4 @@
+import readiness from './api/readiness.js';
 import measurements from './api/measurements.js';
 import nutrition from "./api/nutrition.js";
 import http from "node:http";
@@ -38,7 +39,9 @@ const server = http.createServer(async (req, res) => {
 
   let handler = null;
 
-  if (normalizedPath === "/api/generate-recipe") {
+  if (normalizedPath === "/api/readiness") {
+    handler = readiness;
+  } else if (normalizedPath === "/api/generate-recipe") {
     handler = generateRecipe;
   } else if (normalizedPath === "/api/measurements") {
     handler = measurements;

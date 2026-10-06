@@ -6,6 +6,7 @@ import { DEFAULT_CONSTRAINTS } from '../../shared/pantry.js';
 const constraints = { ...DEFAULT_CONSTRAINTS, pantry: [{ name: 'potato', quantity: 500, unit: 'g' }] };
 const recipe = recipeView(dinner, { id: 'browser-recipe', constraints, review: {} });
 test.beforeEach(async ({ page }) => {
+  await page.route('**/api/readiness', route => route.fulfill({ json: { ready: true, message: 'The recipe service is ready.' } }));
   await page.route('https://js.puter.com/**',route => route.abort());
   await page.addInitScript(({ recipe }) => {
     if (!localStorage.getItem('mise_active_chef_user_v3')) localStorage.setItem('mise_active_chef_user_v3', JSON.stringify({ id: 'browser-chef', provider: 'puter', name: 'Test chef', dietaryPreferences: [] }));
@@ -84,4 +85,16 @@ test('a failed connection preserves ingredients and allows an explicit retry', a
   await expect(page.getByRole('alert')).toHaveCount(0);
   await expect(page.getByText('Skillet potatoes', { exact: true }).first()).toBeVisible();
   expect(attempts).toBe(2);
+});
+
+test('unavailable service blocks generation while preserving editable ingredients', async ({ page }) => {
+  let generationCalls = 0;
+  await page.route('**/api/readiness', route => route.fulfill({ json: { ready: false, message: 'The recipe service is unavailable. Please try again shortly.' } }));
+  await page.route('**/api/generate-recipe', route => { generationCalls++; return route.abort(); });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.getByPlaceholder('e.g. Chicken / Tofu', { exact: true }).fill('potato');
+  await page.getByRole('button', { name: 'Recommend dinner' }).click();
+  await expect(page.getByRole('alert')).toContainText('recipe service is unavailable');
+  await expect(page.getByPlaceholder('e.g. Chicken / Tofu', { exact: true })).toHaveValue('potato');
+  expect(generationCalls).toBe(0);
 });

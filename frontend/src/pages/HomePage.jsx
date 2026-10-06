@@ -1,10 +1,11 @@
+import { getCurrentUser } from '../lib/auth.js';
 import { ResumeCooking } from "../components/ResumeCooking.jsx";
 import { cookbookOwner } from "../lib/savedRecipes.js";
 import { recordMealEvent } from "../lib/mealActivity.js";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { IngredientForm } from "../components/IngredientForm";
 import { MultiRecipeStack } from "../components/MultiRecipeStack";
-import { generateRecipeApi } from "../lib/api";
+import { generateRecipeApi, checkServiceReadiness } from "../lib/api";
 
 const KITCHEN_TIPS = [
   {
@@ -40,6 +41,14 @@ export function HomePage({ onBack, onViewSaved, onViewPantry, onViewPlan, onView
   const [generationError, setGenerationError] = useState("");
   const [generationErrorCode, setGenerationErrorCode] = useState("");
   const recipeRef = useRef(null);
+  const [readiness, setReadiness] = useState(null);
+  useEffect(() => {
+    let active = true;
+    checkServiceReadiness().then(value => { if (active) setReadiness(value); });
+    return () => { active = false; };
+  }, []);
+  async function refreshReadiness() { setReadiness(null); setReadiness(await checkServiceReadiness()); }
+
 
   async function handleGenerate({ question, image, constraints }) {
     if (isLoading) return;
@@ -55,6 +64,10 @@ export function HomePage({ onBack, onViewSaved, onViewPantry, onViewPlan, onView
     }, 2000);
 
     try {
+      const service = await checkServiceReadiness();
+      setReadiness(service);
+      if (!service.ready) throw new Error(service.message);
+      if (image && service.capabilities?.photos === false) throw new Error('Photo scanning is unavailable. Remove the photo and enter your ingredients to continue.');
       const parsedRecipes = await generateRecipeApi(question, image, constraints);
       setRecipes(parsedRecipes);
       try { recordMealEvent('generated', { owner: activityOwner }); } catch { /* Recipe generation remains usable if local metrics storage is full. */ }
@@ -119,6 +132,12 @@ export function HomePage({ onBack, onViewSaved, onViewPantry, onViewPlan, onView
           <p>Name what you have. Mise will recommend a dinner that fits, with alternatives when useful.</p>
         </header>
         <div className="flex flex-wrap gap-3">{onViewPantry && <button className="editorial-button" onClick={onViewPantry}>Manage pantry</button>}{onViewPlan && <button className="editorial-button" onClick={onViewPlan}>Plan meals & groceries</button>}{onViewMeasurements && <button className="editorial-button" onClick={onViewMeasurements}>Meal activity & privacy</button>}</div>
+        <section className="paper-card p-4 flex flex-wrap gap-3 justify-between" aria-label="Recipe service status">
+          <div><p role="status">{readiness ? readiness.message : 'Checking the recipe service…'}</p>
+            {getCurrentUser()?.provider === 'demo' && <p>Sign in with Puter to generate recipes. Demo mode supports cooking previews.</p>}
+          </div>
+          <button type="button" className="underline" disabled={!readiness} onClick={refreshReadiness}>Check connection</button>
+        </section>
         {onOpenRecipe && <ResumeCooking onOpenRecipe={onOpenRecipe} />}
         {/* Top Grid: Form + Kitchen Tips */}
         <div className="kitchen-grid grid grid-cols-1 lg:grid-cols-12 gap-8">
