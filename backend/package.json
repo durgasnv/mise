@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "test": "node --test tests/*.test.js",
-    "check:models": "node scripts/check-generation-models.js"
+    "check:models": "node scripts/check-generation-models.js",
+    "check:release": "node scripts/release-check.js"
   },
   "engines": {
     "node": ">=18"

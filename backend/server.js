@@ -69,5 +69,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Backend service listening on port ${PORT}`);
+  console.log(`Backend service listening on port ${server.address().port}`);
 });
