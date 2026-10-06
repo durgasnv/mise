@@ -1,16 +1,19 @@
+import { validateConstraints, reviewPantry } from "../../../shared/pantry.js";
+import { reviewSafety } from "../../../shared/recipe-safety.js";
 import { validateRecipes, recipeView } from "../../../shared/recipes.js";
-import { getGenerationAuthorization } from "./auth.js";
+import { getGenerationAuthorization, getCurrentUser } from "./auth.js";
 
 const API_BASE_URL = import.meta.env?.VITE_API_URL || "";
 
 /**
  * Calls the recipe generation endpoint with ingredients or a cooking question.
  * @param {string} question - Query string (e.g. "Create a recipe with tomato, garlic, olive oil")
- * @returns {Promise<string>} - Raw text response containing recipe
+ * @returns {Promise<Array<object>>} - Validated recipe views with structured source data
  */
 export async function generateRecipeApi(question, image = null, constraints = undefined, adaptation = undefined) {
   const url = `${API_BASE_URL}/api/generate-recipe`;
   const authorization = getGenerationAuthorization();
+  const accountId = getCurrentUser()?.id;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 40000);
@@ -37,7 +40,10 @@ export async function generateRecipeApi(question, image = null, constraints = un
       throw new Error("No recipe response received from the kitchen. Please try again.");
     }
 
-    return validateRecipes({ recipes: data.recipes }).map((r, index) => recipeView(r, { constraints: data.constraints, review: data.reviews?.[index] }));
+    if (!accountId || getCurrentUser()?.id !== accountId || data.accountId !== `puter:${accountId}`) throw new Error('Your account changed during generation. Please retry after signing in.');
+    const checkedConstraints = validateConstraints(data.constraints);
+    return validateRecipes({ recipes: data.recipes }).map(r => recipeView(r, { constraints: checkedConstraints,
+      review: { ...reviewPantry(r, checkedConstraints), ...reviewSafety(r, checkedConstraints) } }));
   } catch (error) {
     if (error.name === "AbortError") {
       throw new Error("Recipe generation took too long. Please try again.");

@@ -1,3 +1,4 @@
+import { cookbookOwner } from "../lib/savedRecipes.js";
 import { recordMealEvent } from "../lib/mealActivity.js";
 import { useState, useRef } from "react";
 import { IngredientForm } from "../components/IngredientForm";
@@ -41,6 +42,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAut
 
   async function handleGenerate({ question, image, constraints }) {
     if (isLoading) return;
+    const activityOwner = cookbookOwner();
     setIsLoading(true);
     setGenerationError("");
     setGenerationErrorCode("");
@@ -54,7 +56,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAut
     try {
       const parsedRecipes = await generateRecipeApi(question, image, constraints);
       setRecipes(parsedRecipes);
-      try { recordMealEvent('generated', {}); } catch { /* Recipe generation remains usable if local metrics storage is full. */ }
+      try { recordMealEvent('generated', { owner: activityOwner }); } catch { /* Recipe generation remains usable if local metrics storage is full. */ }
 
       setTimeout(() => {
         recipeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });

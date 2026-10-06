@@ -10,6 +10,7 @@ export function validateConstraints(raw = DEFAULT_CONSTRAINTS) {
   const c = structuredClone(raw);
   const fail = () => { throw new Error('Check your pantry, portions, time, equipment and dietary selections.'); };
   if (!c || typeof c !== 'object' || Array.isArray(c)) fail();
+  if (Object.keys(c).some(k => !Object.keys(DEFAULT_CONSTRAINTS).includes(k))) fail();
   if (!Number.isInteger(c.servings) || c.servings < 1 || c.servings > 12 || !Number.isInteger(c.maxMinutes) || c.maxMinutes < 5 || c.maxMinutes > 1440 || typeof c.strictPantry !== 'boolean') fail();
   for (const [key, max] of [['pantry', 40], ['staples', 12], ['equipment', 8], ['restrictions', 20], ['excludedIngredients', 20]]) {
     if (!Array.isArray(c[key]) || c[key].length > max) fail();
@@ -18,6 +19,7 @@ export function validateConstraints(raw = DEFAULT_CONSTRAINTS) {
   for (const item of c.pantry) {
     if (!item || typeof item.name !== 'string' || !item.name.trim() || item.name.length > 120 ||
         (item.quantity !== null && (typeof item.quantity !== 'number' || !Number.isFinite(item.quantity) || item.quantity <= 0 || item.quantity > 100000)) || !UNITS.includes(item.unit)) fail();
+    if (Object.keys(item).some(k => !['name', 'quantity', 'unit'].includes(k))) fail();
     const name = canonicalName(item.name);
     if (names.has(name)) fail();
     names.add(name);

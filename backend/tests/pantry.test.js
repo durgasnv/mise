@@ -15,3 +15,7 @@ test('unknown amounts and incompatible units require confirmation; constraints c
   for (const patch of [{ servings: 4 }, { maxMinutes: 10 }, { equipment: ['oven'] }]) assert.throws(() => reviewPantry(dinner, constraints(patch)));
   for (const patch of [{ servings: 0 }, { equipment: ['invented'] }, { pantry: [{ name: 'x', quantity: -1, unit: 'g' }] }, { strictPantry: 'yes' }]) assert.throws(() => validateConstraints(constraints(patch)));
 });
+test('rejects hidden unbounded constraint fields', () => {
+  assert.throws(() => validateConstraints(constraints({ hiddenPrompt: 'a'.repeat(10000) })));
+  assert.throws(() => validateConstraints(constraints({ pantry: [{ name: 'potato', quantity: 400, unit: 'g', hiddenPrompt: 'a'.repeat(10000) }] })));
+});

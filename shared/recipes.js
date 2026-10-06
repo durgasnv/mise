@@ -1,13 +1,14 @@
+import { EQUIPMENT, UNITS } from "./pantry.js";
 // The provider contract is shared by the server validator and browser renderer.
 const object = (properties) => ({ type: 'object', properties, required: Object.keys(properties), additionalProperties: false });
 const text = { type: 'string' };
 const number = { type: 'number' };
 export const RECIPE_SCHEMA = object({ recipes: { type: 'array', items: object({
   title: text, servings: number, prepMinutes: number, cookMinutes: number,
-  equipment: { type: 'array', items: text },
+  equipment: { type: 'array', items: { ...text, enum: EQUIPMENT } },
   ingredients: { type: 'array', items: object({
     id: text, name: text, quantity: number, quantityMax: { type: ['number', 'null'] },
-    unit: text, preparation: text, packageSize: text,
+    unit: { ...text, enum: UNITS }, preparation: text, packageSize: text,
   }) },
   steps: { type: 'array', items: object({ text, ingredientIds: { type: 'array', items: text } }) },
   chefNote: text,
@@ -30,12 +31,14 @@ export function validateRecipes(value) {
       if (!Array.isArray(v) || v.length > 40) throw new Error(`Invalid ${path}.`);
       v.forEach((item, i) => validate(item, schema.items, `${path}[${i}]`));
     } else if (schema.type === 'string') {
-      if (typeof v !== 'string' || v.length > 2000) throw new Error(`Invalid ${path}.`);
+      if (typeof v !== 'string' || v.length > 2000 || (schema.enum && !schema.enum.includes(v))) throw new Error(`Invalid ${path}.`);
     } else if (typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 100000) throw new Error(`Invalid ${path}.`);
   }
   validate(value, RECIPE_SCHEMA, 'recipes');
+  if (JSON.stringify(value).length > 90000) throw new Error('The recipe response is too large.');
   if (!value.recipes.length || value.recipes.length > 3) throw new Error('Expected one to three complete recipes.');
   for (const r of value.recipes) {
+    if (JSON.stringify(r).length > 30000) throw new Error('The recipe is too large.');
     if (!r.title.trim() || !Number.isInteger(r.servings) || r.servings < 1 || r.servings > 12 ||
         !r.ingredients.length || !r.steps.length || r.prepMinutes + r.cookMinutes < 1 || r.prepMinutes + r.cookMinutes > 1440) throw new Error('The recipe is incomplete.');
     const ids = new Set(r.ingredients.map(i => i.id));

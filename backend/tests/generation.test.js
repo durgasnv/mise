@@ -195,3 +195,30 @@ test("a real verified identity is reserved before successful generation", async 
   assert.equal(res.statusCode, 200);
   assert.equal(res.headers["Cache-Control"], "no-store");
 });
+
+test('handler validates structured constraints and substitutions before saving or returning recipes', async () => {
+  const cases = [
+    { question: 'potato', constraints: { ...DEFAULT_CONSTRAINTS, strictPantry: true } },
+    { question: 'potato', constraints: { ...DEFAULT_CONSTRAINTS, maxMinutes: 10 } },
+    { question: 'adapt', action: 'adapt', recipe: dinner, ingredientId: 'potato', replacement: { name: 'carrot', quantity: 500, unit: 'g' }, constraints: DEFAULT_CONSTRAINTS },
+  ];
+  for (const body of cases) {
+    let saved = false;
+    const handler = createGenerationHandler({
+      admit: () => ({ allowed: true }), authenticate: async () => ({ id: 'puter:test' }), reserveQuota: async () => {},
+      generate: async () => recipeJSON, save: async () => { saved = true; },
+    });
+    const res = responseStub(); await handler({ method: 'POST', body }, res);
+    assert.equal(res.statusCode, 502); assert.equal(res.payload.code, 'INVALID_RECIPE'); assert.equal(saved, false);
+  }
+});
+test('invalid adaptation cannot consume quotas or invoke the provider', async () => {
+  const handler = createGenerationHandler({
+    authenticate: async () => assert.fail('invalid payload must fail before auth'),
+    reserveQuota: async () => assert.fail('invalid payload must fail before quota'),
+    generate: async () => assert.fail('invalid payload must fail before generation'),
+  });
+  const res = responseStub();
+  await handler({ method: 'POST', body: { question: 'adapt', action: 'adapt', constraints: DEFAULT_CONSTRAINTS, recipe: dinner, ingredientId: 'potato', replacement: { name: 'butter', quantity: -2, unit: 'g' } } }, res);
+  assert.equal(res.statusCode, 400);
+});
