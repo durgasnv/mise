@@ -3,10 +3,10 @@ import { startMeasurementSync } from './lib/measurements.js';
 import { MealPlanPage } from "./pages/MealPlanPage.jsx";
 import { PantryPage } from "./pages/PantryPage.jsx";
 import { startCookbookSync } from "./lib/cookbookSync.js";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { motion, MotionConfig, AnimatePresence } from "framer-motion";
 import { Navbar } from "./components/Navbar";
-import { LandingPage } from "./pages/LandingPage";
+const LandingPage = lazy(() => import("./pages/LandingPage.jsx").then(module => ({ default: module.LandingPage })));
 import { HomePage } from "./pages/HomePage";
 import { SavedPage } from "./pages/SavedPage";
 import { SavedRecipePage } from "./pages/SavedRecipePage";
@@ -128,6 +128,7 @@ export default function App() {
           <AnimatePresence mode="wait">
             {view === "landing" && (
               <motion.div key="landing" variants={pageVariants} initial="hidden" animate="show" exit="exit">
+                <Suspense fallback={<section className="editorial-hero"><div className="editorial-shell py-16"><p className="micro-label">Mise / Your cooking companion</p><h1 className="hero-heading">Cook with<br />what you have.</h1></div></section>}>
                 <LandingPage
                   user={user}
                   onEnter={(opts) => handleNavigate("ask", opts || {})}
@@ -136,6 +137,7 @@ export default function App() {
                   onOpenDemoCookingMode={() => requireAuth(() => setShowDemoCooking(true), "Sign in to launch Hands-Free Cooking Mode!")}
                   onRequestAuth={(msg) => { setAuthPromptMessage(msg); setShowAuthModal(true); }}
                 />
+                </Suspense>
               </motion.div>
             )}
             {view === "ask" && user && (

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef } from "react";
+import { useLandingMotion } from "../lib/useLandingMotion.js";
 
 const FEATURES = [
   {
@@ -76,6 +76,8 @@ function LineIcon({ kind }) {
 }
 
 export function LandingPage({ user, onEnter, onViewSaved, onOpenMysteryWheel, onOpenDemoCookingMode, onRequestAuth }) {
+  const root = useRef(null);
+  useLandingMotion(root);
   const [quick1, setQuick1] = useState("Sweet corn");
   const [quick2, setQuick2] = useState("Garlic");
   const [quick3, setQuick3] = useState("Butter");
@@ -102,14 +104,9 @@ export function LandingPage({ user, onEnter, onViewSaved, onOpenMysteryWheel, on
   }
 
   return (
-    <div className="mise-landing">
+    <div ref={root} className="mise-landing">
       <section className="editorial-hero">
-        <motion.div
-          className="editorial-shell hero-layout"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.55 }}
-        >
+        <div className="editorial-shell hero-layout">
           <div className="hero-kicker">
             <span>AI culinary studio</span>
             <span>Est. 2026</span>
@@ -159,7 +156,7 @@ export function LandingPage({ user, onEnter, onViewSaved, onOpenMysteryWheel, on
               Make dinner <span aria-hidden="true">→</span>
             </button>
           </form>
-        </motion.div>
+        </div>
       </section>
 
       <section className="manifesto-section">
