@@ -1,6 +1,6 @@
 // Conservative screening, not allergen certification. Packaged-food labels and
 // cross-contact must still be checked by the person cooking.
-export const RESTRICTIONS = ['vegan', 'vegetarian', 'gluten-free', 'milk-free', 'egg-free', 'fish-free', 'shellfish-free', 'peanut-free', 'tree-nut-free', 'soy-free', 'sesame-free'];
+export const RESTRICTIONS = ['vegan', 'vegetarian', 'gluten-free', 'milk-free', 'egg-free', 'fish-free', 'shellfish-free', 'peanut-free', 'tree-nut-free', 'soy-free', 'sesame-free', 'pescatarian', 'halal', 'kosher'];
 const animal = /\b(chicken|turkey|duck|poultry|beef|veal|pork|bacon|ham|lamb|mutton|venison|gelatin|lard|tallow|anchov(?:y|ies)|fish|salmon|tuna|cod|trout|sardines?|shrimp|prawns?|crab|lobster|clam|mussel|oyster|scallop|squid|octopus)\b/i;
 const rules = {
   'milk-free': /\b(milk|butter|cream|cheese|yog[hu]+rt|ghee|whey|casein|curd|paneer|parmesan)\b/i,
@@ -22,12 +22,15 @@ function adjustedName(name, restriction) {
   return n;
 }
 export function ingredientConflict(name, restrictions, excluded = []) {
-  const n = name.normalize('NFKC');
+  const n = name.normalize('NFKC').replace(/\boyster mushrooms?\b/gi, 'mushroom');
   if (excluded.some(x => n.toLowerCase().includes(x.toLowerCase()))) return `Excluded ingredient: ${name}`;
   for (const restriction of restrictions) {
     const adjusted = adjustedName(n, restriction);
     const conflict = restriction === 'vegetarian' ? animal.test(n)
       : restriction === 'vegan' ? animal.test(n) || rules['milk-free'].test(adjusted) || rules['egg-free'].test(n) || /\bhoney\b/i.test(n)
+      : restriction === 'pescatarian' ? /\b(chicken|turkey|duck|poultry|beef|veal|pork|bacon|ham|lamb|mutton|venison|gelatin|lard|tallow)\b/i.test(n)
+      : restriction === 'halal' ? /\b(pork|bacon|ham|lard|wine|beer|rum|vodka|bourbon|whiskey|brandy)\b/i.test(n)
+      : restriction === 'kosher' ? /\b(pork|bacon|ham|lard)\b/i.test(n) || rules['shellfish-free'].test(n)
       : rules[restriction]?.test(adjusted);
     if (conflict) return `${name} conflicts with ${restriction}.`;
   }
@@ -39,12 +42,13 @@ export function reviewSafety(recipe, constraints) {
     const conflict = ingredientConflict(i.name, constraints.restrictions, constraints.excludedIngredients);
     if (conflict) throw new Error(conflict);
   }
-  const method = recipe.steps.map(s => s.text).join(' ');
+  if (constraints.restrictions.includes('kosher') && recipe.ingredients.some(i => /\b(chicken|turkey|duck|beef|veal|lamb)\b/i.test(i.name)) && recipe.ingredients.some(i => rules['milk-free'].test(adjustedName(i.name, 'milk-free')))) throw new Error('The recipe combines meat and dairy, conflicting with kosher requirements.');
+  const method = recipe.steps.map(s => s.text.replace(/\{ingredient:([^}]+)\}/g, (_, id) => recipe.ingredients.find(i => i.id === id)?.name || '')).join(' ');
   const hiddenConflict = ingredientConflict(method.replace(/\{ingredient:[^}]+\}/g, ''), constraints.restrictions, constraints.excludedIngredients);
   if (hiddenConflict) throw new Error('The method mentions an ingredient that conflicts with your restrictions.');
   if (/\b(?:wash|rinse)\b.{0,25}\b(?:raw )?(?:chicken|poultry|turkey)\b/i.test(method) ||
       /\bthaw\b.{0,50}\b(?:counter|room temperature)\b/i.test(method) ||
-      /\b(?:rare|undercooked|raw)\s+(?:chicken|poultry|turkey|pork|ground beef)\b/i.test(method)) throw new Error('The cooking method contains unsafe handling advice. Please regenerate.');
+      /\b(?:rare|undercooked)\s+(?:chicken|poultry|turkey|pork|ground beef)\b/i.test(method) || /\b(?:serve|eat|plate|taste)\b.{0,30}\braw\s+(?:chicken|poultry|turkey|pork|ground beef)\b/i.test(method)) throw new Error('The cooking method contains unsafe handling advice. Please regenerate.');
   const checks = [], safetyNotes = [];
   const names = recipe.ingredients.map(i => i.name).join(' ');
   const add = (pattern, note) => { if (pattern.test(names)) safetyNotes.push(note); };
@@ -56,9 +60,9 @@ export function reviewSafety(recipe, constraints) {
   add(/\b(leftover|cooked chicken|cooked rice)\b/i, 'Reheat leftovers to 74°C / 165°F internally. Refrigerate perishable food within 2 hours (1 hour above 32°C / 90°F).');
   if (animal.test(names)) safetyNotes.push('Keep raw animal foods separate from ready-to-eat food, and clean hands, utensils and surfaces after handling.');
   for (const note of safetyNotes) {
-    const minimum = note.match(/at least (\d+(?:\.\d+)?)°C/);
+    const minimum = note.match(/(\d+(?:\.\d+)?)°C/);
     if (minimum) {
-      for (const match of method.matchAll(/(?:internal(?:ly)?|center|centre).{0,20}?(\d+(?:\.\d+)?)\s*°?\s*([CF])\b/gi)) {
+      for (const match of method.matchAll(/(?:internal(?:ly)?|center|centre).{0,40}?(\d+(?:\.\d+)?)\s*(?:°|degrees?)?\s*([CF])\b/gi)) {
         const c = match[2].toUpperCase() === 'F' ? (Number(match[1]) - 32) * 5 / 9 : Number(match[1]);
         // Conservative: a lower internal endpoint is rejected, including ambiguous multi-protein dishes.
         if (c + 0.2 < Number(minimum[1])) throw new Error('The recipe specifies an insufficient internal cooking temperature.');
@@ -66,6 +70,7 @@ export function reviewSafety(recipe, constraints) {
     }
   }
   if (constraints.restrictions.length || constraints.excludedIngredients.length) {
+    if (constraints.restrictions.some(r => r === 'halal' || r === 'kosher')) checks.push('Confirm required halal or kosher certification, ingredient composition and preparation rules; food names do not establish religious compliance.');
     checks.push('Check every ingredient label and cross-contact information against your restrictions. The ingredient-name screen cannot certify allergy safety.');
     for (const i of recipe.ingredients) {
       if (/\b(sauce|paste|stock|broth|noodle|bread|pasta|mix|dressing|seasoning|miso|gochujang|pesto|chocolate|sausage|spread|flour)\b/i.test(i.name)) checks.push(`Confirm the full composition of ${i.name}; compound ingredients vary by brand.`);

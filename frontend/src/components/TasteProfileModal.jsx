@@ -11,7 +11,6 @@ const DIETARY_OPTIONS = [
   "Nut-Free",
   "High Protein",
   "Low Carb / Keto",
-  "Under 500 kcal",
   "Pescatarian",
   "Kid-Friendly",
 ];
@@ -40,7 +39,7 @@ const STAPLE_SUGGESTIONS = [
 
 export function TasteProfileModal({ isOpen, onClose, onSave }) {
   const currentUser = getCurrentUser();
-  const [selectedDiets, setSelectedDiets] = useState(currentUser?.dietaryPreferences || []);
+  const [selectedDiets, setSelectedDiets] = useState((currentUser?.dietaryPreferences || []).filter(p => DIETARY_OPTIONS.includes(p)));
   const [spice, setSpice] = useState(currentUser?.spicePreference || "Medium Balanced");
   const [staples, setStaples] = useState(currentUser?.kitchenStaples || ["Olive Oil", "Garlic", "Butter", "Flake Salt"]);
   const [newStaple, setNewStaple] = useState("");

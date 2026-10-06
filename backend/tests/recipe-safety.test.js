@@ -18,3 +18,23 @@ test('uncertain labels require confirmation and safety endpoints enter the rende
     r.steps[0].text = text; assert.throws(() => reviewSafety(r, DEFAULT_CONSTRAINTS));
   }
 });
+test('screens saved religious and pescatarian preferences without treating names as certification', () => {
+  assert.ok(ingredientConflict('chicken', ['pescatarian']));
+  assert.ok(ingredientConflict('pork', ['halal']));
+  assert.ok(ingredientConflict('shrimp', ['kosher']));
+  assert.equal(ingredientConflict('oyster mushrooms', ['vegetarian']), null);
+  const r = structuredClone(dinner);
+  r.ingredients[0].name = 'chicken';
+  assert.ok(reviewSafety(r, { ...DEFAULT_CONSTRAINTS, restrictions: ['halal'] }).labelChecks.some(note => /certification/.test(note)));
+  r.steps[0].text = 'Add butter while cooking.';
+  assert.throws(() => reviewSafety(r, { ...DEFAULT_CONSTRAINTS, restrictions: ['milk-free'] }), /method/);
+});
+test('resolves ingredient references before checking unsafe handling', () => {
+  const r = structuredClone(dinner); r.ingredients[0].name = 'chicken';
+  r.steps[0].text = 'Serve raw {ingredient:potato}.';
+  assert.throws(() => reviewSafety(r, DEFAULT_CONSTRAINTS), /unsafe/);
+  r.steps[0].text = 'Rinse {ingredient:potato} under the tap.';
+  assert.throws(() => reviewSafety(r, DEFAULT_CONSTRAINTS), /unsafe/);
+  r.steps[0].text = 'Cook {ingredient:potato} to an internal temperature of 60 degrees C.';
+  assert.throws(() => reviewSafety(r, DEFAULT_CONSTRAINTS), /insufficient/);
+});

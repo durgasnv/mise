@@ -56,6 +56,15 @@ const COOKING_STYLES = [
   "Bold & spicy",
 ];
 
+function profileRestrictions(preferences = []) {
+  return [...new Set(preferences.flatMap(value => {
+    const label = value.toLowerCase();
+    if (label === 'dairy-free') return ['milk-free'];
+    if (label === 'nut-free') return ['peanut-free', 'tree-nut-free'];
+    return RESTRICTIONS.includes(label) ? [label] : [];
+  }))];
+}
+
 export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
   const [mode, setMode] = useState("3"); // '3' | '5' | '7' | 'freeform'
   const [slots, setSlots] = useState(["", "", ""]);
@@ -72,7 +81,17 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
   const [equipment, setEquipment] = useState(['stovetop', 'skillet', 'pot']);
   const [staples, setStaples] = useState([]);
   const [strictPantry, setStrictPantry] = useState(true);
-  const [restrictions, setRestrictions] = useState([]);
+  const [restrictions, setRestrictions] = useState(() => profileRestrictions(getCurrentUser()?.dietaryPreferences));
+  const profileDietKey = useRef(JSON.stringify(getCurrentUser()?.dietaryPreferences || []));
+  useEffect(() => {
+    const update = () => {
+      const preferences = getCurrentUser()?.dietaryPreferences || [];
+      const key = JSON.stringify(preferences);
+      if (key !== profileDietKey.current) { setRestrictions(profileRestrictions(preferences)); profileDietKey.current = key; }
+    };
+    window.addEventListener('mise-auth-change', update);
+    return () => window.removeEventListener('mise-auth-change', update);
+  }, []);
   const [excluded, setExcluded] = useState("");
   const [amounts, setAmounts] = useState({});
   const pantryNames = (mode === 'freeform' ? freeformText.split(/[,;\n]+/) : slots).map(s => s.trim()).filter(Boolean);
@@ -131,7 +150,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
       list = slots.map((s) => s.trim()).filter(Boolean);
     }
 
-    if (list.length === 0 && !imagePreview) return;
+    if (list.length === 0) return;
 
     const stylePrompt = selectedStyle ? ` Prepared with a ${selectedStyle.replace(/^[^\w]+/, "")} technique.` : "";
     let notePrompt = dietaryNote.trim() ? ` Dietary note: ${dietaryNote.trim()}.` : "";
@@ -242,7 +261,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
   }
 
   const currentPresets = PRESETS_BY_COUNT[parseInt(mode, 10)] || PRESETS_BY_COUNT[3];
-  const hasAnyInput = Boolean(slots.some((s) => s.trim()) || freeformText.trim() || imagePreview);
+  const hasAnyInput = pantryNames.length > 0 && equipment.length > 0;
 
   return (
     <div className="ingredient-workbench bg-[#FFF8EC] rounded-loro-lg border border-[#E3CFB1] shadow-loro p-6 sm:p-8 relative">
@@ -370,7 +389,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
       )}
 
       <form onSubmit={handleSubmit} className="pantry-form mt-6 space-y-6">
-        <fieldset className="space-y-4 rounded-lg border border-[#E3CFB1] p-4">
+        <fieldset disabled={isLoading} className="space-y-4 rounded-lg border border-[#E3CFB1] p-4">
           <legend className="font-semibold">Your household & pantry</legend>
           <div className="flex flex-wrap gap-4">
             <label>Servings <input aria-label="Servings" className="w-16 border p-1" type="number" min="1" max="12" value={servings} onChange={e => setServings(Number(e.target.value))} /></label>
@@ -384,9 +403,9 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
           <p className="text-sm">Confirm staples you actually have</p>
           <div className="flex flex-wrap gap-3">{['salt', 'black pepper', 'olive oil', 'butter', 'garlic'].map(item => <label key={item}><input type="checkbox" checked={staples.includes(item)} onChange={() => toggleChoice(setStaples, item)} /> {item}</label>)}</div>
           <label className="block"><input type="checkbox" checked={strictPantry} onChange={e => setStrictPantry(e.target.checked)} /> Use only my confirmed pantry</label>
-          <p className="text-sm">Optional available amounts (leave blank to check before cooking). Enter ingredient names separately from amounts.</p>
+          <p className="text-sm">Optional available amounts (leave blank to check before cooking). Enter ingredient names separately from amounts. Cup = 240 ml; tbsp = 15 ml; tsp = 5 ml.</p>
           {[...new Set(pantryNames)].map(name => <div key={name} className="flex items-center gap-2 flex-wrap"><span className="min-w-24">{name}</span><input aria-label={`Available amount of ${name}`} className="w-24 border p-1" type="number" min="0.001" step="any" placeholder="Unknown" value={amounts[name]?.quantity || ''} onChange={e => setAmounts(a => ({ ...a, [name]: { ...a[name], quantity: e.target.value } }))} /><select aria-label={`Unit for ${name}`} className="border p-1" value={amounts[name]?.unit || 'count'} onChange={e => setAmounts(a => ({ ...a, [name]: { ...a[name], unit: e.target.value } }))}>{UNITS.map(u => <option key={u}>{u}</option>)}</select></div>)}
-          {imagePreview && <p className="text-sm">Photos help identify food; confirm the ingredient names and quantities above before cooking.</p>}
+          {imagePreview && <p className="text-sm">Confirm photo ingredients by entering their names below before requesting a dinner. Availability is checked against those names.</p>}
         </fieldset>
 
         {/* Slot-based input OR Freeform Box */}
