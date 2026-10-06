@@ -3,22 +3,65 @@
 ## 1. REST API Endpoints
 
 ### 1.1 `POST /api/generate-recipe`
-Generates top 3 distinct artisanal recipes from text ingredients or an uploaded fridge image.
+Returns one to three validated structured dinners. The browser ranks them by pantry fit and shows one recommendation first.
 
-* **Headers**: `Content-Type: application/json`
-* **Request Body**:
+Headers: `Content-Type: application/json`, `Authorization: Bearer <current Puter SDK token>`. The server verifies identity; demo profiles and legacy JWTs cannot authorize generation. MongoDB quotas apply before the provider call.
+
+Request:
+
 ```json
 {
-  "question": "Create 3 distinct elevated recipes using chicken thighs, sweet corn, garlic. Strict dietary preferences: High Protein.",
-  "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..." // Optional base64 photo
+  "question": "Recommend a dinner with potatoes.",
+  "constraints": {
+    "pantry": [{ "name": "potato", "quantity": 500, "unit": "g" }],
+    "staples": [],
+    "servings": 2,
+    "maxMinutes": 30,
+    "equipment": ["stovetop", "skillet"],
+    "strictPantry": true,
+    "restrictions": ["vegan"],
+    "excludedIngredients": []
+  }
 }
 ```
-* **Response (200 OK)**:
+
+`image` is optional embedded JPEG, PNG or WebP data (up to 2 MB). The browser requires typed confirmation of photo ingredients. Question text is bounded at 6,000 characters. Pantry quantities may be `null` when unknown; strict mode rejects known missing/insufficient food and exposes unknown quantity checks.
+
+Successful response:
+
 ```json
 {
-  "response": "# Smoked Garlic & Sweet Corn Sauté\n**Prep Time:** 15 mins | **Cook Time:** 10 mins...\n---RECIPE_DIVIDER---\n# Comforting Chicken & Corn Hearth Braised Bowl..."
+  "accountId": "puter:verified-account-id",
+  "recipes": [{
+    "title": "Skillet potatoes",
+    "servings": 2,
+    "prepMinutes": 5,
+    "cookMinutes": 15,
+    "equipment": ["stovetop", "skillet"],
+    "ingredients": [{
+      "id": "potato", "name": "potato", "quantity": 400,
+      "quantityMax": null, "unit": "g", "preparation": "diced", "packageSize": ""
+    }],
+    "steps": [{
+      "text": "Cook {ingredient:potato} in the skillet for 15 minutes, until tender.",
+      "ingredientIds": ["potato"]
+    }],
+    "chefNote": "Cut evenly."
+  }],
+  "reviews": [{ "missing": [], "quantityChecks": [], "labelChecks": [], "safetyNotes": [] }],
+  "constraints": { "pantry": [{ "name": "potato", "quantity": 500, "unit": "g" }], "staples": [], "servings": 2, "maxMinutes": 30, "equipment": ["stovetop", "skillet"], "strictPantry": true, "restrictions": ["vegan"], "excludedIngredients": [] }
 }
 ```
+
+Method amounts use `{ingredient:ID}` references. The UI scales those references together with numeric ingredient quantities. Ranges use `quantityMax`; fixed package labels use `packageSize`. Nutrition is not estimated. The live endpoint returns no Markdown `response` field. The shared schema and validators are in `shared/recipes.js`, `shared/pantry.js` and `shared/recipe-safety.js`.
+
+Units: `g`, `kg`, `ml`, `l`, `tsp`, `tbsp`, `cup`, `count`, `pack`. Equipment: `stovetop`, `skillet`, `pot`, `oven`, `microwave`, `air fryer`, `blender`, `grill`. Supported dietary codes are exported as `RESTRICTIONS` in `shared/recipe-safety.js`. Uncertain labels require confirmation; a successful response is not allergen certification.
+
+Adaptation uses the same endpoint and gates. Add `"action": "adapt"`, `"recipe": <one structured recipe>`, `"ingredientId": "potato"`, and `"replacement": { "name": "carrot", "quantity": 500, "unit": "g" }` to a request containing question and constraints. It returns exactly one complete revised recipe; the server derives the replacement pantry and validates the revision.
+
+Errors use `{ "code": "...", "error": "actionable message" }`: 400 invalid input/constraints/adaptation, 401 missing/invalid authentication, 403 temporary account, 413 oversized input, 429 admission/account/global quotas with `Retry-After`, 502 invalid or failed provider output, 503 missing provider/vision/quota configuration, 504 provider timeout. Failed attempts may consume reserved quota. Responses are not cached.
+
+Legacy password endpoints below are disabled unless explicitly configured with `ENABLE_LEGACY_AUTH=true` and a valid secret. Their tokens do not grant generation access.
 
 ---
 
