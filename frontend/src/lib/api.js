@@ -15,12 +15,12 @@ const API_BASE_URL = import.meta.env?.VITE_API_URL || "";
 export async function generateRecipeApi(question, image = null, constraints = undefined, adaptation = undefined) {
   const started = Date.now(), owner = cookbookOwner();
   const url = `${API_BASE_URL}/api/generate-recipe`;
-  const authorization = getGenerationAuthorization();
   const accountId = getCurrentUser()?.id;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 40000);
   try {
+    const authorization = getGenerationAuthorization();
     const response = await fetch(url, {
       method: "POST",
       headers: {
