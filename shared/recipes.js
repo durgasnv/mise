@@ -25,7 +25,7 @@ export function validateRecipes(value) {
     }
     if (schema.type === 'object') {
       if (!v || typeof v !== 'object' || Array.isArray(v)) throw new Error(`Invalid ${path}.`);
-      if (Object.keys(v).some(k => !(k in schema.properties))) throw new Error(`Unexpected field in ${path}.`);
+      if (Object.keys(v).some(k => !Object.hasOwn(schema.properties, k))) throw new Error(`Unexpected field in ${path}.`);
       for (const k of schema.required) validate(v[k], schema.properties[k], `${path}.${k}`);
     } else if (schema.type === 'array') {
       if (!Array.isArray(v) || v.length > 40) throw new Error(`Invalid ${path}.`);

@@ -18,3 +18,10 @@ test('rejects Markdown, partial data, duplicate IDs, unknown references and hidd
     assert.throws(() => validateRecipes({ recipes: [r] }));
   }
 });
+test('rejects undeclared fields even when they shadow Object prototype properties', () => {
+  for (const key of ['constructor', '__proto__', 'toString']) {
+    const r = structuredClone(dinner);
+    Object.defineProperty(r, key, { value: {}, enumerable: true });
+    assert.throws(() => validateRecipes({ recipes: [r] }), /Unexpected field/);
+  }
+});
