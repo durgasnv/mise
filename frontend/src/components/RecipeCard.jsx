@@ -1,3 +1,4 @@
+import { recipeText } from "../../../shared/recipe-export.js";
 import { recordMealEvent } from "../lib/mealActivity.js";
 import { cookbookOwner } from "../lib/savedRecipes.js";
 import { useState } from "react";
@@ -21,10 +22,10 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
   function startCooking() {
     const sessionId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
     setMealSession(sessionId); setMealFinished(false); setMealRating(''); setShopping('');
-    record('cookingStarted', { sessionId, recipeId: providedRecipe.id }); setShowCookingMode(true);
+    record('cookingStarted', { sessionId, recipeId: (adaptedRecipe || providedRecipe).id }); setShowCookingMode(true);
   }
   function completeMeal() {
-    record('mealCompleted', { sessionId: mealSession, recipeId: providedRecipe.id }); setMealFinished(true);
+    record('mealCompleted', { sessionId: mealSession, recipeId: (adaptedRecipe || providedRecipe).id }); setMealFinished(true);
   }
   const [saveError, setSaveError] = useState("");
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
@@ -42,7 +43,6 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
   const recipe = scaledRecipeView(baseRecipe, portionCount);
 
   const isSaved = isRecipeSaved(recipe.id, recipe.title);
-  const baseIngredients = baseRecipe.ingredients || [];
   const scaledIngredients = recipe.ingredients || [];
 
   function handleToggleSave() {
@@ -58,23 +58,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
   }
 
   function handleCopy() {
-    const text = `🍽️ ${recipe.title}
-Portions: ${portionCount} servings | Prep Time: ${recipe.prepTime} | Calories: ${recipe.calories || "Nutrition not calculated"}
-
-INGREDIENTS:
-${scaledIngredients.map((i) => `• ${i}`).join("\n")}
-
-INSTRUCTIONS:
-${recipe.instructions.map((step, idx) => `${idx + 1}. ${step}`).join("\n")}
-
-PAIRINGS:
-• Craft Drink: ${recipe.pairing || "Not provided"}
-• Quick Side: ${recipe.quickSide || "Not provided"}
-
-CHEF'S NOTE:
-${recipe.chefNote}
-
-— Crafted with Fridge2Feast (Artisanal AI Smokehouse)`;
+    const text = recipeText(recipe);
 
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -96,7 +80,7 @@ ${recipe.chefNote}
   }
 
   function applyIngredientSwap(adapted) {
-    setAdaptedRecipe(adapted);
+    setAdaptedRecipe(adapted); setMealFinished(false); setMealSession(null); setActivityMessage('');
     setPortionCount(adapted.basePortions);
     setCheckedIngredients({}); setCompletedSteps({}); setReviewConfirmed(false);
     setSwapTarget(null);
@@ -128,6 +112,7 @@ ${recipe.chefNote}
           {recipe.review.missing?.length > 0 && <p className="font-semibold">Missing or insufficient ingredients</p>}
           {[...(recipe.review.missing || []), ...(recipe.review.quantityChecks || []), ...(recipe.review.labelChecks || [])].map((note, i) => <p className="text-sm" key={i}>{note}</p>)}
           {[...(recipe.review.missing || []), ...(recipe.review.quantityChecks || []), ...(recipe.review.labelChecks || [])].length > 0 && <label className="block text-sm"><input type="checkbox" checked={reviewConfirmed} onChange={e => setReviewConfirmed(e.target.checked)} /> I checked quantities, obtained missing items, and verified ingredient labels for my restrictions.</label>}
+          {recipe.review.safetyNotes?.map((note, i) => <p key={`safety-${i}`} className="text-sm font-semibold">{note}</p>)}
           <p className="text-sm">Equipment: {recipe.structured?.equipment.join(', ')}</p>
         </section>}
         {/* Title Header & Portion Scaler Bar */}
@@ -339,7 +324,7 @@ ${recipe.chefNote}
           <h3 className="font-semibold">Meal recorded. How did it go?</h3>
           <label className="block">Rating <select className="border p-2" value={mealRating} onChange={e => setMealRating(e.target.value)}><option value="">Choose (optional)</option>{[1,2,3,4,5].map(n => <option key={n} value={n}>{n} / 5</option>)}</select></label>
           <label className="block">Needed extra ingredients? <select className="border p-2" value={shopping} onChange={e => setShopping(e.target.value)}><option value="">Choose (optional)</option><option value="no">No, used my pantry</option><option value="yes">Yes</option></select></label>
-          <button className="underline text-sm" onClick={() => { record('mealCompleted', { sessionId: mealSession, recipeId: providedRecipe.id, rating: mealRating ? Number(mealRating) : null, neededShopping: shopping ? shopping === 'yes' : null }); setActivityMessage('Feedback saved on this device.'); }}>Save feedback</button>
+          <button className="underline text-sm" onClick={() => { record('mealCompleted', { sessionId: mealSession, recipeId: (adaptedRecipe || providedRecipe).id, rating: mealRating ? Number(mealRating) : null, neededShopping: shopping ? shopping === 'yes' : null }); setActivityMessage('Feedback saved on this device.'); }}>Save feedback</button>
           <p className="text-xs">Activity stays in this account’s browser storage.</p>
         </section>}
         {activityMessage && <p role="status" className="text-sm">{activityMessage}</p>}

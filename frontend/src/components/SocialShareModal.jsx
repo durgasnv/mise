@@ -1,3 +1,4 @@
+import { recipeText } from "../../../shared/recipe-export.js";
 import { useRef, useEffect, useState } from "react";
 
 export function SocialShareModal({ recipe, onClose }) {
@@ -61,7 +62,7 @@ export function SocialShareModal({ recipe, onClose }) {
     y += 35;
     ctx.fillStyle = "#F2382F";
     ctx.font = "bold 14px IBM Plex Mono, monospace";
-    ctx.fillText(`⏱️ PREP: ${recipe.prepTime || "15m"}  •  👥 ${recipe.servings || "2 PORTIONS"}  •  🔥 FRESH HEARTH`, 400, y);
+    ctx.fillText(`⏱️ PREP: ${recipe.prepTime || "Not provided"}  •  👥 ${recipe.servings || "2 PORTIONS"}  •  🔥 FRESH HEARTH`, 400, y);
 
     // Divider Line
     y += 25;
@@ -116,14 +117,14 @@ export function SocialShareModal({ recipe, onClose }) {
 
     ctx.fillStyle = "#201B17";
     ctx.font = "italic 13px Bodoni Moda, serif";
-    const noteText = recipe.pairing ? `Drink: ${recipe.pairing}` : recipe.chefNote || "Serve hot with flaky salt.";
+    const noteText = recipe.pairing ? `Drink: ${recipe.pairing}` : recipe.chefNote || "Review the full recipe before cooking.";
     ctx.fillText(noteText.length > 75 ? noteText.substring(0, 72) + "..." : noteText, 80, y + 52);
 
     // Footer
     ctx.fillStyle = "#6D5545";
     ctx.font = "11px IBM Plex Mono, monospace";
     ctx.textAlign = "center";
-    ctx.fillText("Crafted with Fridge2Feast • Turn 3 Ingredients into a Feast", 400, 940);
+    ctx.fillText("Mise • Preview only; use the complete recipe for cooking", 400, 940);
 
     // Generate URL
     try {
@@ -139,15 +140,14 @@ export function SocialShareModal({ recipe, onClose }) {
       try {
         await navigator.share({
           title: recipe.title,
-          text: `Check out this recipe I crafted on Fridge2Feast: ${recipe.title}`,
-          url: window.location.href,
+          text: recipeText(recipe),
         });
       } catch (err) {
         console.warn("Share cancelled or failed:", err);
       }
     } else {
-      navigator.clipboard.writeText(`${recipe.title}\n${window.location.href}`);
-      alert("Recipe link copied to clipboard!");
+      navigator.clipboard.writeText(recipeText(recipe));
+      alert("Complete recipe copied to clipboard.");
     }
   }
 
@@ -177,6 +177,8 @@ export function SocialShareModal({ recipe, onClose }) {
           />
         </div>
 
+        <p className="text-sm">The image is a short preview. Download or share the complete recipe for all quantities, instructions, label checks and safety guidance.</p>
+        <a className="editorial-button block text-center" download="mise-recipe.txt" href={`data:text/plain;charset=utf-8,${encodeURIComponent(recipeText(recipe))}`}>Download complete recipe</a>
         {/* Action Buttons */}
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
@@ -192,7 +194,7 @@ export function SocialShareModal({ recipe, onClose }) {
               onClick={handleNativeShare}
               className="py-3 px-4 rounded-loro text-xs font-bold font-typewriter uppercase tracking-wider text-center text-[#201B17] bg-[#E3CFB1] hover:bg-[#e0d4c0] transition-all"
             >
-              🚀 Share Card
+              Share complete recipe
             </button>
           </div>
 

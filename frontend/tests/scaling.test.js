@@ -22,3 +22,10 @@ test('rechecks pantry after scaling and leaves legacy text intact', () => {
   const old = { ingredients: ['1 1/2 packs (400 g each)'], instructions: ['Cook at 200°C for 15 minutes.'] };
   assert.equal(scaledRecipeView(old, 4), old);
 });
+test('full export preserves every scaled amount, method step and label check', async () => {
+  const { recipeText } = await import('../../shared/recipe-export.js');
+  const view = scaledRecipeView(recipeView(dinner, { review: { labelChecks: ['Check product labels'], safetyNotes: ['Use a thermometer.'] } }), 4);
+  const text = recipeText(view);
+  assert.match(text, /800 g potato/); assert.match(text, /15 minutes/);
+  assert.match(text, /Check product labels/); assert.match(text, /Use a thermometer/);
+});
