@@ -1,3 +1,4 @@
+import { scaleNutrition } from "./nutrition.js";
 import { validateRecipes, recipeView } from './recipes.js';
 import { reviewPantry } from './pantry.js';
 import { reviewSafety } from './recipe-safety.js';
@@ -15,5 +16,5 @@ export function scaledRecipeView(saved, portions) {
   const structured = scaleStructuredRecipe(saved.structured, portions);
   const constraints = { ...saved.constraints, servings: portions, strictPantry: false };
   const review = saved.constraints ? { ...reviewPantry(structured, constraints), ...reviewSafety(structured, constraints) } : saved.review;
-  return recipeView(structured, { id: saved.id, constraints: saved.constraints, review });
+  return { ...recipeView(structured, { id: saved.id, constraints: saved.constraints, review }), revision: saved.revision, nutrition: scaleNutrition(saved.nutrition, saved.structured, structured) };
 }

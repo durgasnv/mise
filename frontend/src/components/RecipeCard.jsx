@@ -1,3 +1,4 @@
+import { NutritionPanel } from "./NutritionPanel.jsx";
 import { findCookingSession, createCookingSession, updateCookingSession } from "../lib/cookingProgress.js";
 import { RecipeEditor } from "./RecipeEditor.jsx";
 import { PantryDeduction } from "./PantryDeduction.jsx";
@@ -5,7 +6,7 @@ import { recipeText } from "../../../shared/recipe-export.js";
 import { recordMealEvent } from "../lib/mealActivity.js";
 import { cookbookOwner } from "../lib/savedRecipes.js";
 import { useState, useEffect } from "react";
-import { toggleSaveRecipe, isRecipeSaved } from "../lib/savedRecipes";
+import { toggleSaveRecipe, isRecipeSaved, saveRecipe } from "../lib/savedRecipes";
 import { scaledRecipeView } from "../../../shared/recipe-scaling.js";
 import { CookingModeModal } from "./CookingModeModal";
 import { SmartSwapModal } from "./SmartSwapModal";
@@ -36,6 +37,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
   function completeMeal() {
     if (record('mealCompleted', { sessionId: mealSession, recipeId: (adaptedRecipe || providedRecipe).id })) setMealFinished(true); else setActivityMessage('Your meal could not be recorded on this device.');
   }
+  const [nutrition, setNutrition] = useState(providedRecipe?.nutrition);
   const [showEditor, setShowEditor] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [reviewConfirmed, setReviewConfirmed] = useState(restored?.reviewConfirmed || false);
@@ -50,7 +52,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
 
   useEffect(() => { if (providedRecipe?.resumeCooking && restored?.phase === 'cooking') setShowCookingMode(true); }, []);
   if (!providedRecipe) return null;
-  const baseRecipe = adaptedRecipe || providedRecipe;
+  const baseRecipe = { ...(adaptedRecipe || providedRecipe), nutrition };
   const recipe = scaledRecipeView(baseRecipe, portionCount);
 
   const isSaved = isRecipeSaved(recipe.id, recipe.title);
@@ -89,6 +91,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
   }
 
   function applyIngredientSwap(adapted) {
+    setNutrition(undefined);
     setAdaptedRecipe(adapted); setMealFinished(false); setMealSession(null); setActivityMessage('');
     setPortionCount(adapted.basePortions);
     setCheckedIngredients({}); setCompletedSteps({}); setReviewConfirmed(false);
@@ -111,7 +114,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
           <span>•</span>
           <span>Cook {recipe.cookTime || "Not provided"}</span>
           <span>•</span>
-          <span>{recipe.calories || "Nutrition not calculated"}</span>
+          <span>{recipe.nutrition ? "USDA ingredient estimates" : "Nutrition not calculated"}</span>
         </div>
       </div>
 
@@ -342,6 +345,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
         </section>}
         {activityMessage && <p role="status" className="text-sm">{activityMessage}</p>}
         {saveError && <p role="alert" className="text-sm text-red-700">{saveError}</p>}
+        <NutritionPanel key={`${baseRecipe.id}-${baseRecipe.revision || 1}`} recipe={baseRecipe} nutrition={recipe.nutrition} onCalculated={setNutrition} onSaveNutrition={() => { try { saveRecipe(baseRecipe); setSaveError(""); onSaveChange?.(true); } catch(e) { setSaveError(e.message); } }} />
         {/* Bottom Action Toolbar */}
         <div className="recipe-toolbar no-print pt-6 border-t border-[#E3CFB1] flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">

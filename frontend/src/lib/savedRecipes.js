@@ -1,3 +1,4 @@
+import { validateNutrition } from '../../../shared/nutrition.js';
 import { validateRecipes } from "../../../shared/recipes.js";
 import { validateConstraints } from "../../../shared/pantry.js";
 import { getCurrentUser } from "./auth.js";
@@ -92,7 +93,7 @@ export function cookbookOwner() {
 export function cookbookKey(owner = cookbookOwner()) { return `mise_cookbook_v3:${encodeURIComponent(owner)}`; }
 export function validCookbookRecipe(r) {
   try {
-    if (r?.structured) { validateRecipes({ recipes: [r.structured] }); if (r.constraints) validateConstraints(r.constraints); }
+    if (r?.structured) { validateRecipes({ recipes: [r.structured] }); if (r.constraints) validateConstraints(r.constraints); if (r.nutrition) validateNutrition(r.nutrition, r.structured); }
     if (JSON.stringify(r).length > 100000) return false;
   } catch { return false; }
   return r && typeof r.id === 'string' && r.id.length <= 200 && typeof r.title === 'string' && r.title.length <= 200 &&
