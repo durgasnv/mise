@@ -1,3 +1,4 @@
+import { recordOperation } from '../lib/measurement-store.js';
 import { validateAdaptedRecipes } from "../../shared/recipe-adaptation.js";
 import { reviewSafety } from "../../shared/recipe-safety.js";
 import { reviewPantry } from "../../shared/pantry.js";
@@ -23,7 +24,8 @@ async function ensureDB() {
   return dbConnection;
 }
 
-export async function callGroq({ question, imageBase64, constraints, adaptation, conversion }, { env = process.env, fetchImpl = fetch } = {}) {
+export async function callGroq(input, { env = process.env, fetchImpl = fetch } = {}) {
+  const { question, imageBase64, constraints, adaptation, conversion } = input;
   if (!env.GROQ_API_KEY) {
     throw new GenerationError(503, "GENERATION_UNAVAILABLE", "Recipe generation is temporarily unavailable. Please try again later.");
   }
@@ -56,6 +58,7 @@ export async function callGroq({ question, imageBase64, constraints, adaptation,
       userContent = prompt;
     }
 
+    input.providerRequested = true;
     const response = await fetchImpl(GROQ_API_URL, {
       method: "POST",
       signal: controller.signal,
@@ -92,6 +95,7 @@ export async function callGroq({ question, imageBase64, constraints, adaptation,
       );
     }
 
+    if (Number.isSafeInteger(data?.usage?.prompt_tokens) && Number.isSafeInteger(data?.usage?.completion_tokens)) input.providerUsage = { model, promptTokens: data.usage.prompt_tokens, completionTokens: data.usage.completion_tokens };
     const content = data?.choices?.[0]?.message?.content;
     if (typeof content !== "string" || !content.trim() || data?.choices?.[0]?.finish_reason === "length") {
       throw new GenerationError(502, "INCOMPLETE_RESPONSE", "The recipe response was incomplete. Please try again.");
@@ -114,11 +118,12 @@ export async function callGroq({ question, imageBase64, constraints, adaptation,
 const admitRequest = createGenerationLimiter();
 
 async function saveQuery(question, response) {
+  if (process.env.SAVE_RECIPE_HISTORY !== "true") return;
   const db = await ensureDB();
   if (db) await Query.create({ question: question || "Image pantry query", response });
 }
 
-export function createGenerationHandler({ generate = callGroq, save = saveQuery, admit = admitRequest, authenticate = authenticateGeneration, reserveQuota = reserveGenerationQuota } = {}) {
+export function createGenerationHandler({ generate = callGroq, save = saveQuery, admit = admitRequest, authenticate = authenticateGeneration, reserveQuota = reserveGenerationQuota, observe = recordOperation } = {}) {
   return async function handler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -128,8 +133,10 @@ export function createGenerationHandler({ generate = callGroq, save = saveQuery,
     if (req.method === "OPTIONS") return res.status(204).end();
     if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
+    const started = Date.now();
+    let input, providerAttempt = false;
     try {
-      const input = validateGenerationBody(req.body);
+      input = validateGenerationBody(req.body);
       const admission = admit();
       if (!admission.allowed) {
         res.setHeader("Retry-After", String(admission.retryAfter));
@@ -137,14 +144,17 @@ export function createGenerationHandler({ generate = callGroq, save = saveQuery,
       }
       const identity = await authenticate(req);
       await reserveQuota(identity);
+      providerAttempt = true;
       const response = await generate(input);
       let recipes, reviews;
       try { recipes = validateRecipes(response); if (input.conversion && recipes.length !== 1) throw new Error('Expected one complete legacy conversion.'); if (input.adaptation) validateAdaptedRecipes(recipes, input.adaptation); reviews = recipes.map(r => ({ ...reviewPantry(r, input.constraints), ...reviewSafety(r, input.constraints) })); }
       catch (error) { throw new GenerationError(502, "INVALID_RECIPE", error.message); }
       // Logging failure must not replace a successful generation with an error.
       await save(input.question, response).catch(() => console.warn("Recipe history could not be saved."));
+      await observe({ usage: input.providerUsage, durationMs: Date.now() - started, outcome: "success", code: null }).catch(() => console.warn("Operating metrics could not be saved."));
       return res.status(200).json({ recipes, reviews, constraints: input.constraints, accountId: identity.id });
     } catch (error) {
+      if (providerAttempt && input?.providerRequested) await observe({ usage: input?.providerUsage, durationMs: Date.now() - started, outcome: "failed", code: error.code || "INTERNAL_ERROR" }).catch(() => console.warn("Operating metrics could not be saved."));
       const knownError = error instanceof GenerationError;
       const status = knownError ? error.status : 500;
       if (status === 429) res.setHeader("Retry-After", String(error.retryAfter || 60));

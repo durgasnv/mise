@@ -1,0 +1,23 @@
+import { useState, useEffect } from 'react';
+import { measurementSettings, setMeasurementConsent, syncMeasurements } from '../lib/measurements.js';
+import { accountRequest } from '../lib/accountApi.js';
+import { mealEvents, mealSummary } from '../lib/mealActivity.js';
+export function MeasurementsPage({ onBack }) {
+  const [settings,setSettings] = useState(() => { try { return measurementSettings(); } catch { return null; } });
+  const [summary,setSummary] = useState(null), [operations,setOperations] = useState(null), [error,setError] = useState(''), [busy,setBusy] = useState(false);
+  let local; try { local = mealSummary(mealEvents()); } catch { local = null; }
+  useEffect(() => { const update = () => { try { setSettings(measurementSettings()); } catch { setError('Measurement settings are unreadable and preserved.'); } }; window.addEventListener('mise-measurements_v1-change',update); return () => window.removeEventListener('mise-measurements_v1-change',update); },[]);
+  async function consent(enabled) { setBusy(true); setError(''); try { await setMeasurementConsent(enabled); setSummary(null); setOperations(null); } catch(e) { setError(e.message + (!enabled ? ' Sharing is stopped on this device; deletion will retry when connected.' : '')); } finally { try { setSettings(measurementSettings()); } catch {} setBusy(false); } }
+  async function refresh(admin = false) { setBusy(true); setError(''); try { await syncMeasurements(); const result = await accountRequest('measurements',{ action: admin ? 'admin' : 'summary' }); setSummary(result.summary); setOperations(result.operations || null); } catch(e) { setError(e.message); } finally { setBusy(false); } }
+  return <main className="app-shell max-w-4xl mx-auto px-4 py-8 space-y-6">
+    <button onClick={onBack}>← Back to kitchen</button><h1 className="font-display text-4xl">Meal activity & privacy</h1>
+    <p>Your local meal journal helps you track cooking. Optional sharing sends event counts, cooking dates, ratings, shopping answers and request duration to Mise for 90 days. It excludes recipe text, ingredients, names and emails. Events are associated with a hashed account identifier.</p>
+    <p>Sharing starts with new activity after you opt in. Turning it off clears the device queue and requests deletion of your shared events. Operational request totals and token usage are recorded separately without account identifiers.</p>
+    <div className="flex flex-wrap gap-3"><button className="editorial-button" disabled={busy || !settings} onClick={() => consent(!settings.enabled)}>{settings?.enabled ? 'Stop sharing & delete shared activity' : 'Opt in to share activity'}</button><button className="editorial-button" disabled={busy || !settings} onClick={() => refresh()}>Refresh my shared summary</button></div>
+    <p>Sharing: {settings?.enabled ? 'enabled' : 'off'} · Pending events: {settings?.queue.length || 0}{settings?.withdrawalPending && ' · Server deletion pending'}</p>
+    {error && <p role="alert">{error}</p>}
+    {local && <section className="paper-card p-5"><h2 className="font-display text-2xl">On this device · last 30 days</h2><p>{local.completedMeals} confirmed dinners · {local.repeatCookingDays} return cooking days · {local.noShoppingMeals} dinners needing no extra shopping.</p></section>}
+    {summary && <section className="paper-card p-5 space-y-2"><h2 className="font-display text-2xl">Shared activity · last 30 days</h2><p>{summary.completedMeals} confirmed dinners · {summary.repeatCookingDays} return cooking days · {summary.generationFailures} generation failures · {summary.generated} successful requests.</p><p>{summary.noShoppingMeals} dinners needing no extra shopping · {summary.shoppingMeals} needing purchases ({summary.shoppingAnswered} answered) · average rating {summary.averageRating ?? 'not rated'} · average request time {summary.averageRequestMs == null ? 'unavailable' : `${(summary.averageRequestMs/1000).toFixed(1)} seconds`}.</p></section>}
+    <details><summary>Operator measurements</summary><p>Configured operators can view aggregate activity from consenting accounts and request costs. Unpriced attempts are listed separately; estimates are based on configured model rates.</p><button disabled={busy} onClick={() => refresh(true)} className="editorial-button">Load operator summary</button>{operations && <p>{operations.attempts} provider attempts · {operations.failures} failures · {operations.promptTokens} input and {operations.completionTokens} output tokens · estimated priced cost ${operations.estimatedCostUsd.toFixed(4)} · {operations.unpricedAttempts} unpriced attempts.</p>}</details>
+  </main>;
+}

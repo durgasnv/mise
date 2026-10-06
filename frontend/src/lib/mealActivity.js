@@ -1,3 +1,4 @@
+import { queueMeasurement } from './measurements.js';
 import { cookbookOwner } from './savedRecipes.js';
 const key = owner => `mise_meals_v1:${encodeURIComponent(owner)}`;
 export function mealEvents(owner = cookbookOwner()) {
@@ -18,6 +19,7 @@ export function recordMealEvent(type, { sessionId, recipeId, rating = null, need
     else events.push({ type, sessionId, recipeId, at, rating, neededShopping });
   } else events.push({ type, sessionId, recipeId, at });
   localStorage.setItem(key(owner), JSON.stringify(events));
+  if (type !== 'generated') queueMeasurement(type, { at: type === "mealCompleted" ? events.find(e => e.type === type && e.sessionId === sessionId)?.at : at, rating, neededShopping, ...(type === 'mealCompleted' ? { eventId: `meal:${sessionId}` } : {}) },owner);
   window.dispatchEvent(new Event('mise-meal-activity'));
   return true;
 }

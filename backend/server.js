@@ -1,3 +1,4 @@
+import measurements from './api/measurements.js';
 import nutrition from "./api/nutrition.js";
 import http from "node:http";
 import dotenv from "dotenv";
@@ -39,7 +40,8 @@ const server = http.createServer(async (req, res) => {
 
   if (normalizedPath === "/api/generate-recipe") {
     handler = generateRecipe;
-
+  } else if (normalizedPath === "/api/measurements") {
+    handler = measurements;
   } else if (normalizedPath === "/api/nutrition") {
     handler = nutrition;
   } else if (normalizedPath === "/api/health" || normalizedPath === "/api/") {

@@ -1,3 +1,5 @@
+import { MeasurementsPage } from './pages/MeasurementsPage.jsx';
+import { startMeasurementSync } from './lib/measurements.js';
 import { MealPlanPage } from "./pages/MealPlanPage.jsx";
 import { PantryPage } from "./pages/PantryPage.jsx";
 import { startCookbookSync } from "./lib/cookbookSync.js";
@@ -31,6 +33,7 @@ export default function App() {
   const [prefilledIngredients, setPrefilledIngredients] = useState(null);
 
   useEffect(() => startCookbookSync(), []);
+  useEffect(() => startMeasurementSync(), []);
 
   useEffect(() => {
     function handleAuthChange(e) {
@@ -143,12 +146,14 @@ export default function App() {
                   onViewSaved={() => handleNavigate("saved")}
                   onViewPantry={() => handleNavigate("pantry")}
                   onViewPlan={() => handleNavigate("plan")}
+                  onViewMeasurements={() => handleNavigate("measurements")}
                   onOpenRecipe={openSavedRecipe}
                   initialIngredients={prefilledIngredients}
                   onRequestAuth={(msg) => { setAuthPromptMessage(msg); setShowAuthModal(true); }}
                 />
               </motion.div>
             )}
+            {view === "measurements" && user && <motion.div key="measurements" variants={pageVariants} initial="hidden" animate="show" exit="exit"><MeasurementsPage key={user.id} onBack={() => handleNavigate("ask")} /></motion.div>}
             {view === "plan" && user && <motion.div key="plan" variants={pageVariants} initial="hidden" animate="show" exit="exit"><MealPlanPage key={user.id} onBack={() => handleNavigate('ask')} onOpenRecipe={openSavedRecipe} /></motion.div>}
             {view === "pantry" && user && <motion.div key="pantry" variants={pageVariants} initial="hidden" animate="show" exit="exit"><PantryPage key={user.id} onBack={() => handleNavigate('ask')} /></motion.div>}
             {view === "saved" && user && (
