@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+const API_BASE_URL = import.meta.env?.VITE_API_URL || "";
 
 /**
  * Calls the recipe generation endpoint with ingredients or a cooking question.
@@ -8,25 +8,37 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 export async function generateRecipeApi(question, image = null) {
   const url = `${API_BASE_URL}/api/generate-recipe`;
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ question, image }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 40000);
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ question, image }),
+      signal: controller.signal,
+    });
 
-  const data = await response.json().catch(() => null);
+    const data = await response.json().catch(() => null);
 
-  if (!response.ok) {
-    throw new Error(data?.error || `Server responded with status ${response.status}`);
+    if (!response.ok) {
+      throw new Error(typeof data?.error === "string" ? data.error : "We could not generate recipes right now. Please try again.");
+    }
+
+    if (typeof data?.response !== "string" || !data.response.trim()) {
+      throw new Error("No recipe response received from the kitchen. Please try again.");
+    }
+
+    return data.response;
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("Recipe generation took too long. Please try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  if (!data?.response) {
-    throw new Error("No recipe response received from the kitchen.");
-  }
-
-  return data.response;
 }
 
 /**
