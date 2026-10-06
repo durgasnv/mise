@@ -153,4 +153,3 @@ export async function updateTastePreferences(preferences) {
 
   return updatedUser;
 }
-
