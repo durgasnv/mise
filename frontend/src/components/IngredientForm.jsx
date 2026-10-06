@@ -1,3 +1,5 @@
+import { useVoiceInput } from '../lib/useVoiceInput.js';
+import { spokenIngredients, appendVoiceIngredients } from '../lib/voice.js';
 import { activePantry, getPantry, saveFormPantry } from "../lib/pantryInventory.js";
 import { cookbookOwner } from "../lib/savedRecipes.js";
 import { RESTRICTIONS } from "../../../shared/recipe-safety.js";
@@ -79,7 +81,19 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showWheelModal, setShowWheelModal] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
-  const [isListening, setIsListening] = useState(false);
+  const voiceValues = useRef({ mode, slots, freeformText });
+  voiceValues.current = { mode, slots, freeformText };
+  const voice = useVoiceInput(transcript => {
+    if (cookbookOwner() !== inventoryOwner) throw new Error('Your account changed. Reopen the kitchen before using voice input.');
+    const incoming = spokenIngredients(transcript);
+    const values = voiceValues.current;
+    const existing = values.mode === 'freeform' ? values.freeformText.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean) : values.slots;
+    const { items, added } = appendVoiceIngredients(existing, incoming);
+    if (values.mode === 'freeform') { const text = items.filter(Boolean).join(', '); voiceValues.current.freeformText = text; setFreeformText(text); }
+    else { voiceValues.current.slots = items; setSlots(items); }
+    return added ? `Added ${added} ingredient${added === 1 ? '' : 's'}. Review the names before generating a recipe.` : 'Those ingredients are already in your list. Review the names before generating a recipe.';
+  }, { disabled: isLoading, context: mode });
+  const isListening = voice.isListening;
   const fileInputRef = useRef(null);
   const [servings, setServings] = useState(2);
   const [maxMinutes, setMaxMinutes] = useState(30);
@@ -190,46 +204,6 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
     reader.readAsDataURL(file);
   }
 
-  function handleVoiceInput() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Voice recognition is not supported in this browser. Try Chrome or Safari.");
-      return;
-    }
-
-    if (isListening) return;
-
-    try {
-      const recognition = new SpeechRecognition();
-      recognition.lang = "en-US";
-      recognition.interimResults = false;
-
-      recognition.onstart = () => setIsListening(true);
-      recognition.onend = () => setIsListening(false);
-      recognition.onerror = () => setIsListening(false);
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        const parts = transcript
-          .replace(/I have|I've got|and|with|some/gi, ",")
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
-
-        if (mode === "freeform") {
-          setFreeformText(parts.join(", "));
-        } else {
-          setSlots(parts.slice(0, slots.length));
-        }
-      };
-
-      recognition.start();
-    } catch (err) {
-      console.warn("Speech error:", err);
-      setIsListening(false);
-    }
-  }
-
   function applyPreset(preset) {
     setSlots(preset.items);
     if (preset.items.length === 3) setMode("3");
@@ -290,7 +264,9 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
           {/* Voice input */}
           <button
             type="button"
-            onClick={handleVoiceInput}
+            onClick={voice.toggle}
+            disabled={isLoading}
+            aria-describedby="voice-input-feedback"
             aria-pressed={isListening}
             className={`px-3 py-1.5 rounded-lg text-xs font-typewriter font-bold border transition-all flex items-center gap-1.5 ${
               isListening
@@ -299,7 +275,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
             }`}
             title="Speak your ingredients"
           >
-            <span>{isListening ? "Listening…" : "Use voice"}</span>
+            <span>{isListening ? "Stop listening" : "Use voice"}</span>
           </button>
 
           {/* Photo upload */}
@@ -338,6 +314,9 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
         </div>
       </div>
 
+      <div id="voice-input-feedback" className="pt-3 text-sm">
+        {voice.error ? <p role="alert">{voice.error}</p> : voice.message ? <p role="status">{voice.message}</p> : null}
+      </div>
       {/* Ingredient Count Mode Tabs: 3 Items, 5 Items, 7 Items, Freeform */}
       <div className="mode-selector pt-6 pb-2">
         <label className="block text-xs font-typewriter font-bold tracking-wider text-[#201B17] uppercase mb-2">
