@@ -42,4 +42,3 @@ test("provider outages and malformed identities fail closed without leaking toke
     await assert.rejects(authenticateGeneration(request(), { fetchImpl }), (error) => error.status === 503 && !error.message.includes("sdk-token"));
   }
 });
-
