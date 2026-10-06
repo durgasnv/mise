@@ -3,7 +3,7 @@ export const EQUIPMENT = ['stovetop', 'skillet', 'pot', 'oven', 'microwave', 'ai
 export const UNITS = ['g', 'kg', 'ml', 'l', 'tsp', 'tbsp', 'cup', 'count', 'pack'];
 export function canonicalName(name) {
   return name.toLowerCase().normalize('NFKC').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim()
-    .split(' ').map(w => ({ potatoes: 'potato', tomatoes: 'tomato', eggs: 'egg', mushrooms: 'mushroom', thighs: 'thigh', cloves: 'clove', noodles: 'noodle' }[w] || w)).join(' ');
+    .split(' ').map(w => { const aliases = { potatoes: 'potato', tomatoes: 'tomato', eggs: 'egg', mushrooms: 'mushroom', thighs: 'thigh', cloves: 'clove', noodles: 'noodle' }; return Object.hasOwn(aliases, w) ? aliases[w] : w; }).join(' ');
 }
 export const DEFAULT_CONSTRAINTS = { pantry: [], staples: [], servings: 2, maxMinutes: 60, equipment: [...EQUIPMENT], strictPantry: false, restrictions: [], excludedIngredients: [] };
 export function validateConstraints(raw = DEFAULT_CONSTRAINTS) {
@@ -32,7 +32,7 @@ export function validateConstraints(raw = DEFAULT_CONSTRAINTS) {
   return c;
 }
 const factors = { g: ['mass', 1], kg: ['mass', 1000], ml: ['volume', 1], l: ['volume', 1000], tsp: ['volume', 5], tbsp: ['volume', 15], cup: ['volume', 240], count: ['count', 1], pack: ['pack', 1] };
-function comparable(quantity, unit, otherUnit) {
+export function comparable(quantity, unit, otherUnit) {
   const from = factors[unit.toLowerCase()], to = factors[otherUnit.toLowerCase()];
   return from && to && from[0] === to[0] ? quantity * from[1] / to[1] : null;
 }

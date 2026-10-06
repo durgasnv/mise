@@ -31,7 +31,7 @@ const LOADING_MESSAGES = [
   "Finishing with pitmaster tasting notes...",
 ];
 
-export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAuth }) {
+export function HomePage({ onBack, onViewSaved, onViewPantry, initialIngredients, onRequestAuth }) {
   const [isLoading, setIsLoading] = useState(false);
   const [recipes, setRecipes] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
@@ -117,6 +117,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAut
           <h1>What are we<br /><em>working with?</em></h1>
           <p>Name what you have. Mise will recommend a dinner that fits, with alternatives when useful.</p>
         </header>
+        {onViewPantry && <button className="editorial-button" onClick={onViewPantry}>Manage pantry</button>}
         {/* Top Grid: Form + Kitchen Tips */}
         <div className="kitchen-grid grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Main Ingredient Form (8 cols) */}

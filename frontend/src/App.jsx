@@ -1,3 +1,4 @@
+import { PantryPage } from "./pages/PantryPage.jsx";
 import { startCookbookSync } from "./lib/cookbookSync.js";
 import { useState, useEffect } from "react";
 import { motion, MotionConfig, AnimatePresence } from "framer-motion";
@@ -57,7 +58,7 @@ export default function App() {
   }
 
   function handleNavigate(targetView, options = {}) {
-    if (targetView === "ask" || targetView === "saved" || targetView === "saved-recipe") {
+    if (["ask", "saved", "saved-recipe", "pantry", "plan", "measurements"].includes(targetView)) {
       requireAuth(() => {
         if (options.quickItems) {
           setPrefilledIngredients(options.quickItems);
@@ -139,11 +140,13 @@ export default function App() {
                   user={user}
                   onBack={() => handleNavigate("landing")}
                   onViewSaved={() => handleNavigate("saved")}
+                  onViewPantry={() => handleNavigate("pantry")}
                   initialIngredients={prefilledIngredients}
                   onRequestAuth={(msg) => { setAuthPromptMessage(msg); setShowAuthModal(true); }}
                 />
               </motion.div>
             )}
+            {view === "pantry" && user && <motion.div key="pantry" variants={pageVariants} initial="hidden" animate="show" exit="exit"><PantryPage key={user.id} onBack={() => handleNavigate('ask')} /></motion.div>}
             {view === "saved" && user && (
               <motion.div key="saved" variants={pageVariants} initial="hidden" animate="show" exit="exit">
                 <SavedPage key={user?.id || "guest"}

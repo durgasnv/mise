@@ -1,3 +1,4 @@
+import { PantryDeduction } from "./PantryDeduction.jsx";
 import { recipeText } from "../../../shared/recipe-export.js";
 import { recordMealEvent } from "../lib/mealActivity.js";
 import { cookbookOwner } from "../lib/savedRecipes.js";
@@ -322,6 +323,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
 
         {mealFinished && <section className="border p-4 space-y-3" aria-label="Meal feedback">
           <h3 className="font-semibold">Meal recorded. How did it go?</h3>
+          <PantryDeduction key={mealSession} recipe={recipe} sessionId={mealSession} owner={activityOwner} />
           <label className="block">Rating <select className="border p-2" value={mealRating} onChange={e => setMealRating(e.target.value)}><option value="">Choose (optional)</option>{[1,2,3,4,5].map(n => <option key={n} value={n}>{n} / 5</option>)}</select></label>
           <label className="block">Needed extra ingredients? <select className="border p-2" value={shopping} onChange={e => setShopping(e.target.value)}><option value="">Choose (optional)</option><option value="no">No, used my pantry</option><option value="yes">Yes</option></select></label>
           <button className="underline text-sm" onClick={() => { record('mealCompleted', { sessionId: mealSession, recipeId: (adaptedRecipe || providedRecipe).id, rating: mealRating ? Number(mealRating) : null, neededShopping: shopping ? shopping === 'yes' : null }); setActivityMessage('Feedback saved on this device.'); }}>Save feedback</button>

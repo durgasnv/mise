@@ -1,3 +1,5 @@
+import { activePantry, getPantry, saveFormPantry } from "../lib/pantryInventory.js";
+import { cookbookOwner } from "../lib/savedRecipes.js";
 import { RESTRICTIONS } from "../../../shared/recipe-safety.js";
 import { EQUIPMENT, UNITS, canonicalName } from "../../../shared/pantry.js";
 import { useState, useRef, useEffect } from "react";
@@ -66,9 +68,12 @@ function profileRestrictions(preferences = []) {
 }
 
 export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
-  const [mode, setMode] = useState("3"); // '3' | '5' | '7' | 'freeform'
+  const [inventoryOwner] = useState(cookbookOwner);
+  const [pantryMessage, setPantryMessage] = useState('');
+  function inventory() { try { return activePantry(inventoryOwner); } catch { return []; } }
+  const [mode, setMode] = useState(() => inventory().length ? 'freeform' : '3'); // '3' | '5' | '7' | 'freeform'
   const [slots, setSlots] = useState(["", "", ""]);
-  const [freeformText, setFreeformText] = useState("");
+  const [freeformText, setFreeformText] = useState(() => inventory().map(i => i.name).join(", "));
   const [selectedStyle, setSelectedStyle] = useState(COOKING_STYLES[0]);
   const [dietaryNote, setDietaryNote] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -79,7 +84,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
   const [servings, setServings] = useState(2);
   const [maxMinutes, setMaxMinutes] = useState(30);
   const [equipment, setEquipment] = useState(['stovetop', 'skillet', 'pot']);
-  const [staples, setStaples] = useState([]);
+  const [staples, setStaples] = useState(() => { try { return getPantry(inventoryOwner).staples; } catch { return []; } });
   const [strictPantry, setStrictPantry] = useState(true);
   const [restrictions, setRestrictions] = useState(() => profileRestrictions(getCurrentUser()?.dietaryPreferences));
   const profileDietKey = useRef(JSON.stringify(getCurrentUser()?.dietaryPreferences || []));
@@ -93,7 +98,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
     return () => window.removeEventListener('mise-auth-change', update);
   }, []);
   const [excluded, setExcluded] = useState("");
-  const [amounts, setAmounts] = useState({});
+  const [amounts, setAmounts] = useState(() => Object.fromEntries(inventory().map(i => [i.name, { quantity: i.quantity === null ? '' : String(i.quantity), unit: i.unit }])));
   const pantryNames = (mode === 'freeform' ? freeformText.split(/[,;\n]+/) : slots).map(s => s.trim()).filter(Boolean);
   function toggleChoice(set, value) { set(previous => previous.includes(value) ? previous.filter(x => x !== value) : [...previous, value]); }
 
@@ -391,6 +396,13 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
       <form onSubmit={handleSubmit} className="pantry-form mt-6 space-y-6">
         <fieldset disabled={isLoading} className="space-y-4 rounded-lg border border-[#E3CFB1] p-4">
           <legend className="font-semibold">Your household & pantry</legend>
+          <button type="button" className="underline text-sm" onClick={() => {
+            try {
+              const items = [...new Map(pantryNames.map(name => [canonicalName(name), { name, quantity: amounts[name]?.quantity ? Number(amounts[name].quantity) : null, unit: amounts[name]?.unit || 'count' }])).values()];
+              saveFormPantry(items, staples, inventoryOwner); setPantryMessage('Pantry saved for this account on this device.');
+            } catch (e) { setPantryMessage(e.message); }
+          }}>Save these ingredients & staples to my pantry</button>
+          {pantryMessage && <p role="status" className="text-sm">{pantryMessage}</p>}
           <div className="flex flex-wrap gap-4">
             <label>Servings <input aria-label="Servings" className="w-16 border p-1" type="number" min="1" max="12" value={servings} onChange={e => setServings(Number(e.target.value))} /></label>
             <label>Minutes available <input className="w-20 border p-1" type="number" min="5" max="1440" value={maxMinutes} onChange={e => setMaxMinutes(Number(e.target.value))} /></label>
