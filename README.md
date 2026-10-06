@@ -32,7 +32,7 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
-The frontend normally runs at `http://localhost:5173`; the backend uses port 5000. `VITE_API_URL` selects the API origin at build/dev time.
+The frontend normally runs at `http://localhost:5173`; the backend uses port 5000. Keep both terminals running. Leave `VITE_API_URL` empty for local development: Vite proxies same-origin `/api` requests to the backend. Set an HTTPS API origin at build time only if the deployed API is hosted separately. Recipe generation also requires Puter sign-in, a server Groq key and `MONGODB_URI` for shared account limits.
 
 Backend configuration:
 
