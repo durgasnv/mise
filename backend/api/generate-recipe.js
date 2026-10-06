@@ -23,7 +23,7 @@ async function ensureDB() {
   return dbConnection;
 }
 
-export async function callGroq({ question, imageBase64, constraints, adaptation }, { env = process.env, fetchImpl = fetch } = {}) {
+export async function callGroq({ question, imageBase64, constraints, adaptation, conversion }, { env = process.env, fetchImpl = fetch } = {}) {
   if (!env.GROQ_API_KEY) {
     throw new GenerationError(503, "GENERATION_UNAVAILABLE", "Recipe generation is temporarily unavailable. Please try again later.");
   }
@@ -37,7 +37,7 @@ export async function callGroq({ question, imageBase64, constraints, adaptation 
   const timeout = setTimeout(() => controller.abort(), GROQ_TIMEOUT_MS);
 
   try {
-    const prompt = JSON.stringify({ request: question, constraints, adaptation, task: adaptation ? 'Return exactly ONE complete revised recipe. Replace the selected ingredient, adapting amounts, preparation, technique, cooking time and safety endpoints to its culinary function. Use the confirmed replacement and remove the original. Do not merely rename it.' : 'Create one to three distinct dinners.' });
+    const prompt = JSON.stringify({ request: question, constraints, adaptation, conversion, task: conversion ? 'Return exactly ONE structured conversion of the supplied legacy recipe. Preserve its ingredients and intended dish; repair unsafe handling and supply explicit safe cooking endpoints. Do not invent extra food. The user will review the full proposed conversion before saving it.' : adaptation ? 'Return exactly ONE complete revised recipe. Replace the selected ingredient, adapting amounts, preparation, technique, cooking time and safety endpoints to its culinary function. Use the confirmed replacement and remove the original. Do not merely rename it.' : 'Create one to three distinct dinners.' });
     let userContent;
     if (isVision) {
       userContent = [
@@ -139,7 +139,7 @@ export function createGenerationHandler({ generate = callGroq, save = saveQuery,
       await reserveQuota(identity);
       const response = await generate(input);
       let recipes, reviews;
-      try { recipes = validateRecipes(response); if (input.adaptation) validateAdaptedRecipes(recipes, input.adaptation); reviews = recipes.map(r => ({ ...reviewPantry(r, input.constraints), ...reviewSafety(r, input.constraints) })); }
+      try { recipes = validateRecipes(response); if (input.conversion && recipes.length !== 1) throw new Error('Expected one complete legacy conversion.'); if (input.adaptation) validateAdaptedRecipes(recipes, input.adaptation); reviews = recipes.map(r => ({ ...reviewPantry(r, input.constraints), ...reviewSafety(r, input.constraints) })); }
       catch (error) { throw new GenerationError(502, "INVALID_RECIPE", error.message); }
       // Logging failure must not replace a successful generation with an error.
       await save(input.question, response).catch(() => console.warn("Recipe history could not be saved."));

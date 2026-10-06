@@ -1,3 +1,4 @@
+import { validateLegacyRecipe } from "../../shared/recipe-editing.js";
 import { prepareAdaptation } from "../../shared/recipe-adaptation.js";
 import { validateConstraints } from "../../shared/pantry.js";
 export const MAX_QUESTION_LENGTH = 6000;
@@ -66,7 +67,11 @@ export function validateGenerationBody(rawBody) {
   let constraints;
   try { constraints = validateConstraints(body.constraints); }
   catch (error) { throw new GenerationError(400, "INVALID_CONSTRAINTS", error.message); }
-  if (body.action !== undefined && !['generate', 'adapt'].includes(body.action)) throw new GenerationError(400, "INVALID_INPUT", "Unknown recipe action.");
+  if (body.action !== undefined && !['generate', 'adapt', 'convert'].includes(body.action)) throw new GenerationError(400, "INVALID_INPUT", "Unknown recipe action.");
+  if (body.action === 'convert') {
+    try { if (image) throw new Error('Legacy conversion uses recipe text.'); return { question, imageBase64: null, constraints, conversion: validateLegacyRecipe(body.legacy) }; }
+    catch (e) { throw new GenerationError(400, 'INVALID_CONVERSION', e.message); }
+  }
   if (body.action === 'adapt') {
     try {
       if (!body.constraints || image) throw new Error('Adaptation needs a confirmed pantry and a structured recipe.');

@@ -1,3 +1,4 @@
+import { RecipeEditor } from "./RecipeEditor.jsx";
 import { PantryDeduction } from "./PantryDeduction.jsx";
 import { recipeText } from "../../../shared/recipe-export.js";
 import { recordMealEvent } from "../lib/mealActivity.js";
@@ -28,6 +29,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
   function completeMeal() {
     record('mealCompleted', { sessionId: mealSession, recipeId: (adaptedRecipe || providedRecipe).id }); setMealFinished(true);
   }
+  const [showEditor, setShowEditor] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -334,6 +336,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
         {/* Bottom Action Toolbar */}
         <div className="recipe-toolbar no-print pt-6 border-t border-[#E3CFB1] flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
+            <button className="px-4 py-2.5 rounded-lg text-xs font-bold border" onClick={() => setShowEditor(true)}>{baseRecipe.structured ? 'Edit recipe' : 'Convert legacy recipe'}</button>
             {/* Save / Bookmark button */}
             <button
               type="button"
@@ -387,6 +390,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
         </div>
       </div>
 
+      {showEditor && <RecipeEditor recipe={baseRecipe} onClose={() => setShowEditor(false)} onSave={updated => { applyIngredientSwap(updated); setShowEditor(false); onSaveChange?.(true); }} />}
       {/* Cooking Mode Modal */}
       {showCookingMode && (
         <CookingModeModal
