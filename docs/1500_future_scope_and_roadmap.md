@@ -12,10 +12,10 @@ Run a four-week study with a small, defined audience. Collect consented confirme
 
 ## Candidate improvements
 
-- Cross-device pantry/plans/progress synchronization and explicit recipe conflict resolution beyond device-clock ordering.
+- Sync history compaction and household sharing beyond the implemented per-account pantry/plans/progress sync and explicit conflict review.
 - Better ingredient normalization, verified package/barcode imports and density data; preserve explicit confirmation for uncertain records.
 - Preparation/cooking yield factors, nutrient retention and broader verified nutrition coverage.
-- Household collaboration, recurring plans, leftovers and pantry reminder notifications.
+- Household collaboration, configurable recurrence patterns beyond copying a week, and pantry reminder notifications. Leftover tracking and weekly repetition are implemented.
 - Comprehensive accessibility audit and real iOS/Android/offline device testing.
 
 Delivery APIs, health app synchronization, connected appliances, public social feeds and subscriptions remain unimplemented hypotheses. Do not present dated delivery promises, prices or paywalls as shipped behavior. Prioritize them only when usage evidence supports the additional maintenance.

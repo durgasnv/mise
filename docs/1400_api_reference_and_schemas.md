@@ -95,3 +95,10 @@ The cookbook is `{ version: 3, operations: [{ type: "save"|"delete", id, opId, a
 Pantry, weekly plans, cooking sessions and meal journals use account-scoped browser stores, separate from cloud cookbook. Cooking timers persist `{ remainingSeconds, deadline }`; a deadline is an absolute timestamp. Planned dinners retain recipe snapshots. Pantry deductions use a unique cooking-session ID and reviewed amounts.
 
 [Release verification](1700_release_verification.md) records configured versus actually verified services.
+
+
+## GET /api/readiness
+
+Returns `{ ready, capabilities: { recipes, photos, nutrition }, message }` after checking configured service credentials and quota-index initialization. It exposes no secrets, account IDs or database connection details. This checks configuration/storage availability, not end-to-end provider health. The kitchen rechecks before generation and preserves ingredients on failure.
+
+Pantry, meal plans, cooking progress and leftovers now also use account-scoped immutable Puter operation keys. Causal parents distinguish sequential edits from competing revisions. Local/remote merges retain competing heads for explicit review and preserve deletions. See the workflow and release documents for sync limits and outstanding real-device checks.
