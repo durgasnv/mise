@@ -16,9 +16,13 @@ export async function connectDB() {
     return null;
   }
 
-  connectionPromise ??= mongoose.connect(mongoUri).catch((error) => {
+  connectionPromise ??= mongoose.connect(mongoUri, {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 5000,
+    socketTimeoutMS: 5000,
+  }).catch(() => {
     connectionPromise = null;
-    console.warn("MongoDB connection notice:", error.message);
+    console.warn("MongoDB connection unavailable.");
     return null;
   });
 
@@ -29,4 +33,3 @@ export async function connectDB() {
   }
   return null;
 }
-
