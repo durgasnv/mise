@@ -203,3 +203,9 @@ Fourth-batch verification: 95 regression cases passed across 25 files; one optio
 Implemented GSAP hero/section motion with React cleanup and reduced-motion support. The landing page loads separately so these assets do not increase the initial kitchen bundle. A focused procedural Three.js plate assembles ingredients as the hero enters the viewport, with subtle pointer movement on fine-pointer devices. It renders on demand, pauses offscreen/backgrounded and disposes resources on unmount. A local static SVG handles loading, data saving, reduced motion, unavailable WebGL and context loss.
 
 Verification: 38 frontend regression cases passed; eight landing and eight existing kitchen browser cases passed across desktop Chromium and emulated Pixel 7. Production build and production dependency audit passed. Desktop/mobile previews were visually inspected. Headless 3D checks use software WebGL; physical-device performance remains unverified. The renderer is an optional separate chunk (about 136 kB gzipped), and Vite reports its size warning. GSAP and Three.js changes have separate single-line Conventional Commits; no push or deployment was performed.
+
+## Landing photography restoration
+
+At the user's request, removed the animated Three.js noodle scene and restored the original hero photograph. Featured-dish and tools photographs remain in place, as do GSAP entrances, scroll reveals and reduced-motion support. Removed the renderer, SVG fallback, Three.js dependency and WebGL-specific browser checks. This supersedes the 3D illustration described in the fifth batch above.
+
+Verification: production build passed without the previous renderer chunk warning. Four landing browser cases passed across desktop Chromium and emulated Pixel 7, covering the restored photograph, featured images, quick-start form, reduced motion and horizontal overflow.

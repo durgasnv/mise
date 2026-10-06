@@ -2,7 +2,7 @@
 
 Mise helps home cooks choose a dinner from confirmed pantry ingredients, then plan, cook and review it. The UI uses a warm editorial style. Claims about savings, speed and repeat use require measured evidence.
 
-The landing page uses GSAP entrances and scroll reveals, plus an optional Three.js plate illustration. Reduced-motion and data-saving preferences retain a local static SVG; rendering pauses offscreen. Landing assets load separately from the kitchen.
+The landing page keeps its food photographs and uses GSAP entrances and scroll reveals. Reduced-motion preferences show content immediately. Landing assets load separately from the kitchen.
 
 ## Implemented workflows
 
