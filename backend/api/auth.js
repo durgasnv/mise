@@ -3,39 +3,24 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { connectDB } from "../config/database.js";
 import { User } from "../models/User.js";
+import { legacyAuthEnabled, legacyAuthSecret } from "../lib/legacy-auth-config.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "mise_secret_chef_jwt_key_2026";
 const JWT_EXPIRES_IN = "30d";
 
-// In-memory fallback cache when MongoDB is unconfigured or in offline demo mode
+// Local development only; production password routes require MongoDB.
 const memoryUsers = new Map();
 
-// Seed initial demo profile in memory
-const DEMO_EMAIL = "chef@mise.kitchen";
-const DEMO_PASSWORD_HASH = bcrypt.hashSync("mise123", 8);
-memoryUsers.set(DEMO_EMAIL, {
-  _id: "demo-user-1",
-  name: "Chef Durga",
-  email: DEMO_EMAIL,
-  password: DEMO_PASSWORD_HASH,
-  avatar: "👨‍🍳",
-  dietaryPreferences: ["High Protein", "Gluten-Friendly"],
-  spicePreference: "Bold & Smoky",
-  kitchenStaples: ["Cultured Butter", "Garlic Confit", "Smoked Flake Salt", "Chili Crisp"],
-  savedRecipes: [],
-});
-
 function createToken(userId, email) {
-  return jwt.sign({ id: userId, email }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign({ id: userId, email }, legacyAuthSecret(), { expiresIn: JWT_EXPIRES_IN, algorithm: "HS256", issuer: "mise-legacy", audience: "mise-legacy-auth" });
 }
 
 function verifyToken(authHeader) {
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (typeof authHeader !== "string" || !authHeader.startsWith("Bearer ")) {
     return null;
   }
   const token = authHeader.substring(7);
   try {
-    return jwt.verify(token, JWT_SECRET);
+    return jwt.verify(token, legacyAuthSecret(), { algorithms: ["HS256"], issuer: "mise-legacy", audience: "mise-legacy-auth" });
   } catch {
     return null;
   }
@@ -51,11 +36,21 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Cache-Control", "no-store");
 
   if (req.method === "OPTIONS") return res.status(204).end();
 
   const url = new URL(req.url, `http://${req.headers.host}`);
   const action = url.pathname.replace(/^\/api\/auth\/?/, "");
+  if (action === "demo-login") {
+    return res.status(403).json({ error: "Demo accounts cannot obtain API credentials. Sign in with Puter to generate recipes." });
+  }
+  if (!legacyAuthEnabled()) {
+    return res.status(503).json({ error: "Password authentication is disabled. Use Puter sign-in." });
+  }
+  if (!legacyAuthSecret()) {
+    return res.status(503).json({ error: "Password authentication is unavailable. Use Puter sign-in." });
+  }
 
   let body = req.body;
   if (typeof body === "string" && body.trim()) {
@@ -67,11 +62,14 @@ export default async function handler(req, res) {
   }
 
   const db = await connectDB().catch(() => null);
+  if (!db && (process.env.NODE_ENV === "production" || process.env.VERCEL)) {
+    return res.status(503).json({ error: "Password authentication is unavailable. Use Puter sign-in." });
+  }
 
   // 1. REGISTER
   if (action === "register" && req.method === "POST") {
     const { name, email, password, avatar } = body || {};
-    if (!name || !email || !password) {
+    if (typeof name !== "string" || !name.trim() || typeof email !== "string" || !email.trim() || typeof password !== "string" || password.length < 8 || password.length > 72) {
       return res.status(400).json({ error: "Name, email, and password are required." });
     }
 
@@ -119,7 +117,7 @@ export default async function handler(req, res) {
   // 2. LOGIN
   if (action === "login" && req.method === "POST") {
     const { email, password } = body || {};
-    if (!email || !password) {
+    if (typeof email !== "string" || !email.trim() || typeof password !== "string" || !password) {
       return res.status(400).json({ error: "Email and password are required." });
     }
 
@@ -143,13 +141,6 @@ export default async function handler(req, res) {
 
     const token = createToken(user._id, user.email);
     return res.status(200).json({ token, user: sanitizeUser(user) });
-  }
-
-  // 3. DEMO LOGIN (1-Click instant presentation profile)
-  if (action === "demo-login" && req.method === "POST") {
-    const demoUser = memoryUsers.get(DEMO_EMAIL);
-    const token = createToken(demoUser._id, demoUser.email);
-    return res.status(200).json({ token, user: sanitizeUser(demoUser) });
   }
 
   // Auth Guard for subsequent routes
