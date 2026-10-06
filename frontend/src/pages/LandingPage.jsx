@@ -1,3 +1,4 @@
+import { HeroVisual } from "../components/HeroVisual.jsx";
 import { useState, useRef } from "react";
 import { useLandingMotion } from "../lib/useLandingMotion.js";
 
@@ -119,14 +120,7 @@ export function LandingPage({ user, onEnter, onViewSaved, onOpenMysteryWheel, on
             </h1>
           </div>
 
-          <div className="hero-visual" aria-label="A fresh noodle dish ready to serve">
-            <img
-              src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1400&q=90"
-              alt="Colorful Asian-inspired dish with vegetables"
-            />
-            <span className="ingredient-note ingredient-note-one">Tonight's odds & ends</span>
-            <span className="ingredient-note ingredient-note-two">One very good dinner</span>
-          </div>
+          <HeroVisual />
 
           <div className="hero-copy">
             <p>
