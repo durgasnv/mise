@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { saveRecipe, getSavedRecipes, deleteRecipe, readCookbook, cookbookOwner, mergeCookbooks, recipesFromBook, importLegacyCookbook, legacyRecipesAvailable } from '../src/lib/savedRecipes.js';
+import { cookbookHeads, cookbookConflicts, resolveCookbookConflict, saveRecipe, getSavedRecipes, deleteRecipe, readCookbook, cookbookOwner, mergeCookbooks, recipesFromBook, importLegacyCookbook, legacyRecipesAvailable } from '../src/lib/savedRecipes.js';
 import { syncCookbook } from '../src/lib/cookbookSync.js';
 import { recipeView } from '../../shared/recipes.js';
 import { dinner } from '../../shared/recipe-fixture.js';
@@ -55,3 +55,14 @@ test('mismatched SDK identity never syncs, and corrupt local data is preserved',
   const key = `mise_cookbook_v3:${encodeURIComponent(cookbookOwner())}`; store.set(key, 'broken');
   assert.throws(() => getSavedRecipes()); assert.throws(() => saveRecipe(recipe('a'))); assert.equal(store.get(key), 'broken');
 }));
+
+test('causal parents preserve competing edits and order resolutions despite clock skew', () => {
+  const base = { opId: 'base', id: 'a', at: 1000, type: 'save', recipe: recipe('a'), parents: [] };
+  const left = { ...base, opId: 'left', at: 1001, parents: ['base'], recipe: { ...recipe('a'), title: 'Left version' } };
+  const right = { ...base, opId: 'right', at: 1, parents: ['base'], recipe: { ...recipe('a'), title: 'Right version' } };
+  const book = mergeCookbooks({ operations: [base, left] }, { operations: [base, right] });
+  assert.equal(cookbookHeads(book).get('a').length, 2);
+  const resolution = { ...right, opId: 'resolved', at: 0, parents: ['left','right'] };
+  assert.equal(recipesFromBook(mergeCookbooks(book, { operations: [resolution] }))[0].title, 'Right version');
+  assert.throws(() => mergeCookbooks(book, { operations: [{ ...right, recipe: recipe('b') }] }));
+});

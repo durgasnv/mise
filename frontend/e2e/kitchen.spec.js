@@ -137,3 +137,19 @@ test('pantry conflict review keeps the chosen stock version after refresh', asyn
   await page.getByRole('button',{name:'Manage pantry'}).click();
   await expect(page.getByText('300 g',{exact:true})).toBeVisible();
 });
+
+test('cookbook exposes competing recipe methods and retains an explicit resolution', async ({ page }) => {
+  await page.addInitScript(({recipe}) => {
+    const base={id:recipe.id,opId:'base',type:'save',at:1,parents:[],recipe};
+    localStorage.setItem('mise_cookbook_v3:puter%3Abrowser-chef',JSON.stringify({version:3,operations:[base,
+      {...base,opId:'left',at:100,parents:['base'],recipe:{...recipe,title:'Left dinner'}},
+      {...base,opId:'right',at:2,parents:['base'],recipe:{...recipe,title:'Right dinner'}},
+    ]}));
+  },{recipe});
+  await page.goto('/',{waitUntil:'domcontentloaded'});await page.getByRole('button',{name:'View cookbook'}).click();
+  await expect(page.getByRole('heading',{name:'Review competing recipe edits'})).toBeVisible();
+  await page.getByText('Version 2: Right dinner',{exact:true}).click();
+  await page.getByRole('button',{name:'Keep recipe version 2',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Review competing recipe edits'})).toHaveCount(0);
+  await expect(page.getByText('Right dinner',{exact:true})).toBeVisible();
+});
