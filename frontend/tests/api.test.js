@@ -4,13 +4,18 @@ import { generateRecipeApi } from "../src/lib/api.js";
 
 async function withFetch(fetchImpl, run) {
   const original = globalThis.fetch;
+  const originalWindow = globalThis.window;
+  const originalStorage = globalThis.localStorage;
+  globalThis.window = { puter: { authToken: "test-puter-token" } };
+  globalThis.localStorage = { getItem: () => JSON.stringify({ id: "test-user", provider: "puter" }) };
   globalThis.fetch = fetchImpl;
-  try { await run(); } finally { globalThis.fetch = original; }
+  try { await run(); } finally { globalThis.fetch = original; globalThis.window = originalWindow; globalThis.localStorage = originalStorage; }
 }
 
 test("returns the actual provider response and supplies a cancellation signal", async () => {
   await withFetch(async (url, options) => {
     assert.equal(url, "/api/generate-recipe");
+    assert.equal(options.headers.Authorization, "Bearer test-puter-token");
     assert.deepEqual(JSON.parse(options.body), { question: "corn", image: null });
     assert.ok(options.signal instanceof AbortSignal);
     return { ok: true, json: async () => ({ response: "actual recipe" }) };

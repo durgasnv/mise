@@ -129,7 +129,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
               <div className="w-full border-t border-[#E3CFB1]"></div>
             </div>
             <span className="relative bg-[#FFF8EC] px-3 text-[11px] font-typewriter text-[#6D5545] uppercase">
-              or instant demo
+              or explore the demo
             </span>
           </div>
 
@@ -140,8 +140,9 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
             disabled={loading}
             className="w-full py-3 px-4 bg-[#201B17] hover:bg-[#100E0C] text-[#F5E6CC] rounded-loro text-xs font-typewriter font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
           >
-            <span>🧑‍🍳 1-Click Demo Profile (Chef Durga)</span>
+            <span>🧑‍🍳 Explore demo as Chef Durga</span>
           </button>
+          <p className="text-xs text-[#6D5545]">Demo mode includes browsing and cooking previews. Sign in with Puter to generate recipes.</p>
         </div>
 
         {/* Cloud Benefit Points */}

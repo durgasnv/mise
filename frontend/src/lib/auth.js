@@ -1,5 +1,4 @@
 const USER_STORAGE_KEY = "mise_active_chef_user_v3";
-const PREFS_STORAGE_KEY = "mise_chef_taste_prefs_v3";
 
 /**
  * Returns currently authenticated user object from localStorage.
@@ -11,6 +10,18 @@ export function getCurrentUser() {
   } catch {
     return null;
   }
+}
+
+export function getGenerationAuthorization() {
+  const user = getCurrentUser();
+  const token = typeof window !== "undefined" ? window.puter?.authToken : null;
+  if (user?.provider !== "puter" || typeof token !== "string" || !token) {
+    const error = new Error("Sign in with Puter to generate recipes. Demo mode is for browsing and cooking previews.");
+    error.code = "AUTH_REQUIRED";
+    throw error;
+  }
+  // Read the current SDK token for each request; do not duplicate it in our profile storage.
+  return { Authorization: `Bearer ${token}` };
 }
 
 /**
@@ -45,12 +56,12 @@ export async function signInWithPuter() {
     await window.puter.auth.signIn();
     const puterUser = await window.puter.auth.getUser();
 
-    if (!puterUser) {
+    if (!puterUser || typeof puterUser.uuid !== "string" || !puterUser.uuid) {
       throw new Error("Could not retrieve user profile.");
     }
 
     const chefUser = {
-      id: puterUser.uuid || `puter-${Date.now()}`,
+      id: puterUser.uuid,
       name: puterUser.username || "Chef",
       email: puterUser.email || `${puterUser.username}@puter.com`,
       avatar: "🧑‍🍳",

@@ -30,18 +30,20 @@ const LOADING_MESSAGES = [
   "Finishing with pitmaster tasting notes...",
 ];
 
-export function HomePage({ onBack, onViewSaved, initialIngredients }) {
+export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAuth }) {
   const [isLoading, setIsLoading] = useState(false);
   const [recipes, setRecipes] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const [generationError, setGenerationError] = useState("");
+  const [generationErrorCode, setGenerationErrorCode] = useState("");
   const recipeRef = useRef(null);
 
   async function handleGenerate({ question, ingredients, image }) {
     if (isLoading) return;
     setIsLoading(true);
     setGenerationError("");
+    setGenerationErrorCode("");
     setRecipes(null);
     setLoadingMessageIndex(0);
 
@@ -59,6 +61,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients }) {
       }, 100);
     } catch (err) {
       setGenerationError(err.message || "We could not generate recipes. Please try again.");
+      setGenerationErrorCode(err.code || "");
     } finally {
       clearInterval(timer);
       setIsLoading(false);
@@ -168,6 +171,11 @@ export function HomePage({ onBack, onViewSaved, initialIngredients }) {
             <p className="font-semibold">Your recipes could not be generated</p>
             <p className="mt-2 text-sm">{generationError}</p>
             <p className="mt-2 text-sm">Your ingredients are still in the form. Adjust them if needed, then choose Create three recipes again.</p>
+            {["AUTH_REQUIRED", "ACCOUNT_REQUIRED"].includes(generationErrorCode) && onRequestAuth && (
+              <button type="button" className="mt-3 text-sm font-semibold underline" onClick={() => onRequestAuth("Sign in with Puter to generate recipes. Your ingredients will stay in the form.")}>
+                Sign in with Puter
+              </button>
+            )}
           </div>
         )}
 

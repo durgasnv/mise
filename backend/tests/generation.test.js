@@ -99,7 +99,7 @@ function responseStub() {
 
 test("handler rejects invalid inputs and exhausted admission before generation", async () => {
   let calls = 0;
-  const handler = createGenerationHandler({ generate: async () => { calls++; }, admit: () => ({ allowed: false, retryAfter: 12 }) });
+  const handler = createGenerationHandler({ authenticate: async () => ({ id: "puter:test-user", provider: "puter" }), reserveQuota: async () => {}, generate: async () => { calls++; }, admit: () => ({ allowed: false, retryAfter: 12 }) });
   const bad = responseStub();
   await handler({ method: "POST", body: { question: 7 } }, bad);
   assert.equal(bad.statusCode, 400);
@@ -111,7 +111,7 @@ test("handler rejects invalid inputs and exhausted admission before generation",
 });
 
 test("handler preserves success when optional history fails", async () => {
-  const handler = createGenerationHandler({
+  const handler = createGenerationHandler({ authenticate: async () => ({ id: "puter:test-user", provider: "puter" }), reserveQuota: async () => {},
     generate: async () => "real recipe", admit: () => ({ allowed: true }), save: async () => { throw new Error("db offline"); },
   });
   const res = responseStub();
@@ -126,7 +126,7 @@ test("handler propagates photo failures and hides unexpected internal errors", a
     [new GenerationError(502, "VISION_FAILED", "Remove the photo and enter ingredients."), "VISION_FAILED"],
     [new Error("private database credentials"), "INTERNAL_ERROR"],
   ]) {
-    const handler = createGenerationHandler({
+    const handler = createGenerationHandler({ authenticate: async () => ({ id: "puter:test-user", provider: "puter" }), reserveQuota: async () => {},
       generate: async () => { throw failure; }, admit: () => ({ allowed: true }),
       save: async () => assert.fail("Failures must not be saved as recipes"),
     });
@@ -140,11 +140,56 @@ test("handler propagates photo failures and hides unexpected internal errors", a
 
 test("preflight and unsupported methods do not generate recipes", async () => {
   let calls = 0;
-  const handler = createGenerationHandler({ generate: async () => { calls++; } });
+  const handler = createGenerationHandler({ authenticate: async () => ({ id: "puter:test-user", provider: "puter" }), reserveQuota: async () => {}, generate: async () => { calls++; } });
   for (const [method, status] of [["OPTIONS", 204], ["GET", 405]]) {
     const res = responseStub();
     await handler({ method }, res);
     assert.equal(res.statusCode, status);
   }
   assert.equal(calls, 0);
+});
+
+test("authentication and quota failures prevent provider calls", async () => {
+  const { GenerationError } = await import("../lib/generation-guards.js");
+  for (const gate of ["authentication", "quota"]) {
+    let generated = false;
+    let reserved = false;
+    const handler = createGenerationHandler({
+      admit: () => ({ allowed: true }),
+      authenticate: async () => {
+        if (gate === "authentication") throw new GenerationError(401, "AUTH_REQUIRED", "Sign in.");
+        return { id: "puter:real-user", provider: "puter" };
+      },
+      reserveQuota: async (identity) => {
+        reserved = true;
+        assert.equal(identity.id, "puter:real-user");
+        const error = new GenerationError(429, "USER_QUOTA_REACHED", "Daily limit reached.");
+        error.retryAfter = 3600;
+        throw error;
+      },
+      generate: async () => { generated = true; },
+    });
+    const res = responseStub();
+    await handler({ method: "POST", body: { question: "corn" }, headers: {} }, res);
+    assert.equal(generated, false);
+    assert.equal(reserved, gate === "quota");
+    assert.equal(res.statusCode, gate === "quota" ? 429 : 401);
+    if (gate === "quota") assert.equal(res.headers["Retry-After"], "3600");
+  }
+});
+
+test("a real verified identity is reserved before successful generation", async () => {
+  const events = [];
+  const handler = createGenerationHandler({
+    admit: () => ({ allowed: true }),
+    authenticate: async () => { events.push("verified"); return { id: "puter:real-user", provider: "puter" }; },
+    reserveQuota: async (identity) => { assert.equal(identity.id, "puter:real-user"); events.push("reserved"); },
+    generate: async () => { events.push("generated"); return "recipe"; },
+    save: async () => {},
+  });
+  const res = responseStub();
+  await handler({ method: "POST", body: { question: "corn", userId: "spoofed" } }, res);
+  assert.deepEqual(events, ["verified", "reserved", "generated"]);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.headers["Cache-Control"], "no-store");
 });

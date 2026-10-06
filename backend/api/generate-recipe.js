@@ -2,6 +2,8 @@ import "dotenv/config";
 import { connectDB } from "../config/database.js";
 import { Query } from "../models/Query.js";
 import { GenerationError, validateGenerationBody, createGenerationLimiter } from "../lib/generation-guards.js";
+import { authenticateGeneration } from "../lib/generation-auth.js";
+import { reserveGenerationQuota } from "../lib/generation-quota.js";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_TIMEOUT_MS = 25000;
@@ -134,11 +136,12 @@ async function saveQuery(question, response) {
   if (db) await Query.create({ question: question || "Image pantry query", response });
 }
 
-export function createGenerationHandler({ generate = callGroq, save = saveQuery, admit = admitRequest } = {}) {
+export function createGenerationHandler({ generate = callGroq, save = saveQuery, admit = admitRequest, authenticate = authenticateGeneration, reserveQuota = reserveGenerationQuota } = {}) {
   return async function handler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Cache-Control", "no-store");
 
     if (req.method === "OPTIONS") return res.status(204).end();
     if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
@@ -150,6 +153,8 @@ export function createGenerationHandler({ generate = callGroq, save = saveQuery,
         res.setHeader("Retry-After", String(admission.retryAfter));
         return res.status(429).json({ code: "RATE_LIMITED", error: "The kitchen is busy. Please wait a minute and try again." });
       }
+      const identity = await authenticate(req);
+      await reserveQuota(identity);
       const response = await generate(input);
       // Logging failure must not replace a successful generation with an error.
       await save(input.question, response).catch(() => console.warn("Recipe history could not be saved."));
@@ -157,7 +162,7 @@ export function createGenerationHandler({ generate = callGroq, save = saveQuery,
     } catch (error) {
       const knownError = error instanceof GenerationError;
       const status = knownError ? error.status : 500;
-      if (status === 429) res.setHeader("Retry-After", "60");
+      if (status === 429) res.setHeader("Retry-After", String(error.retryAfter || 60));
       if (status >= 500) console.warn("Recipe generation failed", { code: knownError ? error.code : "INTERNAL_ERROR" });
       return res.status(status).json({
         code: knownError ? error.code : "INTERNAL_ERROR",

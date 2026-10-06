@@ -1,3 +1,5 @@
+import { getGenerationAuthorization } from "./auth.js";
+
 const API_BASE_URL = import.meta.env?.VITE_API_URL || "";
 
 /**
@@ -7,6 +9,7 @@ const API_BASE_URL = import.meta.env?.VITE_API_URL || "";
  */
 export async function generateRecipeApi(question, image = null) {
   const url = `${API_BASE_URL}/api/generate-recipe`;
+  const authorization = getGenerationAuthorization();
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 40000);
@@ -15,6 +18,7 @@ export async function generateRecipeApi(question, image = null) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...authorization,
       },
       body: JSON.stringify({ question, image }),
       signal: controller.signal,
@@ -23,7 +27,9 @@ export async function generateRecipeApi(question, image = null) {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      throw new Error(typeof data?.error === "string" ? data.error : "We could not generate recipes right now. Please try again.");
+      const error = new Error(typeof data?.error === "string" ? data.error : "We could not generate recipes right now. Please try again.");
+      error.code = typeof data?.code === "string" ? data.code : undefined;
+      throw error;
     }
 
     if (typeof data?.response !== "string" || !data.response.trim()) {
