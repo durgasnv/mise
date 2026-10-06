@@ -1,29 +1,31 @@
 import { useState } from "react";
 import { toggleSaveRecipe, isRecipeSaved } from "../lib/savedRecipes";
-import { scaleRecipeIngredients } from "../lib/parseRecipes";
+import { scaledRecipeView } from "../../../shared/recipe-scaling.js";
 import { CookingModeModal } from "./CookingModeModal";
 import { SmartSwapModal } from "./SmartSwapModal";
 import { SocialShareModal } from "./SocialShareModal";
 
-export function RecipeCard({ recipe, onSaveChange, onCookAnother }) {
+export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother }) {
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [portionCount, setPortionCount] = useState(2);
+  const [portionCount, setPortionCount] = useState(providedRecipe?.basePortions || 2);
   const [checkedIngredients, setCheckedIngredients] = useState({});
   const [completedSteps, setCompletedSteps] = useState({});
   const [showCookingMode, setShowCookingMode] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [swapTarget, setSwapTarget] = useState(null);
-  const [customIngredients, setCustomIngredients] = useState(null);
+  const [adaptedRecipe, setAdaptedRecipe] = useState(null);
 
-  if (!recipe) return null;
+  if (!providedRecipe) return null;
+  const baseRecipe = adaptedRecipe || providedRecipe;
+  const recipe = scaledRecipeView(baseRecipe, portionCount);
 
   const isSaved = isRecipeSaved(recipe.id, recipe.title);
-  const baseIngredients = customIngredients || recipe.ingredients || [];
-  const scaledIngredients = scaleRecipeIngredients(baseIngredients, portionCount, recipe.basePortions || 2);
+  const baseIngredients = baseRecipe.ingredients || [];
+  const scaledIngredients = recipe.ingredients || [];
 
   function handleToggleSave() {
-    const res = toggleSaveRecipe({ ...recipe, ingredients: baseIngredients });
+    const res = toggleSaveRecipe(baseRecipe);
     if (onSaveChange) onSaveChange(res.isSaved);
   }
 
@@ -69,11 +71,10 @@ ${recipe.chefNote}
     }));
   }
 
-  function applyIngredientSwap(newSub) {
-    if (swapTarget === null) return;
-    const updated = [...baseIngredients];
-    updated[swapTarget] = `${newSub} (Swapped)`;
-    setCustomIngredients(updated);
+  function applyIngredientSwap(adapted) {
+    setAdaptedRecipe(adapted);
+    setPortionCount(adapted.basePortions);
+    setCheckedIngredients({}); setCompletedSteps({}); setReviewConfirmed(false);
     setSwapTarget(null);
   }
 
@@ -128,7 +129,8 @@ ${recipe.chefNote}
                 <button
                   key={num}
                   type="button"
-                  onClick={() => setPortionCount(num)}
+                  disabled={!baseRecipe.structured}
+                  onClick={() => { setPortionCount(num); setReviewConfirmed(false); setCheckedIngredients({}); setCompletedSteps({}); }}
                   aria-pressed={portionCount === num}
                   className={`w-7 h-7 rounded text-xs font-typewriter font-bold transition-all ${
                     portionCount === num
@@ -136,7 +138,7 @@ ${recipe.chefNote}
                       : "text-[#201B17] hover:bg-[#E3CFB1]"
                   }`}
                 >
-                  {num}x
+                  {num}
                 </button>
               ))}
             </div>
@@ -148,7 +150,7 @@ ${recipe.chefNote}
 
           <div className="flex flex-wrap items-center justify-between gap-3 mt-3">
             <p className="text-sm font-typewriter text-[#6D5545]">
-              Scratch-cooked with 3 pantry items • Scaled for {portionCount} {portionCount === 1 ? "portion" : "portions"}
+              {!baseRecipe.structured ? 'Legacy recipe • Scaling unavailable • ' : ''}Prepared for {portionCount} {portionCount === 1 ? "portion" : "portions"}
             </p>
 
             {/* Launch Hands-Free Cooking Mode Button */}
@@ -173,7 +175,7 @@ ${recipe.chefNote}
                 Ingredients
               </h3>
               <span className="text-[11px] font-typewriter text-[#6D5545]">
-                ({portionCount}x scaled)
+                ({portionCount} servings)
               </span>
             </div>
 
@@ -209,7 +211,8 @@ ${recipe.chefNote}
                         e.stopPropagation();
                         setSwapTarget(idx);
                       }}
-                      title="Swap this ingredient"
+                      disabled={!baseRecipe.structured}
+                      title={baseRecipe.structured ? "Adapt this recipe with a replacement" : "Regenerate this legacy recipe to enable swaps"}
                       className="no-print text-[10px] font-typewriter text-[#6D5545] hover:text-[#F2382F] px-1.5 py-0.5 rounded border border-[#E3CFB1] hover:border-[#F2382F] bg-white transition-all flex-shrink-0"
                     >
                       Swap

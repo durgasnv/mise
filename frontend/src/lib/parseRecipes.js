@@ -98,31 +98,9 @@ export function getIngredientSubstitutes(rawIngredient) {
  * @param {number} basePortions
  * @returns {Array<string>}
  */
-export function scaleRecipeIngredients(ingredients, targetPortions = 2, basePortions = 2) {
-  if (!Array.isArray(ingredients)) return [];
-  if (targetPortions === basePortions || basePortions <= 0) return ingredients;
-
-  const factor = targetPortions / basePortions;
-
-  return ingredients.map((item) => {
-    return item.replace(/(\d+(?:\.\d+)?|\d+\/\d+)/g, (match) => {
-      let val;
-      if (match.includes("/")) {
-        const [num, den] = match.split("/").map(Number);
-        val = num / den;
-      } else {
-        val = parseFloat(match);
-      }
-
-      const scaled = val * factor;
-      if (scaled >= 10) return Math.round(scaled).toString();
-      if (scaled === 0.5) return "1/2";
-      if (scaled === 0.25) return "1/4";
-      if (scaled === 0.75) return "3/4";
-      if (scaled === 1.5) return "1 1/2";
-      return (Math.round(scaled * 10) / 10).toString();
-    });
-  });
+export function scaleRecipeIngredients(ingredients) {
+  // Retained for legacy imports. Text-only recipes cannot be safely scaled.
+  return Array.isArray(ingredients) ? ingredients : [];
 }
 
 /** Parse only supplied recipe content; never fabricate cooking instructions. */
