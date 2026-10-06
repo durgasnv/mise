@@ -1,3 +1,4 @@
+import { validateConstraints } from "../../shared/pantry.js";
 export const MAX_QUESTION_LENGTH = 6000;
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 export const MAX_BODY_BYTES = 3 * 1024 * 1024;
@@ -61,7 +62,10 @@ export function validateGenerationBody(rawBody) {
   if (!question && !image) {
     throw new GenerationError(400, "INVALID_INPUT", "Enter ingredients or add a photo first.");
   }
-  return { question, imageBase64: image };
+  let constraints;
+  try { constraints = validateConstraints(body.constraints); }
+  catch (error) { throw new GenerationError(400, "INVALID_CONSTRAINTS", error.message); }
+  return { question, imageBase64: image, constraints };
 }
 
 // Baseline for one running process, NOT a shared quota or a production spending cap.

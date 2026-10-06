@@ -98,6 +98,11 @@ ${recipe.chefNote}
 
       {/* Main Content Area */}
       <div className="p-6 sm:p-10 space-y-8">
+        {recipe.review && <section aria-label="Pantry review" className="bg-[#FFF8EC] border p-4 space-y-2">
+          {recipe.review.missing?.length > 0 && <p className="font-semibold">Missing or insufficient ingredients</p>}
+          {[...(recipe.review.missing || []), ...(recipe.review.quantityChecks || [])].map((note, i) => <p className="text-sm" key={i}>{note}</p>)}
+          <p className="text-sm">Equipment: {recipe.structured?.equipment.join(', ')}</p>
+        </section>}
         {/* Title Header & Portion Scaler Bar */}
         <div className="border-b border-[#E3CFB1] pb-6">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-3">

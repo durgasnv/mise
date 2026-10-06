@@ -1,3 +1,4 @@
+import { DEFAULT_CONSTRAINTS } from "../../shared/pantry.js";
 import { dinner, recipeJSON } from "../../shared/recipe-fixture.js";
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -14,8 +15,8 @@ test("rejects invalid types, empty inputs, oversized lists and non-image payload
   }
   assert.throws(() => validateGenerationBody({ question: "a".repeat(6001) }), (error) => error.status === 413);
   assert.throws(() => validateGenerationBody({ image: `data:image/jpeg;base64,${Buffer.alloc(MAX_IMAGE_BYTES + 1, 0xff).toString("base64")}` }), (error) => error.status === 413);
-  assert.deepEqual(validateGenerationBody(JSON.stringify({ question: " corn " })), { question: "corn", imageBase64: null });
-  assert.deepEqual(validateGenerationBody({ image: photo }), { question: "", imageBase64: photo });
+  assert.deepEqual(validateGenerationBody(JSON.stringify({ question: " corn " })), { question: "corn", imageBase64: null, constraints: DEFAULT_CONSTRAINTS });
+  assert.deepEqual(validateGenerationBody({ image: photo }), { question: "", imageBase64: photo, constraints: DEFAULT_CONSTRAINTS });
 });
 
 test("bounds local admission and resets after its window", () => {
@@ -118,7 +119,7 @@ test("handler preserves success when optional history fails", async () => {
   const res = responseStub();
   await handler({ method: "POST", body: { question: "corn" } }, res);
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.payload, { recipes: [dinner] });
+  assert.deepEqual(res.payload.recipes, [dinner]);
 });
 
 test("handler propagates photo failures and hides unexpected internal errors", async () => {

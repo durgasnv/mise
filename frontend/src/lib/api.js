@@ -8,7 +8,7 @@ const API_BASE_URL = import.meta.env?.VITE_API_URL || "";
  * @param {string} question - Query string (e.g. "Create a recipe with tomato, garlic, olive oil")
  * @returns {Promise<string>} - Raw text response containing recipe
  */
-export async function generateRecipeApi(question, image = null) {
+export async function generateRecipeApi(question, image = null, constraints = undefined) {
   const url = `${API_BASE_URL}/api/generate-recipe`;
   const authorization = getGenerationAuthorization();
 
@@ -21,7 +21,7 @@ export async function generateRecipeApi(question, image = null) {
         "Content-Type": "application/json",
         ...authorization,
       },
-      body: JSON.stringify({ question, image }),
+      body: JSON.stringify({ question, image, constraints }),
       signal: controller.signal,
     });
 
@@ -37,7 +37,7 @@ export async function generateRecipeApi(question, image = null) {
       throw new Error("No recipe response received from the kitchen. Please try again.");
     }
 
-    return validateRecipes({ recipes: data.recipes }).map(r => recipeView(r));
+    return validateRecipes({ recipes: data.recipes }).map((r, index) => recipeView(r, { constraints: data.constraints, review: data.reviews?.[index] }));
   } catch (error) {
     if (error.name === "AbortError") {
       throw new Error("Recipe generation took too long. Please try again.");

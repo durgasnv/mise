@@ -1,3 +1,4 @@
+import { EQUIPMENT, UNITS, canonicalName } from "../../../shared/pantry.js";
 import { useState, useRef, useEffect } from "react";
 import { PantryWheelModal } from "./PantryWheelModal";
 import { getCurrentUser } from "../lib/auth";
@@ -65,6 +66,15 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const fileInputRef = useRef(null);
+  const [servings, setServings] = useState(2);
+  const [maxMinutes, setMaxMinutes] = useState(30);
+  const [equipment, setEquipment] = useState(['stovetop', 'skillet', 'pot']);
+  const [staples, setStaples] = useState([]);
+  const [strictPantry, setStrictPantry] = useState(true);
+  const [amounts, setAmounts] = useState({});
+  const pantryNames = (mode === 'freeform' ? freeformText.split(/[,;\n]+/) : slots).map(s => s.trim()).filter(Boolean);
+  function toggleChoice(set, value) { set(previous => previous.includes(value) ? previous.filter(x => x !== value) : [...previous, value]); }
+
 
   // Sync initialIngredients if passed
   useEffect(() => {
@@ -135,6 +145,10 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
       question,
       ingredients: list,
       image: imagePreview,
+      constraints: {
+        pantry: [...new Map(list.map(name => [canonicalName(name), { name, quantity: amounts[name]?.quantity ? Number(amounts[name].quantity) : null, unit: amounts[name]?.unit || 'count' }])).values()],
+        staples, servings, maxMinutes, equipment, strictPantry, restrictions: [], excludedIngredients: [],
+      },
     });
   }
 
@@ -353,6 +367,22 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
       )}
 
       <form onSubmit={handleSubmit} className="pantry-form mt-6 space-y-6">
+        <fieldset className="space-y-4 rounded-lg border border-[#E3CFB1] p-4">
+          <legend className="font-semibold">Your household & pantry</legend>
+          <div className="flex flex-wrap gap-4">
+            <label>Servings <input aria-label="Servings" className="w-16 border p-1" type="number" min="1" max="12" value={servings} onChange={e => setServings(Number(e.target.value))} /></label>
+            <label>Minutes available <input className="w-20 border p-1" type="number" min="5" max="1440" value={maxMinutes} onChange={e => setMaxMinutes(Number(e.target.value))} /></label>
+          </div>
+          <p className="text-sm">Available equipment</p>
+          <div className="flex flex-wrap gap-3">{EQUIPMENT.map(item => <label key={item}><input type="checkbox" checked={equipment.includes(item)} onChange={() => toggleChoice(setEquipment, item)} /> {item}</label>)}</div>
+          <p className="text-sm">Confirm staples you actually have</p>
+          <div className="flex flex-wrap gap-3">{['salt', 'black pepper', 'olive oil', 'butter', 'garlic'].map(item => <label key={item}><input type="checkbox" checked={staples.includes(item)} onChange={() => toggleChoice(setStaples, item)} /> {item}</label>)}</div>
+          <label className="block"><input type="checkbox" checked={strictPantry} onChange={e => setStrictPantry(e.target.checked)} /> Use only my confirmed pantry</label>
+          <p className="text-sm">Optional available amounts (leave blank to check before cooking). Enter ingredient names separately from amounts.</p>
+          {[...new Set(pantryNames)].map(name => <div key={name} className="flex items-center gap-2 flex-wrap"><span className="min-w-24">{name}</span><input aria-label={`Available amount of ${name}`} className="w-24 border p-1" type="number" min="0.001" step="any" placeholder="Unknown" value={amounts[name]?.quantity || ''} onChange={e => setAmounts(a => ({ ...a, [name]: { ...a[name], quantity: e.target.value } }))} /><select aria-label={`Unit for ${name}`} className="border p-1" value={amounts[name]?.unit || 'count'} onChange={e => setAmounts(a => ({ ...a, [name]: { ...a[name], unit: e.target.value } }))}>{UNITS.map(u => <option key={u}>{u}</option>)}</select></div>)}
+          {imagePreview && <p className="text-sm">Photos help identify food; confirm the ingredient names and quantities above before cooking.</p>}
+        </fieldset>
+
         {/* Slot-based input OR Freeform Box */}
         {mode === "freeform" ? (
           <div className="space-y-1.5">

@@ -38,7 +38,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAut
   const [generationErrorCode, setGenerationErrorCode] = useState("");
   const recipeRef = useRef(null);
 
-  async function handleGenerate({ question, ingredients, image }) {
+  async function handleGenerate({ question, image, constraints }) {
     if (isLoading) return;
     setIsLoading(true);
     setGenerationError("");
@@ -51,7 +51,7 @@ export function HomePage({ onBack, onViewSaved, initialIngredients, onRequestAut
     }, 2000);
 
     try {
-      const parsedRecipes = await generateRecipeApi(question, image);
+      const parsedRecipes = await generateRecipeApi(question, image, constraints);
       setRecipes(parsedRecipes);
 
       setTimeout(() => {
