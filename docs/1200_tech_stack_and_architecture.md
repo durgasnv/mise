@@ -1,6 +1,6 @@
 # Architecture
 
-The frontend uses React 18, Vite, Tailwind CSS and Framer Motion. The same Node handlers run under `backend/server.js` locally or through re-exports in `api/` and `frontend/api/` on serverless deployments.
+The frontend uses React 18, Vite, Tailwind CSS and Framer Motion. The landing page adds scoped GSAP motion and a dynamically imported Three.js renderer with a local SVG fallback. The same Node handlers run under `backend/server.js` locally or through re-exports in `api/` and `frontend/api/` on serverless deployments.
 
 `shared/` contains the recipe contract, quantities/scaling, pantry comparison, independent safety rules, adaptations, editing, weekly shopping aggregation and nutrition arithmetic. Both browser and server use these validators. Live generation exchanges bounded JSON, not Markdown. Groq text generation defaults to `openai/gpt-oss-20b`; vision requires explicit configuration. One provider request is made per generation/adaptation/conversion attempt.
 

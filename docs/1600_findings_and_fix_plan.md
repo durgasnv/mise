@@ -197,3 +197,9 @@ Nutrition source: [USDA API guide](https://fdc.nal.usda.gov/api-guide/) and [dat
 See [release verification](1700_release_verification.md) for remaining environment-dependent checks and provider monetary cap evidence.
 
 Fourth-batch verification: 95 regression cases passed across 25 files; one optional live MongoDB case skipped. Eight desktop/mobile Playwright cases passed, including source-nutrition persistence and current-stock review; cooking overflow was rechecked after wrapping controls. Production frontend build and whitespace checks passed. Frontend/backend/root production dependency audits are clean after the Mongoose security update. Live service limits remain as recorded above.
+
+## Fifth batch: landing motion and 3D illustration
+
+Implemented GSAP hero/section motion with React cleanup and reduced-motion support. The landing page loads separately so these assets do not increase the initial kitchen bundle. A focused procedural Three.js plate assembles ingredients as the hero enters the viewport, with subtle pointer movement on fine-pointer devices. It renders on demand, pauses offscreen/backgrounded and disposes resources on unmount. A local static SVG handles loading, data saving, reduced motion, unavailable WebGL and context loss.
+
+Verification: 38 frontend regression cases passed; eight landing and eight existing kitchen browser cases passed across desktop Chromium and emulated Pixel 7. Production build and production dependency audit passed. Desktop/mobile previews were visually inspected. Headless 3D checks use software WebGL; physical-device performance remains unverified. The renderer is an optional separate chunk (about 136 kB gzipped), and Vite reports its size warning. GSAP and Three.js changes have separate single-line Conventional Commits; no push or deployment was performed.
