@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { signInWithPuter, signInAsDemoChef, syncCookbookToPuterCloud, loadCookbookFromPuterCloud } from "../lib/auth";
-import { getSavedRecipes, saveRecipe } from "../lib/savedRecipes";
+import { signInWithPuter, signInAsDemoChef } from "../lib/auth";
+import { syncCookbook } from "../lib/cookbookSync.js";
 
 export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
   const [loading, setLoading] = useState(false);
@@ -15,16 +15,8 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
     try {
       const user = await signInWithPuter();
 
-      // Sync guest recipes to cloud or load existing cloud cookbook
-      const localRecipes = getSavedRecipes();
-      if (localRecipes && localRecipes.length > 0) {
-        await syncCookbookToPuterCloud(localRecipes);
-      } else {
-        const cloudRecipes = await loadCookbookFromPuterCloud();
-        if (cloudRecipes && Array.isArray(cloudRecipes)) {
-          cloudRecipes.forEach((r) => saveRecipe(r));
-        }
-      }
+      // Merge only this account's collection. A sync failure leaves local data intact.
+      await syncCookbook().catch(() => {});
 
       if (onAuthSuccess) onAuthSuccess(user);
       onClose();

@@ -136,8 +136,11 @@ export async function updateTastePreferences(preferences) {
   setLocalSession(updatedUser);
 
   // Sync to Puter Cloud KV if connected
-  if (typeof window !== "undefined" && window.puter?.kv?.set) {
+  if (updatedUser.provider === "puter" && typeof window !== "undefined" && window.puter?.kv?.set && window.puter?.authToken) {
     try {
+      const token = window.puter.authToken;
+      const identity = await window.puter.auth.getUser();
+      if (identity?.uuid !== updatedUser.id || window.puter.authToken !== token || getCurrentUser()?.id !== updatedUser.id) throw new Error('Account changed before preference sync.');
       await window.puter.kv.set("mise_taste_prefs", JSON.stringify({
         dietaryPreferences: updatedUser.dietaryPreferences,
         spicePreference: updatedUser.spicePreference,
@@ -151,32 +154,3 @@ export async function updateTastePreferences(preferences) {
   return updatedUser;
 }
 
-/**
- * Syncs saved cookbook recipes to Puter Cloud Key-Value storage.
- */
-export async function syncCookbookToPuterCloud(recipes) {
-  if (typeof window !== "undefined" && window.puter?.kv?.set && Array.isArray(recipes)) {
-    try {
-      await window.puter.kv.set("mise_cloud_cookbook", JSON.stringify(recipes));
-    } catch (err) {
-      console.warn("Cloud cookbook sync notice:", err.message);
-    }
-  }
-}
-
-/**
- * Loads cloud cookbook recipes from Puter KV on sign in.
- */
-export async function loadCookbookFromPuterCloud() {
-  if (typeof window !== "undefined" && window.puter?.kv?.get) {
-    try {
-      const raw = await window.puter.kv.get("mise_cloud_cookbook");
-      if (raw) {
-        return typeof raw === "string" ? JSON.parse(raw) : raw;
-      }
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}

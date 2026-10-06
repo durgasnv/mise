@@ -6,6 +6,7 @@ import { SmartSwapModal } from "./SmartSwapModal";
 import { SocialShareModal } from "./SocialShareModal";
 
 export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother }) {
+  const [saveError, setSaveError] = useState("");
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [portionCount, setPortionCount] = useState(providedRecipe?.basePortions || 2);
@@ -25,8 +26,10 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
   const scaledIngredients = recipe.ingredients || [];
 
   function handleToggleSave() {
-    const res = toggleSaveRecipe(baseRecipe);
-    if (onSaveChange) onSaveChange(res.isSaved);
+    try {
+      const res = toggleSaveRecipe(baseRecipe); setSaveError('');
+      if (onSaveChange) onSaveChange(res.isSaved);
+    } catch { setSaveError('Your recipe could not be saved on this device. Free browser storage or open the cookbook to review its data.'); }
   }
 
   function handlePrint() {
@@ -311,6 +314,7 @@ ${recipe.chefNote}
           </div>
         </div>
 
+        {saveError && <p role="alert" className="text-sm text-red-700">{saveError}</p>}
         {/* Bottom Action Toolbar */}
         <div className="recipe-toolbar no-print pt-6 border-t border-[#E3CFB1] flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">

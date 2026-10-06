@@ -1,3 +1,4 @@
+import { startCookbookSync } from "./lib/cookbookSync.js";
 import { useState, useEffect } from "react";
 import { motion, MotionConfig, AnimatePresence } from "framer-motion";
 import { Navbar } from "./components/Navbar";
@@ -9,7 +10,7 @@ import { PantryWheelModal } from "./components/PantryWheelModal";
 import { CookingModeModal } from "./components/CookingModeModal";
 import { AuthModal } from "./components/AuthModal";
 import { getCurrentUser } from "./lib/auth";
-import { getSavedRecipes } from "./lib/savedRecipes";
+import { getStarterRecipes } from "./lib/savedRecipes";
 
 const pageVariants = {
   hidden: { opacity: 0, y: 12 },
@@ -27,17 +28,22 @@ export default function App() {
   const [authPromptMessage, setAuthPromptMessage] = useState("");
   const [prefilledIngredients, setPrefilledIngredients] = useState(null);
 
+  useEffect(() => startCookbookSync(), []);
+
   useEffect(() => {
     function handleAuthChange(e) {
       const updatedUser = e.detail?.user || getCurrentUser();
       setUser(updatedUser);
+      setSelectedRecipe(null); setShowDemoCooking(false);
+      if (!updatedUser) setView('landing');
+      else if (view === 'saved-recipe' || updatedUser.id !== user?.id) setView('ask');
       if (updatedUser && view === "landing") {
         setView("ask");
       }
     }
     window.addEventListener("mise-auth-change", handleAuthChange);
     return () => window.removeEventListener("mise-auth-change", handleAuthChange);
-  }, [view]);
+  }, [view, user?.id]);
 
   function requireAuth(actionCallback, message = "Please sign in or create an account to use this feature.") {
     if (user) {
@@ -82,7 +88,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const demoRecipe = selectedRecipe || getSavedRecipes()[0] || {
+  const demoRecipe = getStarterRecipes()[0] || {
     title: "Smoked Butter Sweet Corn & Scallion Sauté",
     prepTime: "15 mins",
     servings: "2 portions",
@@ -127,7 +133,7 @@ export default function App() {
             )}
             {view === "ask" && user && (
               <motion.div key="ask" variants={pageVariants} initial="hidden" animate="show" exit="exit">
-                <HomePage
+                <HomePage key={user?.id || "guest"}
                   user={user}
                   onBack={() => handleNavigate("landing")}
                   onViewSaved={() => handleNavigate("saved")}
@@ -138,7 +144,7 @@ export default function App() {
             )}
             {view === "saved" && user && (
               <motion.div key="saved" variants={pageVariants} initial="hidden" animate="show" exit="exit">
-                <SavedPage
+                <SavedPage key={user?.id || "guest"}
                   onBack={() => handleNavigate("ask")}
                   onOpenRecipe={openSavedRecipe}
                 />

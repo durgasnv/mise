@@ -15,10 +15,11 @@ export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemo
 
   useEffect(() => {
     function updateCount() {
-      setSavedCount(getSavedRecipes().length);
+      try { setSavedCount(getSavedRecipes().length); } catch { setSavedCount(0); }
     }
     function updateAuth(event) {
       setUser(event.detail?.user || getCurrentUser());
+      updateCount();
     }
     updateCount();
     window.addEventListener("storage", updateCount);

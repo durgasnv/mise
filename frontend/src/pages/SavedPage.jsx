@@ -1,5 +1,6 @@
+import { syncCookbook, getSyncStatus } from "../lib/cookbookSync.js";
 import { useEffect, useState } from "react";
-import { deleteRecipe, getSavedRecipes, saveRecipe } from "../lib/savedRecipes";
+import { deleteRecipe, getSavedRecipes, saveRecipe, legacyRecipesAvailable, importLegacyCookbook } from "../lib/savedRecipes";
 
 const FILTERS = [
   { id: "all", label: "All recipes" },
@@ -9,18 +10,27 @@ const FILTERS = [
 
 export function SavedPage({ onBack, onOpenRecipe }) {
   const [recipes, setRecipes] = useState([]);
+  const [syncMessage, setSyncMessage] = useState(getSyncStatus());
+  const [storageError, setStorageError] = useState("");
+  const [legacyAvailable, setLegacyAvailable] = useState(legacyRecipesAvailable());
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [deletedUndoItem, setDeletedUndoItem] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
-    setRecipes(getSavedRecipes());
+    const refresh = () => { try { setRecipes(getSavedRecipes()); setStorageError(''); } catch (e) { setStorageError(e.message); } };
+    const refreshStatus = () => setSyncMessage(getSyncStatus());
+    refresh();
+    window.addEventListener('storage', refresh); window.addEventListener('mise-auth-change', refresh); window.addEventListener('mise-sync-status', refreshStatus);
+    return () => { window.removeEventListener('storage', refresh); window.removeEventListener('mise-auth-change', refresh); window.removeEventListener('mise-sync-status', refreshStatus); };
   }, []);
 
   function handleDelete(id, event) {
     event.stopPropagation();
-    const { updated, deleted } = deleteRecipe(id);
+    let result;
+    try { result = deleteRecipe(id); } catch (e) { setStorageError(e.message); return; }
+    const { updated, deleted } = result;
     setRecipes(updated);
     setDeletedUndoItem(deleted);
     setToastMessage(`“${deleted?.title || "Recipe"}” removed`);
@@ -32,7 +42,7 @@ export function SavedPage({ onBack, onOpenRecipe }) {
 
   function handleUndo() {
     if (!deletedUndoItem) return;
-    setRecipes(saveRecipe(deletedUndoItem));
+    try { setRecipes(saveRecipe(deletedUndoItem)); } catch (e) { setStorageError(e.message); return; }
     setDeletedUndoItem(null);
     setToastMessage("Recipe restored");
     setTimeout(() => setToastMessage(""), 3000);
@@ -72,6 +82,13 @@ export function SavedPage({ onBack, onOpenRecipe }) {
             <button type="button" className="editorial-button" onClick={onBack}>Create a new recipe <span>→</span></button>
           </div>
         </header>
+
+        <section className="border p-4 space-y-2 text-sm" aria-label="Cookbook storage">
+          <p>{syncMessage}</p>
+          {storageError && <p role="alert">{storageError}</p>}
+          <button className="underline" onClick={() => syncCookbook().catch(e => setStorageError(e.message))}>Retry cloud sync</button>
+          {legacyAvailable && <div><p>A collection from the previous shared browser storage is available. Import it only if those recipes belong to this account. The original copy will be preserved.</p><button className="underline" onClick={() => { try { setRecipes(importLegacyCookbook()); setLegacyAvailable(false); } catch (e) { setStorageError(e.message); } }}>These are my recipes — import into this account</button></div>}
+        </section>
 
         <section className="cookbook-controls" aria-label="Recipe filters">
           <label className="cookbook-search">

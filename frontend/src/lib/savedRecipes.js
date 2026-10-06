@@ -1,3 +1,4 @@
+import { getCurrentUser } from "./auth.js";
 const STORAGE_KEY = "mise_saved_recipes_v2";
 
 const STARTER_RECIPES = [
@@ -80,97 +81,81 @@ const STARTER_RECIPES = [
   },
 ];
 
-/**
- * Retrieves all saved recipes from localStorage.
- * @returns {Array<object>}
- */
-export function getSavedRecipes() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(STARTER_RECIPES));
-      return STARTER_RECIPES;
-    }
-    return JSON.parse(raw);
-  } catch (err) {
-    console.error("Error reading saved recipes:", err);
-    return STARTER_RECIPES;
-  }
-}
+export function getStarterRecipes() { return structuredClone(STARTER_RECIPES); }
 
-/**
- * Saves a new recipe to localStorage.
- * @param {object} recipe
- * @returns {Array<object>}
- */
+export function cookbookOwner() {
+  const user = getCurrentUser();
+  return user?.id && user?.provider ? `${user.provider}:${user.id}` : 'guest';
+}
+export function cookbookKey(owner = cookbookOwner()) { return `mise_cookbook_v3:${encodeURIComponent(owner)}`; }
+export function validCookbookRecipe(r) {
+  return r && typeof r.id === 'string' && r.id.length <= 200 && typeof r.title === 'string' && r.title.length <= 200 &&
+    Array.isArray(r.ingredients) && r.ingredients.every(x => typeof x === 'string') && Array.isArray(r.instructions) && r.instructions.every(x => typeof x === 'string') &&
+    (!r.tags || Array.isArray(r.tags) && r.tags.every(x => typeof x === 'string'));
+}
+export function validateCookbookOperations(ops) {
+  if (!Array.isArray(ops) || ops.some(op => !op || typeof op.opId !== 'string' || typeof op.id !== 'string' || typeof op.at !== 'number' || !Number.isFinite(op.at) || op.at < 0 || !['save', 'delete'].includes(op.type) || (op.type === 'save' && (!validCookbookRecipe(op.recipe) || op.recipe.id !== op.id)))) throw new Error('Cookbook data is unreadable. The original data has been preserved.');
+  return ops;
+}
+export function mergeCookbooks(...books) {
+  const operations = new Map();
+  for (const book of books) for (const op of validateCookbookOperations(book.operations || [])) operations.set(op.opId, op);
+  return { version: 3, operations: [...operations.values()] };
+}
+export function recipesFromBook(book) {
+  const latest = new Map();
+  for (const op of validateCookbookOperations(book.operations)) {
+    const prior = latest.get(op.id);
+    if (!prior || op.at > prior.at || (op.at === prior.at && op.opId > prior.opId)) latest.set(op.id, op);
+  }
+  return [...latest.values()].filter(op => op.type === 'save').sort((a, b) => b.at - a.at).map(op => op.recipe);
+}
+export function readCookbook(owner = cookbookOwner()) {
+  const raw = localStorage.getItem(cookbookKey(owner));
+  if (raw) {
+    const book = JSON.parse(raw); validateCookbookOperations(book.operations);
+    return book;
+  }
+  return { version: 3, operations: owner.startsWith('puter:') ? [] : STARTER_RECIPES.map(recipe => ({ opId: `starter-${recipe.id}`, id: recipe.id, at: 0, type: 'save', recipe })) };
+}
+export function writeCookbook(book, owner = cookbookOwner()) {
+  validateCookbookOperations(book.operations);
+  localStorage.setItem(cookbookKey(owner), JSON.stringify(book));
+  window.dispatchEvent(new Event('storage'));
+}
+export function getSavedRecipes() { return recipesFromBook(readCookbook()); }
+function mutateBook(type, id, recipe) {
+  const owner = cookbookOwner(), book = readCookbook(owner);
+  const at = Math.max(Date.now(), ...book.operations.map(op => op.at + 1));
+  const op = { type, id, at, opId: globalThis.crypto?.randomUUID?.() || `${at}-${Math.random().toString(36).slice(2)}`, ...(recipe ? { recipe: { ...recipe, savedAt: new Date(at).toISOString() } } : {}) };
+  const updated = mergeCookbooks(book, { operations: [op] });
+  writeCookbook(updated, owner);
+  window.dispatchEvent(new CustomEvent('mise-cookbook-change', { detail: { owner } }));
+  return recipesFromBook(updated);
+}
 export function saveRecipe(recipe) {
-  if (!recipe || !recipe.title) return getSavedRecipes();
-
-  const current = getSavedRecipes();
-  const existsIndex = current.findIndex(
-    (r) => r.id === recipe.id || (r.title.toLowerCase() === recipe.title.toLowerCase())
-  );
-
-  let updated;
-  if (existsIndex >= 0) {
-    updated = [...current];
-    updated[existsIndex] = { ...recipe, savedAt: new Date().toISOString() };
-  } else {
-    updated = [{ ...recipe, savedAt: new Date().toISOString() }, ...current];
-  }
-
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    window.dispatchEvent(new Event("storage"));
-  } catch (err) {
-    console.error("Error saving recipe:", err);
-  }
-  return updated;
+  if (!validCookbookRecipe(recipe)) throw new Error('This recipe is incomplete and cannot be saved.');
+  return mutateBook('save', recipe.id, recipe);
 }
-
-/**
- * Deletes a recipe by ID.
- * @param {string} id
- * @returns {{ updated: Array<object>, deleted: object | null }}
- */
 export function deleteRecipe(id) {
-  const current = getSavedRecipes();
-  const deleted = current.find((r) => r.id === id) || null;
-  const updated = current.filter((r) => r.id !== id);
-
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    window.dispatchEvent(new Event("storage"));
-  } catch (err) {
-    console.error("Error deleting recipe:", err);
-  }
-  return { updated, deleted };
+  const deleted = getSavedRecipes().find(r => r.id === id) || null;
+  return { updated: mutateBook('delete', id), deleted };
 }
-
-/**
- * Checks if a recipe is saved.
- * @param {string} [id]
- * @param {string} [title]
- * @returns {boolean}
- */
-export function isRecipeSaved(id, title) {
-  const current = getSavedRecipes();
-  return current.some(
-    (r) => (id && r.id === id) || (title && r.title.toLowerCase() === title.toLowerCase())
-  );
-}
-
-/**
- * Toggles the save status of a recipe.
- * @param {object} recipe
- * @returns {{ isSaved: boolean, recipes: Array<object> }}
- */
+export function isRecipeSaved(id) { try { return getSavedRecipes().some(r => r.id === id); } catch { return false; } }
 export function toggleSaveRecipe(recipe) {
-  if (isRecipeSaved(recipe.id, recipe.title)) {
-    const { updated } = deleteRecipe(recipe.id);
-    return { isSaved: false, recipes: updated };
-  } else {
-    const updated = saveRecipe(recipe);
-    return { isSaved: true, recipes: updated };
-  }
+  if (isRecipeSaved(recipe.id)) return { isSaved: false, recipes: deleteRecipe(recipe.id).updated };
+  return { isSaved: true, recipes: saveRecipe(recipe) };
+}
+export function legacyRecipesAvailable() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw || localStorage.getItem('mise_legacy_cookbook_claimed')) return false;
+  try { return Array.isArray(JSON.parse(raw)) && JSON.parse(raw).some(validCookbookRecipe); } catch { return false; }
+}
+export function importLegacyCookbook() {
+  if (!legacyRecipesAvailable()) return getSavedRecipes();
+  const original = localStorage.getItem(STORAGE_KEY);
+  // Never delete or rewrite the legacy file; ownership requires the explicit UI action.
+  for (const recipe of JSON.parse(original).filter(validCookbookRecipe)) saveRecipe(recipe);
+  localStorage.setItem('mise_legacy_cookbook_claimed', cookbookOwner());
+  return getSavedRecipes();
 }
