@@ -34,16 +34,18 @@ export default function App() {
     function handleAuthChange(e) {
       const updatedUser = e.detail?.user || getCurrentUser();
       setUser(updatedUser);
-      setSelectedRecipe(null); setShowDemoCooking(false);
-      if (!updatedUser) setView('landing');
-      else if (view === 'saved-recipe' || updatedUser.id !== user?.id) setView('ask');
+      const changedAccount = updatedUser?.id !== user?.id || updatedUser?.provider !== user?.provider;
+      if (changedAccount) {
+        setSelectedRecipe(null); setShowDemoCooking(false);
+        setView(updatedUser ? 'ask' : 'landing');
+      }
       if (updatedUser && view === "landing") {
         setView("ask");
       }
     }
     window.addEventListener("mise-auth-change", handleAuthChange);
     return () => window.removeEventListener("mise-auth-change", handleAuthChange);
-  }, [view, user?.id]);
+  }, [view, user?.id, user?.provider]);
 
   function requireAuth(actionCallback, message = "Please sign in or create an account to use this feature.") {
     if (user) {

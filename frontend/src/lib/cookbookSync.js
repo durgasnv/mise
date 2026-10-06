@@ -6,7 +6,7 @@ let syncStatus = 'Saved on this device';
 function status(message) { syncStatus = message; window.dispatchEvent(new Event('mise-sync-status')); }
 export function syncCookbook() {
   const user = getCurrentUser(), owner = cookbookOwner(), sdk = window.puter, token = sdk?.authToken;
-  if (user?.provider !== 'puter' || !token || !sdk?.kv?.list || !sdk?.auth?.getUser) return Promise.resolve();
+  if (user?.provider !== 'puter' || !token || !sdk?.kv?.list || !sdk?.auth?.getUser) { status('Saved on this device'); return Promise.resolve(); }
   const prefix = `mise_cookbook_v3:${encodeURIComponent(user.id)}:`;
   const assertOwner = () => {
     if (cookbookOwner() !== owner || window.puter !== sdk || sdk.authToken !== token) throw new Error('Account changed during sync.');

@@ -1,3 +1,5 @@
+import { validateRecipes } from "../../../shared/recipes.js";
+import { validateConstraints } from "../../../shared/pantry.js";
 import { getCurrentUser } from "./auth.js";
 const STORAGE_KEY = "mise_saved_recipes_v2";
 
@@ -89,6 +91,10 @@ export function cookbookOwner() {
 }
 export function cookbookKey(owner = cookbookOwner()) { return `mise_cookbook_v3:${encodeURIComponent(owner)}`; }
 export function validCookbookRecipe(r) {
+  try {
+    if (r?.structured) { validateRecipes({ recipes: [r.structured] }); if (r.constraints) validateConstraints(r.constraints); }
+    if (JSON.stringify(r).length > 100000) return false;
+  } catch { return false; }
   return r && typeof r.id === 'string' && r.id.length <= 200 && typeof r.title === 'string' && r.title.length <= 200 &&
     Array.isArray(r.ingredients) && r.ingredients.every(x => typeof x === 'string') && Array.isArray(r.instructions) && r.instructions.every(x => typeof x === 'string') &&
     (!r.tags || Array.isArray(r.tags) && r.tags.every(x => typeof x === 'string'));
