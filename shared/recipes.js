@@ -70,7 +70,7 @@ export function recipeView(structured, { id, constraints, review } = {}) {
     title: structured.title, basePortions: structured.servings, servings: `${structured.servings} portions`,
     prepTime: `${structured.prepMinutes} mins`, cookTime: `${structured.cookMinutes} mins`,
     ingredients: structured.ingredients.map(i => ingredientText(i)),
-    instructions: structured.steps.map(step => step.text.replace(/\{ingredient:([^}]+)\}/g, (_, id) => ingredientText(structured.ingredients.find(i => i.id === id)))),
+    instructions: structured.steps.map(step => step.text.replace(/\{ingredient:([^}]+)\}/g, (_, id) => ingredientText(structured.ingredients.find(i => i.id === id)))).concat(review?.safetyNotes || []),
     chefNote: structured.chefNote, tags: [],
   };
 }

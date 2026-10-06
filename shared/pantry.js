@@ -1,3 +1,4 @@
+import { RESTRICTIONS } from "./recipe-safety.js";
 export const EQUIPMENT = ['stovetop', 'skillet', 'pot', 'oven', 'microwave', 'air fryer', 'blender', 'grill'];
 export const UNITS = ['g', 'kg', 'ml', 'l', 'tsp', 'tbsp', 'cup', 'count', 'pack'];
 export function canonicalName(name) {
@@ -24,6 +25,7 @@ export function validateConstraints(raw = DEFAULT_CONSTRAINTS) {
   for (const key of ['staples', 'restrictions', 'excludedIngredients']) {
     if (c[key].some(x => typeof x !== 'string' || !x.trim() || x.length > 120)) fail();
   }
+  if (c.restrictions.some(r => !RESTRICTIONS.includes(r))) fail();
   if (!c.equipment.length || c.equipment.some(e => !EQUIPMENT.includes(e))) fail();
   return c;
 }

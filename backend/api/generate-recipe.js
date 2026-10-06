@@ -1,3 +1,4 @@
+import { reviewSafety } from "../../shared/recipe-safety.js";
 import { reviewPantry } from "../../shared/pantry.js";
 import "dotenv/config";
 import { RECIPE_SCHEMA, validateRecipes } from "../../shared/recipes.js";
@@ -137,7 +138,7 @@ export function createGenerationHandler({ generate = callGroq, save = saveQuery,
       await reserveQuota(identity);
       const response = await generate(input);
       let recipes, reviews;
-      try { recipes = validateRecipes(response); reviews = recipes.map(r => reviewPantry(r, input.constraints)); }
+      try { recipes = validateRecipes(response); reviews = recipes.map(r => ({ ...reviewPantry(r, input.constraints), ...reviewSafety(r, input.constraints) })); }
       catch (error) { throw new GenerationError(502, "INVALID_RECIPE", error.message); }
       // Logging failure must not replace a successful generation with an error.
       await save(input.question, response).catch(() => console.warn("Recipe history could not be saved."));

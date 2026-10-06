@@ -1,3 +1,4 @@
+import { RESTRICTIONS } from "../../../shared/recipe-safety.js";
 import { EQUIPMENT, UNITS, canonicalName } from "../../../shared/pantry.js";
 import { useState, useRef, useEffect } from "react";
 import { PantryWheelModal } from "./PantryWheelModal";
@@ -71,6 +72,8 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
   const [equipment, setEquipment] = useState(['stovetop', 'skillet', 'pot']);
   const [staples, setStaples] = useState([]);
   const [strictPantry, setStrictPantry] = useState(true);
+  const [restrictions, setRestrictions] = useState([]);
+  const [excluded, setExcluded] = useState("");
   const [amounts, setAmounts] = useState({});
   const pantryNames = (mode === 'freeform' ? freeformText.split(/[,;\n]+/) : slots).map(s => s.trim()).filter(Boolean);
   function toggleChoice(set, value) { set(previous => previous.includes(value) ? previous.filter(x => x !== value) : [...previous, value]); }
@@ -134,7 +137,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
     let notePrompt = dietaryNote.trim() ? ` Dietary note: ${dietaryNote.trim()}.` : "";
     const user = getCurrentUser();
     if (user?.dietaryPreferences?.length > 0) {
-      notePrompt += ` Strict dietary preferences: ${user.dietaryPreferences.join(", ")}. Spice level preference: ${user.spicePreference || "Medium"}.`;
+      notePrompt += ` Saved taste preferences (honor the explicit restrictions separately): ${user.dietaryPreferences.join(", ")}. Spice level preference: ${user.spicePreference || "Medium"}.`;
     }
 
     const question = imagePreview && list.length === 0
@@ -147,7 +150,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
       image: imagePreview,
       constraints: {
         pantry: [...new Map(list.map(name => [canonicalName(name), { name, quantity: amounts[name]?.quantity ? Number(amounts[name].quantity) : null, unit: amounts[name]?.unit || 'count' }])).values()],
-        staples, servings, maxMinutes, equipment, strictPantry, restrictions: [], excludedIngredients: [],
+        staples, servings, maxMinutes, equipment, strictPantry, restrictions, excludedIngredients: excluded.split(/[,;]+/).map(x => x.trim()).filter(Boolean),
       },
     });
   }
@@ -373,6 +376,9 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
             <label>Servings <input aria-label="Servings" className="w-16 border p-1" type="number" min="1" max="12" value={servings} onChange={e => setServings(Number(e.target.value))} /></label>
             <label>Minutes available <input className="w-20 border p-1" type="number" min="5" max="1440" value={maxMinutes} onChange={e => setMaxMinutes(Number(e.target.value))} /></label>
           </div>
+          <p className="text-sm">Dietary restrictions & allergens</p>
+          <div className="flex flex-wrap gap-3">{RESTRICTIONS.map(item => <label key={item}><input type="checkbox" checked={restrictions.includes(item)} onChange={() => toggleChoice(setRestrictions, item)} /> {item}</label>)}</div>
+          <label className="block">Other ingredients to exclude <input className="border p-2 w-full" placeholder="Comma-separated ingredient names" value={excluded} onChange={e => setExcluded(e.target.value)} maxLength={500} /></label>
           <p className="text-sm">Available equipment</p>
           <div className="flex flex-wrap gap-3">{EQUIPMENT.map(item => <label key={item}><input type="checkbox" checked={equipment.includes(item)} onChange={() => toggleChoice(setEquipment, item)} /> {item}</label>)}</div>
           <p className="text-sm">Confirm staples you actually have</p>

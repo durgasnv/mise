@@ -6,6 +6,7 @@ import { SmartSwapModal } from "./SmartSwapModal";
 import { SocialShareModal } from "./SocialShareModal";
 
 export function RecipeCard({ recipe, onSaveChange, onCookAnother }) {
+  const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [portionCount, setPortionCount] = useState(2);
   const [checkedIngredients, setCheckedIngredients] = useState({});
@@ -32,7 +33,7 @@ export function RecipeCard({ recipe, onSaveChange, onCookAnother }) {
 
   function handleCopy() {
     const text = `🍽️ ${recipe.title}
-Portions: ${portionCount} servings | Prep Time: ${recipe.prepTime} | Calories: ${recipe.calories || "~480 kcal"}
+Portions: ${portionCount} servings | Prep Time: ${recipe.prepTime} | Calories: ${recipe.calories || "Nutrition not calculated"}
 
 INGREDIENTS:
 ${scaledIngredients.map((i) => `• ${i}`).join("\n")}
@@ -41,8 +42,8 @@ INSTRUCTIONS:
 ${recipe.instructions.map((step, idx) => `${idx + 1}. ${step}`).join("\n")}
 
 PAIRINGS:
-• Craft Drink: ${recipe.pairing || "Charred Citrus Highball"}
-• Quick Side: ${recipe.quickSide || "Whipped Garlic Butter with warm bread"}
+• Craft Drink: ${recipe.pairing || "Not provided"}
+• Quick Side: ${recipe.quickSide || "Not provided"}
 
 CHEF'S NOTE:
 ${recipe.chefNote}
@@ -88,11 +89,11 @@ ${recipe.chefNote}
         </div>
 
         <div className="flex items-center gap-3 text-xs font-typewriter text-[#F3C694]">
-          <span>Prep {recipe.prepTime || "15m"}</span>
+          <span>Prep {recipe.prepTime || "Not provided"}</span>
           <span>•</span>
-          <span>Cook {recipe.cookTime || "15m"}</span>
+          <span>Cook {recipe.cookTime || "Not provided"}</span>
           <span>•</span>
-          <span>{recipe.calories || "~480 kcal"}</span>
+          <span>{recipe.calories || "Nutrition not calculated"}</span>
         </div>
       </div>
 
@@ -100,7 +101,8 @@ ${recipe.chefNote}
       <div className="p-6 sm:p-10 space-y-8">
         {recipe.review && <section aria-label="Pantry review" className="bg-[#FFF8EC] border p-4 space-y-2">
           {recipe.review.missing?.length > 0 && <p className="font-semibold">Missing or insufficient ingredients</p>}
-          {[...(recipe.review.missing || []), ...(recipe.review.quantityChecks || [])].map((note, i) => <p className="text-sm" key={i}>{note}</p>)}
+          {[...(recipe.review.missing || []), ...(recipe.review.quantityChecks || []), ...(recipe.review.labelChecks || [])].map((note, i) => <p className="text-sm" key={i}>{note}</p>)}
+          {[...(recipe.review.missing || []), ...(recipe.review.quantityChecks || []), ...(recipe.review.labelChecks || [])].length > 0 && <label className="block text-sm"><input type="checkbox" checked={reviewConfirmed} onChange={e => setReviewConfirmed(e.target.checked)} /> I checked quantities, obtained missing items, and verified ingredient labels for my restrictions.</label>}
           <p className="text-sm">Equipment: {recipe.structured?.equipment.join(', ')}</p>
         </section>}
         {/* Title Header & Portion Scaler Bar */}
@@ -152,6 +154,7 @@ ${recipe.chefNote}
             {/* Launch Hands-Free Cooking Mode Button */}
             <button
               type="button"
+              disabled={Boolean(recipe.review && [...(recipe.review.missing || []), ...(recipe.review.quantityChecks || []), ...(recipe.review.labelChecks || [])].length && !reviewConfirmed)}
               onClick={() => setShowCookingMode(true)}
               className="no-print px-4 py-2 rounded-loro bg-[#201B17] hover:bg-[#100E0C] text-[#F5E6CC] text-xs font-typewriter font-bold uppercase tracking-wider shadow-loro flex items-center gap-2 transition-all hover:scale-102"
             >
