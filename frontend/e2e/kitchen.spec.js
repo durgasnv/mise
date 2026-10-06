@@ -98,3 +98,23 @@ test('unavailable service blocks generation while preserving editable ingredient
   await expect(page.getByPlaceholder('e.g. Chicken / Tofu', { exact: true })).toHaveValue('potato');
   expect(generationCalls).toBe(0);
 });
+
+test('leftover planning avoids groceries and repeating a week does not duplicate dinners', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'Plan meals & groceries' }).click();
+  await page.getByLabel('Week starting').fill('2026-10-05');
+  await page.getByLabel('Date', { exact: true }).fill('2026-10-06');
+  await page.getByLabel('Saved recipe').selectOption(recipe.id);
+  await page.getByRole('button', { name: 'Record selected recipe as leftovers' }).click();
+  await expect(page.getByText('Skillet potatoes: 2 portions remaining')).toBeVisible();
+  await page.getByLabel('Recorded leftovers').selectOption({ index: 1 });
+  await page.getByRole('button', { name: 'Plan leftovers on selected date' }).click();
+  await expect(page.getByText('Your recorded pantry covers this week.')).toBeVisible();
+  await page.getByRole('button', { name: 'Add dinner', exact: true }).click();
+  await page.getByRole('button', { name: 'Repeat this week next week' }).click();
+  await page.getByRole('button', { name: 'Repeat this week next week' }).click();
+  await expect(page.getByRole('button', { name: 'Remove dinner', exact: true })).toHaveCount(3);
+  await page.reload(); await page.getByRole('button', { name: 'Plan meals & groceries' }).click();
+  await expect(page.getByText('Skillet potatoes: 2 portions remaining')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+});
