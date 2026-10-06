@@ -1,3 +1,4 @@
+import { prepareAdaptation } from "../../shared/recipe-adaptation.js";
 import { validateConstraints } from "../../shared/pantry.js";
 export const MAX_QUESTION_LENGTH = 6000;
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -65,6 +66,14 @@ export function validateGenerationBody(rawBody) {
   let constraints;
   try { constraints = validateConstraints(body.constraints); }
   catch (error) { throw new GenerationError(400, "INVALID_CONSTRAINTS", error.message); }
+  if (body.action !== undefined && !['generate', 'adapt'].includes(body.action)) throw new GenerationError(400, "INVALID_INPUT", "Unknown recipe action.");
+  if (body.action === 'adapt') {
+    try {
+      if (!body.constraints || image) throw new Error('Adaptation needs a confirmed pantry and a structured recipe.');
+      const adaptation = prepareAdaptation(body.recipe, body.ingredientId, body.replacement, constraints);
+      return { question, imageBase64: null, constraints: adaptation.constraints, adaptation };
+    } catch (error) { throw new GenerationError(400, "INVALID_ADAPTATION", error.message); }
+  }
   return { question, imageBase64: image, constraints };
 }
 

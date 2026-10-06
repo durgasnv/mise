@@ -40,7 +40,7 @@ export function reviewSafety(recipe, constraints) {
     if (conflict) throw new Error(conflict);
   }
   const method = recipe.steps.map(s => s.text).join(' ');
-  const hiddenConflict = ingredientConflict(method, constraints.restrictions, constraints.excludedIngredients);
+  const hiddenConflict = ingredientConflict(method.replace(/\{ingredient:[^}]+\}/g, ''), constraints.restrictions, constraints.excludedIngredients);
   if (hiddenConflict) throw new Error('The method mentions an ingredient that conflicts with your restrictions.');
   if (/\b(?:wash|rinse)\b.{0,25}\b(?:raw )?(?:chicken|poultry|turkey)\b/i.test(method) ||
       /\bthaw\b.{0,50}\b(?:counter|room temperature)\b/i.test(method) ||

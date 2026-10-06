@@ -378,7 +378,8 @@ ${recipe.chefNote}
       {/* Smart Swap Modal */}
       {swapTarget !== null && (
         <SmartSwapModal
-          ingredient={baseIngredients[swapTarget]}
+          ingredient={recipe.structured?.ingredients[swapTarget]}
+          recipe={recipe}
           onSelectSwap={applyIngredientSwap}
           onClose={() => setSwapTarget(null)}
         />

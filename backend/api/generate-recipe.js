@@ -1,3 +1,4 @@
+import { validateAdaptedRecipes } from "../../shared/recipe-adaptation.js";
 import { reviewSafety } from "../../shared/recipe-safety.js";
 import { reviewPantry } from "../../shared/pantry.js";
 import "dotenv/config";
@@ -22,7 +23,7 @@ async function ensureDB() {
   return dbConnection;
 }
 
-export async function callGroq({ question, imageBase64, constraints }, { env = process.env, fetchImpl = fetch } = {}) {
+export async function callGroq({ question, imageBase64, constraints, adaptation }, { env = process.env, fetchImpl = fetch } = {}) {
   if (!env.GROQ_API_KEY) {
     throw new GenerationError(503, "GENERATION_UNAVAILABLE", "Recipe generation is temporarily unavailable. Please try again later.");
   }
@@ -36,7 +37,7 @@ export async function callGroq({ question, imageBase64, constraints }, { env = p
   const timeout = setTimeout(() => controller.abort(), GROQ_TIMEOUT_MS);
 
   try {
-    const prompt = JSON.stringify({ request: question, constraints });
+    const prompt = JSON.stringify({ request: question, constraints, adaptation, task: adaptation ? 'Return exactly ONE complete revised recipe. Replace the selected ingredient, adapting amounts, preparation, technique, cooking time and safety endpoints to its culinary function. Use the confirmed replacement and remove the original. Do not merely rename it.' : 'Create one to three distinct dinners.' });
     let userContent;
     if (isVision) {
       userContent = [
@@ -138,7 +139,7 @@ export function createGenerationHandler({ generate = callGroq, save = saveQuery,
       await reserveQuota(identity);
       const response = await generate(input);
       let recipes, reviews;
-      try { recipes = validateRecipes(response); reviews = recipes.map(r => ({ ...reviewPantry(r, input.constraints), ...reviewSafety(r, input.constraints) })); }
+      try { recipes = validateRecipes(response); if (input.adaptation) validateAdaptedRecipes(recipes, input.adaptation); reviews = recipes.map(r => ({ ...reviewPantry(r, input.constraints), ...reviewSafety(r, input.constraints) })); }
       catch (error) { throw new GenerationError(502, "INVALID_RECIPE", error.message); }
       // Logging failure must not replace a successful generation with an error.
       await save(input.question, response).catch(() => console.warn("Recipe history could not be saved."));

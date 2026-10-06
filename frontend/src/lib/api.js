@@ -8,7 +8,7 @@ const API_BASE_URL = import.meta.env?.VITE_API_URL || "";
  * @param {string} question - Query string (e.g. "Create a recipe with tomato, garlic, olive oil")
  * @returns {Promise<string>} - Raw text response containing recipe
  */
-export async function generateRecipeApi(question, image = null, constraints = undefined) {
+export async function generateRecipeApi(question, image = null, constraints = undefined, adaptation = undefined) {
   const url = `${API_BASE_URL}/api/generate-recipe`;
   const authorization = getGenerationAuthorization();
 
@@ -21,7 +21,7 @@ export async function generateRecipeApi(question, image = null, constraints = un
         "Content-Type": "application/json",
         ...authorization,
       },
-      body: JSON.stringify({ question, image, constraints }),
+      body: JSON.stringify({ question, image, constraints, ...(adaptation || {}) }),
       signal: controller.signal,
     });
 
@@ -61,4 +61,11 @@ export async function checkBackendHealth() {
   } catch {
     return false;
   }
+}
+
+export async function adaptRecipeApi(recipe, ingredientId, replacement) {
+  const [adapted] = await generateRecipeApi('Adapt this dinner for the confirmed replacement.', null,
+    { ...recipe.constraints, servings: recipe.structured.servings },
+    { action: 'adapt', recipe: recipe.structured, ingredientId, replacement });
+  return adapted;
 }
