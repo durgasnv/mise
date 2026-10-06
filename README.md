@@ -42,7 +42,7 @@ Inspired by the craft, wood smoke, and effortless hospitality of **Loro Asian Sm
 
 ### 6. 📸 "Snap Your Fridge" (AI Vision Scanner)
 - Upload or take a picture of your open fridge or pantry.
-- Powered by **Groq Vision (`llama-3.2-11b-vision-preview`)** to detect visible ingredients and formulate recipes automatically.
+- Uses an explicitly configured image-capable Groq model (`GROQ_VISION_MODEL`). Photo scanning is unavailable until a supported model is configured; users can enter ingredients instead.
 
 ### 7. 🎰 "Mystery Pantry Wheel" (Culinary Roulette Challenge)
 - Spin 3 randomized culinary slot reels across Base Proteins, Fresh Produce, and Flavor Accents.
@@ -139,7 +139,7 @@ fridge2feast/
 
 ### Prerequisites
 - **Node.js**: `>= 18.0.0`
-- **Groq API Key**: (Included in `.env` for `llama-3.1-8b-instant` and `llama-3.2-11b-vision-preview`)
+- **Groq API Key**: Configure it server-side. Text defaults to `openai/gpt-oss-20b`; model IDs can be changed through environment variables.
 - **MongoDB Atlas Connection** (Optional — fully operational with in-memory fallback)
 
 ---
@@ -155,7 +155,10 @@ Ensure `backend/.env` contains:
 ```env
 PORT=5000
 GROQ_API_KEY=your_groq_api_key
-JWT_SECRET=mise_secret_chef_jwt_key_2026
+GROQ_TEXT_MODEL=openai/gpt-oss-20b
+# Optional: choose a supported vision model available to your Groq account.
+GROQ_VISION_MODEL=
+JWT_SECRET=your_long_random_secret
 # Optional MongoDB URI:
 # MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/mise
 ```
@@ -165,6 +168,10 @@ Start the backend server:
 npm run dev
 # Running on http://localhost:5000
 ```
+
+Run `npm run check:models` from `backend/` to check configured model availability without generating recipes. Availability does not verify image capability; confirm that in provider documentation.
+
+Generation now rejects invalid/oversized inputs and displays provider failures instead of substituting generic recipes. The endpoint has a process-local limit of 20 requests per minute and a 4,096-token output bound. The local limit does not provide shared serverless quotas, verified identity, or a provider spending cap. Production protection and remaining fixes are tracked in [the findings and implementation plan](docs/1600_findings_and_fix_plan.md).
 
 ---
 
