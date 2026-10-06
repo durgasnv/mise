@@ -4,8 +4,9 @@ Updated 2026-10-06. A staging URL means the address of a deployed test copy of M
 
 ## Checks performed
 
-- 93 regression cases passed across 24 test files; one optional live MongoDB case was skipped. A production frontend build and whitespace checks passed. Local checks cover recipe contracts, auth/quota ordering, dietary rules, pantry deductions, meal planning, editing, nutrition calculations, consent projection, opt-out deletion and account isolation.
+- 95 regression cases passed across 25 test files; one optional live MongoDB case was skipped. A production frontend build and whitespace checks passed. Local checks cover recipe contracts, auth/quota ordering, dietary rules, pantry deductions, meal planning, editing, nutrition calculations, consent projection, opt-out deletion and account isolation.
 - Playwright tests use mocked Puter identity. Desktop Chromium and an emulated Pixel 7 verify inventory persistence, shopping aggregation, cooking timer recovery, dialog focus/Escape, validated editing and consent controls. They are not real-device or real-auth tests.
+- Actual local HTTP checks passed for health and anonymous rejection on generation, nutrition and measurement routes.
 - Read-only Groq model lookup succeeded: the configured default text model is available to the configured account. No paid generation was performed.
 - Frontend, backend and root production dependency audits report no known vulnerabilities after updating Mongoose and locking root deployment dependencies. Development tooling is outside those results.
 - A direct USDA demonstration-record lookup timed out in this environment. USDA lookup tests therefore use labeled mock responses; live nutrition retrieval is not verified.

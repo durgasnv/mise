@@ -61,159 +61,37 @@ Adaptation uses the same endpoint and gates. Add `"action": "adapt"`, `"recipe":
 
 Errors use `{ "code": "...", "error": "actionable message" }`: 400 invalid input/constraints/adaptation, 401 missing/invalid authentication, 403 temporary account, 413 oversized input, 429 admission/account/global quotas with `Retry-After`, 502 invalid or failed provider output, 503 missing provider/vision/quota configuration, 504 provider timeout. Failed attempts may consume reserved quota. Responses are not cached.
 
-Legacy password endpoints below are disabled unless explicitly configured with `ENABLE_LEGACY_AUTH=true` and a valid secret. Their tokens do not grant generation access.
+### `POST /api/generate-recipe`: legacy conversion
 
----
+Use `action: "convert"`, question, constraints and `legacy: { title, ingredients: string[], instructions: string[] }`. Exactly one proposed structured recipe is returned through the same authentication/quota gates. The UI requires review and saves a separate copy with its legacy source ID; it does not overwrite the original.
 
-### 1.2 `POST /api/auth/register`
-Creates a new chef account.
+### `POST /api/nutrition`
 
-* **Request Body**:
-```json
-{
-  "name": "Durga S.",
-  "email": "durga@example.com",
-  "password": "securepassword123",
-  "avatar": "🧑‍🍳"
-}
-```
-* **Response (201 Created)**:
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "66d1a2b3c4d5e6f7a8b9c0d1",
-    "name": "Durga S.",
-    "email": "durga@example.com",
-    "avatar": "🧑‍🍳",
-    "dietaryPreferences": [],
-    "spicePreference": "Medium Heat",
-    "kitchenStaples": ["Olive Oil", "Flake Sea Salt", "Garlic", "Butter"],
-    "savedRecipes": []
-  }
-}
-```
+Requires the current Puter Bearer token and `accountId: "puter:<uuid>"`. The server compares that field with verified identity before quota or lookup. Search: `{ action: "search", query, accountId }` returns up to eight Foundation/SR Legacy food descriptions and FDC IDs. Calculate: `{ action: "calculate", recipe: <structured recipe>, matches: [{ ingredientId, fdcId, grams }], accountId }`.
 
----
+The server fetches official nutrient records itself; client nutrient values are ignored. At most 40 selected matches are fetched in one 10-second bounded batch. Results contain source snapshots, totals, per-serving values, missing ingredients and a recipe fingerprint. Each nutrient amount has `complete: true|false`; partial known totals do not mean missing foods have zero nutrients. Rates are 20 account lookups/minute and 100 globally/minute. Missing USDA configuration or quota storage returns 503, not invented nutrition.
 
-### 1.3 `POST /api/auth/login`
-Authenticates an existing chef.
+### `POST /api/measurements`
 
-* **Request Body**:
-```json
-{
-  "email": "durga@example.com",
-  "password": "securepassword123"
-}
-```
-* **Response (200 OK)**:
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": { ... }
-}
-```
+Requires the same identity binding. Actions:
 
----
+- `{ action: "consent", enabled: boolean, accountId }` changes consent and returns a consent version. Disabling deletes that account's shared events.
+- `{ action: "events", consentVersion, events: [...], accountId }` accepts up to 20 projected events only under the current enabled consent version. Event IDs deduplicate retries and feedback updates. Allowed types: generated, generationFailed, saved, cookingStarted, mealCompleted. Optional metadata: durationMs, bounded errorCode, rating 1–5 and neededShopping boolean/null. Private text fields are dropped.
+- `{ action: "summary", accountId }` returns the account's consented 30-day summary.
+- `{ action: "admin", accountId }` requires `MISE_ADMIN_PUTER_IDS`; returns aggregate consented activity and anonymous operating token/cost counters. Missing usage or rates remains an unpriced count.
 
-### 1.4 `POST /api/auth/demo-login`
-Instant 1-click login as **Chef Durga** with pre-seeded taste profile.
+Events expire after 90 days. Withdrawal changes the version before deletion and insertion rechecks that version; an older upload cannot restore revoked activity. Browser collection is off by default and does not backfill the local journal. Operational request counts contain no account/recipe identifiers. Raw query history is separately disabled unless `SAVE_RECIPE_HISTORY=true`.
 
-* **Response (200 OK)**:
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "demo-user-1",
-    "name": "Chef Durga",
-    "email": "chef@mise.kitchen",
-    "avatar": "👨‍🍳",
-    "dietaryPreferences": ["High Protein", "Gluten-Friendly"],
-    "spicePreference": "Bold & Smoky",
-    "kitchenStaples": ["Cultured Butter", "Garlic Confit", "Smoked Flake Salt", "Chili Crisp"],
-    "savedRecipes": []
-  }
-}
-```
+### Health and legacy endpoints
 
----
+`GET /api/health` returns a liveness response, not proof that authenticated generation, MongoDB or USDA is usable.
 
-### 1.5 `PUT /api/auth/preferences`
-Updates dietary restrictions, spice level, and permanent kitchen staples.
+Legacy `/api/auth/register`, `/login`, `/me`, `/preferences` and `/sync-recipes` are disabled unless `ENABLE_LEGACY_AUTH=true` and a valid secret are configured. The active frontend uses Puter instead. Legacy JWTs do not grant generation, nutrition or measurement access. Public demo token issuance is disabled.
 
-* **Headers**: `Authorization: Bearer <JWT_TOKEN>`
-* **Request Body**:
-```json
-{
-  "dietaryPreferences": ["Vegetarian", "Dairy-Free"],
-  "spicePreference": "Bold & Smoky Heat",
-  "kitchenStaples": ["Olive Oil", "Garlic", "Butter", "Gochujang", "Chili Crisp"]
-}
-```
-* **Response (200 OK)**:
-```json
-{
-  "user": { ... }
-}
-```
+### Browser and cloud schemas
 
----
+The cookbook is `{ version: 3, operations: [{ type: "save"|"delete", id, opId, at, recipe? }] }`, scoped to the account. Puter stores immutable operations in individual keys. Saves retain structured source, constraints and optional validated nutrition; deletes retain tombstones. Legacy recipes keep text and scaling remains disabled until conversion.
 
-### 1.6 `POST /api/auth/sync-recipes`
-Merges guest recipes into the user's permanent cloud account.
+Pantry, weekly plans, cooking sessions and meal journals use account-scoped browser stores, separate from cloud cookbook. Cooking timers persist `{ remainingSeconds, deadline }`; a deadline is an absolute timestamp. Planned dinners retain recipe snapshots. Pantry deductions use a unique cooking-session ID and reviewed amounts.
 
-* **Headers**: `Authorization: Bearer <JWT_TOKEN>`
-* **Request Body**:
-```json
-{
-  "recipes": [
-    {
-      "id": "sample-1",
-      "title": "Smoked Garlic & Sweet Corn Sauté",
-      "prepTime": "15 mins",
-      "ingredients": [...],
-      "instructions": [...]
-    }
-  ]
-}
-```
-* **Response (200 OK)**:
-```json
-{
-  "savedRecipes": [ ... ]
-}
-```
-
----
-
-### 1.7 `GET /api/health`
-Health check confirmation.
-```json
-{ "ok": true }
-```
-
----
-
-## 2. Database Mongoose Schemas
-
-### User Schema (`backend/models/User.js`)
-```javascript
-const UserSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true },
-  avatar: { type: String, default: "🧑‍🍳" },
-  dietaryPreferences: { type: [String], default: [] },
-  spicePreference: { type: String, default: "Medium Heat" },
-  kitchenStaples: { type: [String], default: ["Olive Oil", "Flake Sea Salt", "Garlic", "Butter"] },
-  savedRecipes: { type: [Object], default: [] },
-}, { timestamps: true });
-```
-
-### Query Audit Schema (`backend/models/Query.js`)
-```javascript
-const QuerySchema = new mongoose.Schema({
-  question: { type: String, required: true },
-  response: { type: String, required: true },
-}, { timestamps: true });
-```
+[Release verification](1700_release_verification.md) records configured versus actually verified services.

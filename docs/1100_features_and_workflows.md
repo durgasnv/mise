@@ -1,110 +1,20 @@
-# 1100 • Features & Culinary Workflows
+# Features and workflows
 
-## Overview of System Features
+Updated 2026-10-06.
 
-Mise is packed with 12 interconnected culinary tools designed to guide users from their open fridge all the way to plating their meal.
+1. Sign in with Puter for API services. Demo profiles support local previews. Server identity verification determines account quotas; browser profiles do not establish authorization.
+2. Enter ingredients and available amounts or load persisted pantry stock. Confirm staples, yield, available time, equipment, dietary restrictions and exclusions. Photos require typed ingredient confirmation and an explicitly configured vision model.
+3. Request one recommended dinner, with up to two alternatives. Server and browser validate the structured recipe and independently check known inventory/dietary conflicts. Errors preserve the form and do not fabricate fallback dinners.
+4. Scale structured quantities and linked method amounts. Times, temperatures and package labels remain fixed. Text-only legacy recipes retain original text until a reviewed conversion creates a separate structured copy.
+5. Edit title, yield, timings, ingredients, equipment and linked method steps. Saving validates the revision again and preserves cookbook operation history. Substitution requests adapt the whole recipe rather than renaming food.
+6. Open cooking mode. Timers use deadlines and survive refresh; steps, checks and review confirmation persist per account on this device. Resume active sessions from the kitchen. Confirm completion explicitly; rating and shopping feedback are optional.
+7. Review actual pantry use after completion before deduction. Unknown/incompatible amounts require manual confirmation. Stock is never deducted automatically from a timer or twice for the same session. Reminder dates are user-entered, not inferred freshness.
+8. Schedule structured saved recipes in a weekly plan. Shopping demand combines scaled ingredient amounts and subtracts available stock once. Unknown quantities and incompatible units remain visible. Plans retain the scheduled recipe snapshot rather than silently following later edits.
+9. Match ingredients to USDA Foundation/SR Legacy records and confirm edible gram weights. Calculation covers known nutrients and shows partial coverage. Portion scaling adjusts totals; recipe changes invalidate older calculations. Save the recipe to persist its nutrition record in the cookbook.
+10. Opt in to optional activity sharing from Meal activity & privacy. Shared summaries cover confirmed dinners, return days, shopping answers, ratings and generation failures/duration. Operators see aggregate consented activity and anonymous request token/cost totals. Opt-out stops local collection, clears the queue and requests deletion; offline deletion retries.
 
----
+Cookbook uses account-scoped browser operation logs and Puter KV synchronization. Offline local changes survive retries; delete tombstones prevent older saves from returning. A shared legacy browser collection requires explicit ownership import. Timestamp conflict resolution can be affected by device clock skew.
 
-## 1. 🎛️ Flexible Pantry Quantities & Freeform Input
+Complete text export includes recipe, amounts, method and checks. The image postcard is a shortened preview. Voice reading depends on browser support; an elapsed timer is not a doneness or meal-completion signal.
 
-Users can customize the exact quantity of ingredients they want to cook with:
-* **`3 Items` (Quick Trio)**: High-speed cooking using a protein, produce, and cooking fat/sauce.
-* **`5 Items` (Balanced Kitchen)**: Full dinner balancing proteins, vegetables, starches, and aromatics.
-* **`7 Items` (Feast Master)**: Multi-component feasts with sauces, marinades, and textures.
-* **`Freeform Text Box`**: Allows users to paste or dictate an unformatted list of ingredients (*e.g., "leftover roast chicken, sweet corn, garlic, heavy cream, parmesan, fresh basil"*).
-* **`+ Add / ✕ Remove Slot`**: Dynamically add or delete ingredient input slots.
-
----
-
-## 2. 🃏 Top 3 Stacked Recipe Deck
-
-Rather than forcing a single recipe, Mise outputs **3 distinct culinary styles** for the provided ingredients:
-1. **Option 1: Quick Sauté / High-Heat Sear** — Fast weeknight cooking (10-15 mins).
-2. **Option 2: Comforting Hearth Braised Bowl / Soup** — Deeply savory, slow-simmered flavors.
-3. **Option 3: Crispy Cast-Iron / Oven Roast** — Golden textures, crispy skins, and roasted caramelization.
-
-**Stacked Deck Interface**:
-* Visually layered cards arranged one behind the other with offset depth shadows (`scale-[0.98]` and `scale-[0.96]`).
-* Clicking any background card or top tab instantly brings it to the front with smooth animation.
-
----
-
-## 3. ⏱️ Interactive Hands-Free Cooking Mode
-
-Built for standing over a sizzling pan with flour on your hands:
-* **Giant Readable Typography**: Clear, high-contrast serif and monospace fonts readable from 5 feet away.
-* **Smart Auto-Timers**: Parses text like *"Sear undisturbed for 3 minutes"* into a 1-click countdown timer with `+1m` / `+3m` extensions.
-* **Harmonic Dinner Bell Chime**: Uses the browser **Web Audio API** oscillator synthesis (523.25 Hz - 1046.5 Hz) to ring an authentic, warm brass dinner bell when timers finish.
-* **Voice Step Reader**: Leverages the browser **Web Speech API** to read instruction steps aloud.
-* **Keyboard Navigation**: Press `Arrow Left / Right` to change steps and `Spacebar` to toggle timers.
-
----
-
-## 4. 🧑‍🍳 Authentication & 1-Click Fast Demo Profile
-
-* **Built-in JWT + MongoDB Authentication**: Secure password hashing with `bcryptjs` and session tokens stored in `localStorage`.
-* **⚡ 1-Click Fast Demo Login (`Chef Durga`)**: Instantly logs in with pre-configured taste preferences and cloud cookbook access without typing credentials (ideal for hackathon judging).
-* **Automatic Guest Sync**: Any recipes saved locally prior to login are automatically migrated to the user's permanent cloud profile.
-
----
-
-## 5. 🎯 Personalized Taste & Dietary Profile
-
-Users can configure their kitchen profile once and Mise applies it automatically to every recipe generated:
-* **Dietary Restrictions**: *Vegetarian, Vegan, Gluten-Free, Dairy-Free, Halal, Kosher, Nut-Free, High Protein, Low Carb / Keto, Under 500 kcal, Pescatarian, Kid-Friendly*.
-* **Spice Level**: *Mild & Gentle, Medium Balanced, Bold & Smoky Heat, Fiery Ghost Pepper*.
-* **Permanent Kitchen Staples**: Saves household pantry basics (*olive oil, butter, garlic confit, flake salt, gochujang, chili crisp*) so users don't have to re-enter them.
-
----
-
-## 6. 📸 "Snap Your Fridge" (AI Vision Scanner)
-
-* Users can upload an image or snap a photo directly from their camera.
-* Uses **Groq Vision (`llama-3.2-11b-vision-preview`)** to detect visible ingredients and automatically formulate recipes without manual typing.
-
----
-
-## 7. 🎰 "Mystery Pantry Wheel" (Culinary Roulette Challenge)
-
-* Interactive 3-slot spinning reel game:
-  - **Reel 1**: Base Proteins & Grains (*Chicken Thighs, Firm Tofu, Salmon Fillet, Ramen Noodles, Jasmine Rice*)
-  - **Reel 2**: Fresh Produce & Veggies (*Sweet Corn, Shiitake Mushrooms, Shallots, Bok Choy, Charred Lime*)
-  - **Reel 3**: Flavor Accents & Sauces (*Gochujang, Cultured Butter, Chili Crisp, Miso Paste, Rosemary*)
-* Click **`🎲 Spin Again`** or **`🔥 Cook This Feast`** to instantly populate the kitchen workbench.
-
----
-
-## 8. ⚖️ Dynamic Portion Scaler
-
-* Switch between **`1x`**, **`2x`**, **`4x`**, **`6x`**, or **`8x`** servings.
-* Dynamically recalculates fractions (*e.g., 1/2 cup -> 1 cup*), decimal measurements, and metric weights in real time.
-
----
-
-## 9. 🔄 "Smart Swap" 1-Click Ingredient Substitutions
-
-* Click the **`🔄 Swap`** button next to any ingredient.
-* Displays 3 chef-curated replacements with replacement ratios (*e.g., swapping Butter for Olive Oil 1:1, or Gochujang for Sriracha + Miso*).
-* 1-click replaces the ingredient directly in the active recipe card.
-
----
-
-## 10. 🍸 Smokehouse Beverage & Companion Side Pairings
-
-* Recommends a craft drink pairing (*e.g., Charred Citrus Highball or Smoky Iced Jasmine Tea*).
-* Recommends a quick 2-ingredient companion side dish (*e.g., Whipped Garlic-Miso Butter with warm flatbread*).
-
----
-
-## 11. 📸 Vintage Menu Postcard Exporter (Social Share)
-
-* Uses **HTML5 Canvas** to render a high-resolution, restaurant-style printable menu card with decorative borders, ingredients, and pairings.
-* 1-click **PNG Download** and native **Web Share API** integration.
-
----
-
-## 12. 📖 Cookbook & Recipe Library
-
-* Search saved recipes by name or filter by tags (*Quick Sauté, Comfort Bowl, Cast Iron, High Protein*).
-* Interactive checkbox step completion and undo-delete toast recovery.
+Persistent pantry, plans, cooking progress and local meal journal remain on this device. Cookbook cloud sync and server measurements are separate services. See [release verification](1700_release_verification.md) for unverified live paths.
