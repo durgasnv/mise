@@ -48,7 +48,7 @@ textarea:focus-visible {
 .app-subnav button,
 .app-subnav span {
   font-family: "DM Sans", sans-serif !important;
-  font-size: 9px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -106,7 +106,7 @@ textarea:focus-visible {
 .ingredient-workbench .preset-panel > div:first-child > span {
   color: var(--mise-ink) !important;
   font-family: "IBM Plex Mono", monospace !important;
-  font-size: 9px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
   letter-spacing: .12em !important;
   text-transform: uppercase;
@@ -289,7 +289,7 @@ textarea:focus-visible {
   border-radius: 0 !important;
   background: transparent !important;
   font-family: "IBM Plex Mono", monospace;
-  font-size: 10px !important;
+  font-size: 12px !important;
 }
 .quick-add > div:last-child button:hover { color: var(--mise-cream) !important; background: var(--mise-red) !important; }
 
@@ -338,7 +338,7 @@ textarea:focus-visible {
   justify-content: space-between;
   color: var(--mise-red) !important;
   font-family: "IBM Plex Mono", monospace;
-  font-size: 9px !important;
+  font-size: 12px !important;
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -351,7 +351,7 @@ textarea:focus-visible {
   border-radius: 0 !important;
   box-shadow: none !important;
   font-family: "DM Sans", sans-serif;
-  font-size: 11px !important;
+  font-size: 12px !important;
   letter-spacing: .11em;
 }
 
@@ -456,7 +456,7 @@ textarea:focus-visible {
 
 .recipe-card button {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: .06em;
   text-transform: uppercase;
@@ -637,7 +637,7 @@ textarea:focus-visible {
   color: var(--mise-cream);
   background: var(--mise-red);
   font-family: "DM Sans", sans-serif;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .09em;
   text-transform: uppercase;
@@ -656,12 +656,12 @@ textarea:focus-visible {
 }
 
 .cookbook-search { width: min(100%, 420px); }
-.cookbook-search span { display: block; margin-bottom: 7px; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.cookbook-search span { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .cookbook-search input { width: 100%; padding: 9px 0; border: 0; border-bottom: 1px solid var(--mise-rule); border-radius: 0; outline: 0; background: transparent; font-size: 13px; }
 .cookbook-search input:focus { border-color: var(--mise-red); }
 
 .cookbook-filters { display: flex; gap: 8px; }
-.cookbook-filters button { padding: 8px 12px; border: 1px solid var(--mise-rule); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.cookbook-filters button { padding: 8px 12px; border: 1px solid var(--mise-rule); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .cookbook-filters button.active { color: var(--mise-cream); border-color: var(--mise-ink); background: var(--mise-ink); }
 
 .cookbook-grid {
@@ -683,18 +683,18 @@ textarea:focus-visible {
 }
 
 .cookbook-card:hover { color: var(--mise-cream); background: var(--mise-red); }
-.cookbook-card-top, .cookbook-card-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.cookbook-card-top, .cookbook-card-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .cookbook-card-top button { margin-left: auto; padding-bottom: 2px; border-bottom: 1px solid currentColor; }
-.cookbook-card-body > p { margin-bottom: 16px; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.cookbook-card-body > p { margin-bottom: 16px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .cookbook-card h2 { font-family: "Bodoni Moda", serif; font-size: 38px; font-weight: 500; letter-spacing: -.035em; line-height: .92; text-transform: uppercase; }
-.cookbook-card ul { margin-top: 35px; padding-top: 14px; border-top: 1px solid currentColor; font-size: 11px; line-height: 1.7; }
+.cookbook-card ul { margin-top: 35px; padding-top: 14px; border-top: 1px solid currentColor; font-size: 12px; line-height: 1.7; }
 
 .cookbook-empty { display: grid; min-height: 430px; place-items: center; align-content: center; padding: 60px 20px; border-bottom: 1px solid var(--mise-red); text-align: center; }
 .empty-mark { color: var(--mise-red); font-size: 28px; }
 .cookbook-empty h2 { margin-top: 18px; color: var(--mise-red); font-family: "Bodoni Moda", serif; font-size: 48px; font-weight: 500; }
 .cookbook-empty p { max-width: 440px; margin: 10px 0 28px; font-size: 13px; }
 
-.editorial-toast { position: fixed; right: 24px; bottom: 24px; z-index: 60; display: flex; gap: 26px; align-items: center; padding: 14px 18px; color: var(--mise-cream); background: var(--mise-ink); border: 1px solid var(--mise-red); font-size: 11px; }
+.editorial-toast { position: fixed; right: 24px; bottom: 24px; z-index: 60; display: flex; gap: 26px; align-items: center; padding: 14px 18px; color: var(--mise-cream); background: var(--mise-ink); border: 1px solid var(--mise-red); font-size: 12px; }
 .editorial-toast button { color: var(--mise-peach); border-bottom: 1px solid currentColor; font-weight: 700; text-transform: uppercase; }
 
 /* Dialogs and focused modes */
@@ -715,7 +715,7 @@ textarea:focus-visible {
   right: 42px;
   color: rgba(242, 56, 47, .55);
   font-family: "DM Sans", sans-serif;
-  font-size: 7px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .14em;
 }
@@ -840,7 +840,7 @@ textarea:focus-visible {
 .micro-label {
   display: block;
   font-family: "DM Sans", sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.18em;
   line-height: 1.2;
@@ -894,7 +894,7 @@ textarea:focus-visible {
 .sign-in-link {
   position: relative;
   font-family: "DM Sans", sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .07em;
   text-transform: uppercase;
@@ -932,7 +932,7 @@ textarea:focus-visible {
   color: var(--mise-cream);
   border-radius: 50%;
   background: var(--mise-red);
-  font-size: 8px;
+  font-size: 12px;
   vertical-align: top;
 }
 
@@ -946,7 +946,7 @@ textarea:focus-visible {
   color: var(--mise-cream);
   background: var(--mise-red);
   font-family: "DM Sans", sans-serif;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -958,7 +958,7 @@ textarea:focus-visible {
 .mise-profile { position: relative; }
 .profile-trigger { display: flex; align-items: center; gap: 7px; }
 .profile-trigger > span { display: grid; width: 28px; height: 28px; place-items: center; color: var(--mise-cream); border-radius: 50%; background: var(--mise-red); font-size: 12px; font-style: normal; }
-.profile-trigger em { font-family: "DM Sans", sans-serif; font-size: 10px; font-style: normal; font-weight: 700; text-transform: uppercase; }
+.profile-trigger em { font-family: "DM Sans", sans-serif; font-size: 12px; font-style: normal; font-weight: 700; text-transform: uppercase; }
 
 .mise-profile-menu {
   position: absolute;
@@ -975,8 +975,8 @@ textarea:focus-visible {
 .profile-menu-head { padding: 8px 8px 12px; border-bottom: 1px solid var(--mise-rule); }
 .profile-menu-head strong, .profile-menu-head span { display: block; }
 .profile-menu-head strong { font-family: "Bodoni Moda", serif; font-size: 19px; }
-.profile-menu-head span { margin-top: 2px; color: #6d655e; font-size: 10px; }
-.mise-profile-menu > button { display: block; width: 100%; padding: 10px 8px; text-align: left; font-size: 11px; }
+.profile-menu-head span { margin-top: 2px; color: #6d655e; font-size: 12px; }
+.mise-profile-menu > button { display: block; width: 100%; padding: 10px 8px; text-align: left; font-size: 12px; }
 .mise-profile-menu > button:hover { color: var(--mise-red); }
 .mise-profile-menu .signout { margin-top: 4px; color: var(--mise-red); border-top: 1px solid var(--mise-rule); }
 
@@ -1009,7 +1009,7 @@ textarea:focus-visible {
   text-align: left;
 }
 
-.mise-mobile-nav button span { font-family: "DM Sans", sans-serif; font-size: 9px; font-weight: 700; }
+.mise-mobile-nav button span { font-family: "DM Sans", sans-serif; font-size: 12px; font-weight: 700; }
 
 .editorial-hero {
   position: relative;
@@ -1033,7 +1033,7 @@ textarea:focus-visible {
   align-items: flex-start;
   color: var(--mise-red);
   font-family: "DM Sans", sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.17em;
   text-transform: uppercase;
@@ -1111,7 +1111,7 @@ textarea:focus-visible {
   color: var(--mise-cream);
   border: 1px solid rgba(255,255,255,.55);
   font-family: "DM Sans", sans-serif;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -1145,7 +1145,7 @@ textarea:focus-visible {
   padding: 0 0 7px;
   border-bottom: 1px solid currentColor;
   font-family: "DM Sans", sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -1193,7 +1193,7 @@ textarea:focus-visible {
 
 .pantry-field span {
   color: var(--mise-red);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -1218,7 +1218,7 @@ textarea:focus-visible {
   color: var(--mise-cream);
   border-right: 0;
   background: var(--mise-red);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -1284,7 +1284,7 @@ textarea:focus-visible {
   color: var(--mise-red);
   border: 1px solid var(--mise-red);
   border-radius: 50%;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -1308,7 +1308,7 @@ textarea:focus-visible {
 }
 
 .manifesto-stamp span { font-family: "Bodoni Moda", serif; font-size: 44px; }
-.manifesto-stamp small { max-width: 52px; font-size: 7px; letter-spacing: .1em; text-transform: uppercase; }
+.manifesto-stamp small { max-width: 52px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
 
 .feature-section {
   padding: clamp(90px, 11vw, 150px) 0;
@@ -1338,11 +1338,11 @@ textarea:focus-visible {
   border-bottom: 1px solid var(--mise-rule);
 }
 
-.feature-number { align-self: start; padding-top: 30px; font-size: 10px; font-weight: 700; }
+.feature-number { align-self: start; padding-top: 30px; font-size: 12px; font-weight: 700; }
 .feature-icon svg { width: 70px; fill: none; stroke: var(--mise-red); stroke-width: 1.25; }
 .feature-row h3 { color: var(--mise-red); font-family: "Bodoni Moda", serif; font-size: 31px; font-weight: 500; line-height: 1; }
 .feature-row p { max-width: 330px; font-size: 13px; line-height: 1.6; }
-.feature-row button { justify-self: end; padding-bottom: 6px; border-bottom: 1px solid currentColor; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.feature-row button { justify-self: end; padding-bottom: 6px; border-bottom: 1px solid currentColor; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 
 .dish-section {
   padding: clamp(90px, 11vw, 150px) 0;
@@ -1386,12 +1386,12 @@ textarea:focus-visible {
 }
 
 .dish-card:hover img { transform: scale(1.04); }
-.dish-image-wrap > span { position: absolute; top: 12px; right: 12px; display: grid; width: 36px; height: 36px; place-items: center; color: var(--mise-red); border-radius: 50%; background: var(--mise-cream); font-size: 10px; font-weight: 700; }
+.dish-image-wrap > span { position: absolute; top: 12px; right: 12px; display: grid; width: 36px; height: 36px; place-items: center; color: var(--mise-red); border-radius: 50%; background: var(--mise-cream); font-size: 12px; font-weight: 700; }
 
 .dish-card-copy { padding-top: 18px; }
-.dish-card-copy p { margin-bottom: 12px; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.dish-card-copy p { margin-bottom: 12px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .dish-card-copy h3 { max-width: 360px; font-family: "Bodoni Moda", serif; font-size: 30px; font-weight: 500; line-height: 1; text-transform: uppercase; }
-.dish-card-copy > span { display: block; margin-top: 14px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.dish-card-copy > span { display: block; margin-top: 14px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
 
 .tools-section {
   display: grid;
@@ -1425,7 +1425,7 @@ textarea:focus-visible {
   padding: 16px 19px;
   color: var(--mise-red);
   border: 1px solid var(--mise-red);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -1491,7 +1491,7 @@ textarea:focus-visible {
 .footer-brand { font-family: "Bodoni Moda", serif; font-size: clamp(56px, 7vw, 104px); line-height: .75; }
 .footer-brand em { display: block; margin-left: 62px; font-size: .35em; font-weight: 400; }
 .footer-grid > p { max-width: 250px; font-family: "Bodoni Moda", serif; font-size: 23px; line-height: 1.1; }
-.footer-meta { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.footer-meta { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 
 @media (max-width: 980px) {
   .mise-nav-inner { grid-template-columns: 1fr auto; }
@@ -1688,3 +1688,8 @@ textarea:focus-visible {
 
 .skip-link { position: fixed; top: 8px; left: 8px; z-index: 200; padding: 12px; background: #fff8ec; color: #201b17; transform: translateY(-150%); }
 .skip-link:focus { transform: translateY(0); }
+
+/* Readable everyday controls across the kitchen. */
+.app-page { font-size: 16px; line-height: 1.6; }
+.app-page :where(input:not([type="checkbox"]):not([type="file"]), select, textarea) { font-size: 16px; }
+.ingredient-workbench label { line-height: 1.5; letter-spacing: .04em !important; }

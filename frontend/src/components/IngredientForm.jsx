@@ -336,7 +336,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
               }`}
             >
               <div className="font-bold text-xs">{m.label}</div>
-              <div className={`text-[10px] font-typewriter ${mode === m.id ? "text-[#F3C694]" : "text-[#6D5545]"}`}>
+              <div className={`text-xs font-typewriter ${mode === m.id ? "text-[#F3C694]" : "text-[#6D5545]"}`}>
                 {m.desc}
               </div>
             </button>
@@ -420,7 +420,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {slots.map((val, idx) => (
                 <div key={idx} className="space-y-1">
-                  <label htmlFor={`pantry-ingredient-${idx}`} className="block text-[11px] font-typewriter font-bold text-[#201B17] uppercase">
+                  <label htmlFor={`pantry-ingredient-${idx}`} className="block text-xs font-typewriter font-bold text-[#201B17] uppercase">
                     Ingredient {String(idx + 1).padStart(2, "0")}
                   </label>
                   <div className="relative flex items-center">
@@ -511,7 +511,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
                 <div className="text-xs font-bold text-[#201B17] group-hover:text-[#F2382F] line-clamp-1 mb-1">
                   {preset.name}
                 </div>
-                <div className="text-[11px] text-[#6D5545] font-medium font-typewriter truncate">
+                <div className="text-xs text-[#6D5545] font-medium font-typewriter truncate">
                   {preset.items.join(" • ")}
                 </div>
               </button>
