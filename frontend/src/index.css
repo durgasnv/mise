@@ -886,7 +886,7 @@ textarea:focus-visible {
 .mise-desktop-nav {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: clamp(14px, 2vw, 26px);
 }
 
 .mise-desktop-nav button,
@@ -1701,3 +1701,5 @@ textarea:focus-visible {
 .ingredient-inspiration > summary { cursor: pointer; font-size: 14px; font-weight: 600; }
 
 .method-panel ol p { font-size: clamp(16px, 1.5vw, 18px); line-height: 1.7; }
+
+.mise-mobile-nav button.active { color: var(--mise-ink); background: var(--mise-paper); font-weight: 700; box-shadow: inset 3px 0 var(--mise-red); }
