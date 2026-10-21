@@ -22,3 +22,7 @@ Landing motion uses GSAP timelines and ScrollTrigger for the hero entrance and s
 The hero, featured dishes and tools section retain their original photographs. The animated 3D noodle scene has been removed.
 
 The landing page loads as a separate JavaScript chunk. Browser checks cover the hero photograph, featured images, reduced motion, form use and horizontal overflow.
+
+Kitchen UI primitives are defined in `frontend/src/index.css`: `ui-card`, `ui-field`, `ui-label`, and `ui-button` with primary/secondary variants. Use these for component appearance and utility classes for layout. Controls use a shared 44px minimum height and 3px radius; fields use 16px text, labels use 12–14px text, and recipe steps use 16–18px text. Keep bright red for emphasis and selected states; primary buttons use the darker red for readable light text.
+
+The kitchen places ingredient entry before household settings. Dietary restrictions remain visible; quick-add suggestions, combinations, and optional preferences live in an expandable section. Healthy recipe service status stays compact, failures expose details, and synchronization follows the workbench. Desktop and mobile navigation share About, Kitchen, Pantry, Plan, and Cookbook destinations with `aria-current` active states.

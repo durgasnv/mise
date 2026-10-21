@@ -132,7 +132,7 @@ export function HomePage({ onBack, onViewSaved, onViewPantry, onViewPlan, onView
           <h1>What are we<br /><em>working with?</em></h1>
           <p>Name what you have. Mise will recommend a dinner that fits, with alternatives when useful.</p>
         </header>
-        <div className="flex flex-wrap gap-3">{onViewPantry && <button className="editorial-button" onClick={onViewPantry}>Manage pantry</button>}{onViewPlan && <button className="editorial-button" onClick={onViewPlan}>Plan meals & groceries</button>}{onViewMeasurements && <button className="editorial-button" onClick={onViewMeasurements}>Meal activity & privacy</button>}</div>
+        <div className="flex flex-wrap gap-3">{onViewPantry && <button className="ui-button ui-button-secondary" onClick={onViewPantry}>Manage pantry</button>}{onViewPlan && <button className="ui-button ui-button-secondary" onClick={onViewPlan}>Plan meals & groceries</button>}{onViewMeasurements && <button className="ui-button ui-button-secondary" onClick={onViewMeasurements}>Meal activity & privacy</button>}</div>
         <details className="service-status" open={readiness && !readiness.ready ? true : undefined}>
           <summary>{!readiness ? 'Checking recipe availability…' : readiness.ready ? 'Ready to recommend dinner' : 'Recipe service needs attention'}</summary>
           <div className="flex flex-wrap items-center gap-3 pt-3">

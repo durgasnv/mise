@@ -112,7 +112,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
   }
 
   return (
-    <article className="recipe-card paper-card print-card rounded-loro-lg border border-[#E3CFB1] shadow-loro-lg overflow-hidden transition-all relative">
+    <article className="recipe-card ui-card print-card overflow-hidden relative">
       {/* Top Banner Ribbon */}
       <div className="recipe-ribbon bg-[#201B17] text-[#F5E6CC] px-6 py-2.5 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
