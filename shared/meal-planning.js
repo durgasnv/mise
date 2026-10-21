@@ -3,6 +3,7 @@ import { scaleStructuredRecipe } from './recipe-scaling.js';
 export function shoppingList(entries, pantry) {
   const demand = new Map();
   for (const entry of entries) {
+    if (entry.kind === 'leftover') continue;
     const recipe = scaleStructuredRecipe(entry.recipe.structured, entry.servings);
     for (const i of recipe.ingredients) {
       const unit = ['g', 'kg'].includes(i.unit) ? 'g' : ['ml','l','tsp','tbsp','cup'].includes(i.unit) ? 'ml' : i.unit;

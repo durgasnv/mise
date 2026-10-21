@@ -1,3 +1,4 @@
+import { recordWorkspaceChange } from './workspaceLog.js';
 import { cookbookOwner } from './savedRecipes.js';
 export function accountKey(name, owner = cookbookOwner()) { return `mise_${name}:${encodeURIComponent(owner)}`; }
 export function readAccountData(name, fallback, validate = () => {}, owner = cookbookOwner()) {
@@ -8,11 +9,13 @@ export function readAccountData(name, fallback, validate = () => {}, owner = coo
   catch { throw new Error('Stored data could not be read. The original copy has been preserved.'); }
   return value;
 }
-export function writeAccountData(name, value, validate = () => {}, owner = cookbookOwner()) {
+export function writeAccountData(name, value, validate = () => {}, owner = cookbookOwner(), { fromSync = false } = {}) {
   if (owner !== cookbookOwner()) throw new Error('Your account changed. Reopen this page before saving.');
   validate(value);
+  if (!fromSync) recordWorkspaceChange(name, JSON.parse(localStorage.getItem(accountKey(name, owner)) || 'null'), value, owner);
   localStorage.setItem(accountKey(name, owner), JSON.stringify(value));
   window.dispatchEvent(new Event(`mise-${name}-change`));
+  if (!fromSync) window.dispatchEvent(new Event('mise-workspace-change'));
   return value;
 }
 export function newId() { return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`; }

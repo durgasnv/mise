@@ -50,6 +50,15 @@ export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemo
     setMobileOpen(false);
   }
 
+  const navigation = [
+    { view: 'landing', label: 'About' },
+    { view: 'ask', label: 'Kitchen' },
+    { view: 'pantry', label: 'Pantry' },
+    { view: 'plan', label: 'Plan' },
+    { view: 'saved', label: 'Cookbook' },
+  ];
+  const activeView = currentView === 'saved-recipe' ? 'saved' : currentView;
+
   return (
     <>
       <header className="mise-navbar">
@@ -59,13 +68,14 @@ export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemo
           </button>
 
           <nav className="mise-desktop-nav" aria-label="Primary navigation">
-            <button type="button" className={currentView === "landing" ? "active" : ""} onClick={() => navigate("landing")}>About</button>
-            <button type="button" className={currentView === "ask" ? "active" : ""} onClick={() => navigate("ask")}>The kitchen</button>
-            <button type="button" onClick={onOpenMysteryWheel}>Surprise me</button>
+            {navigation.map(item => (
+              <button key={item.view} type="button" className={activeView === item.view ? 'active' : ''} aria-current={activeView === item.view ? 'page' : undefined} onClick={() => navigate(item.view)}>
+                {item.label}{item.view === 'saved' && savedCount > 0 && <sup> {savedCount}</sup>}
+              </button>
+            ))}
           </nav>
 
           <div className="mise-nav-actions">
-            <button type="button" className="cookbook-link" onClick={() => navigate("saved")}>Cookbook{savedCount > 0 && <sup>{savedCount}</sup>}</button>
             {user ? (
               <div className="mise-profile" ref={menuRef}>
                 <button type="button" className="profile-trigger" onClick={() => setProfileOpen((open) => !open)} aria-expanded={profileOpen}>
@@ -96,12 +106,14 @@ export function Navbar({ currentView, onNavigate, onOpenMysteryWheel, onOpenDemo
 
         {mobileOpen && (
           <nav className="mise-mobile-nav" aria-label="Mobile navigation">
-            <button type="button" onClick={() => navigate("landing")}><span>01</span>About</button>
-            <button type="button" onClick={() => navigate("ask")}><span>02</span>The kitchen</button>
-            <button type="button" onClick={() => navigate("saved")}><span>03</span>Cookbook {savedCount > 0 && `(${savedCount})`}</button>
-            <button type="button" onClick={() => { setMobileOpen(false); onOpenMysteryWheel(); }}><span>04</span>Mystery wheel</button>
-            <button type="button" onClick={() => { setMobileOpen(false); onOpenDemoCookingMode(); }}><span>05</span>Cooking mode</button>
-            {!user && <button type="button" onClick={() => { setMobileOpen(false); setShowAuthModal(true); }}><span>06</span>Sign in</button>}
+            {navigation.map((item, index) => (
+              <button key={item.view} type="button" className={activeView === item.view ? 'active' : ''} aria-current={activeView === item.view ? 'page' : undefined} onClick={() => navigate(item.view)}>
+                <span>{String(index + 1).padStart(2, '0')}</span>{item.label}{item.view === 'saved' && savedCount > 0 && ` (${savedCount})`}
+              </button>
+            ))}
+            <button type="button" onClick={() => { setMobileOpen(false); onOpenMysteryWheel(); }}><span>06</span>Mystery wheel</button>
+            <button type="button" onClick={() => { setMobileOpen(false); onOpenDemoCookingMode(); }}><span>07</span>Cooking mode</button>
+            {!user && <button type="button" onClick={() => { setMobileOpen(false); setShowAuthModal(true); }}><span>08</span>Sign in</button>}
           </nav>
         )}
       </header>

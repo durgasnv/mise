@@ -1,7 +1,7 @@
 import { mealEvents, mealSummary } from "../lib/mealActivity.js";
 import { syncCookbook, getSyncStatus } from "../lib/cookbookSync.js";
 import { useEffect, useState } from "react";
-import { deleteRecipe, getSavedRecipes, saveRecipe, legacyRecipesAvailable, importLegacyCookbook } from "../lib/savedRecipes";
+import { cookbookConflicts, resolveCookbookConflict, deleteRecipe, getSavedRecipes, saveRecipe, legacyRecipesAvailable, importLegacyCookbook } from "../lib/savedRecipes";
 
 const FILTERS = [
   { id: "all", label: "All recipes" },
@@ -10,6 +10,7 @@ const FILTERS = [
 ];
 
 export function SavedPage({ onBack, onOpenRecipe }) {
+  const [conflicts, setConflicts] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [meals, setMeals] = useState(null);
   const [syncMessage, setSyncMessage] = useState(getSyncStatus());
@@ -21,7 +22,7 @@ export function SavedPage({ onBack, onOpenRecipe }) {
   const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
-    const refresh = () => { try { setRecipes(getSavedRecipes()); setStorageError(''); } catch (e) { setStorageError(e.message); } };
+    const refresh = () => { try { setRecipes(getSavedRecipes()); setConflicts(cookbookConflicts()); setStorageError(''); } catch (e) { setStorageError(e.message); } };
     const refreshMeals = () => { try { setMeals(mealSummary(mealEvents())); } catch (e) { setStorageError(e.message); } };
     const refreshStatus = () => setSyncMessage(getSyncStatus());
     refresh(); refreshMeals();
@@ -99,6 +100,14 @@ export function SavedPage({ onBack, onOpenRecipe }) {
           {legacyAvailable && <div><p>A collection from the previous shared browser storage is available. Import it only if those recipes belong to this account. The original copy will be preserved.</p><button className="underline" onClick={() => { try { setRecipes(importLegacyCookbook()); setLegacyAvailable(false); } catch (e) { setStorageError(e.message); } }}>These are my recipes — import into this account</button></div>}
         </section>
 
+        {conflicts.map(conflict => <section key={conflict.id} className="paper-card p-4 space-y-3" aria-label="Recipe conflict">
+          <h2 className="font-display text-2xl">Review competing recipe edits</h2>
+          <p>Choose the version to keep. Each original revision remains in history.</p>
+          {conflict.heads.map((head, index) => <details key={head.opId}><summary>Version {index + 1}: {head.type === 'delete' ? 'Remove recipe' : head.recipe.title}</summary>
+            {head.recipe && <><ul>{head.recipe.ingredients.map((text,i) => <li key={i}>{text}</li>)}</ul><ol>{head.recipe.instructions.map((text,i) => <li key={i}>{text}</li>)}</ol></>}
+            <button className="underline" onClick={() => { try { resolveCookbookConflict(conflict.id, head.opId); } catch(e) { setStorageError(e.message); } }}>Keep recipe version {index + 1}</button>
+          </details>)}
+        </section>)}
         <section className="cookbook-controls" aria-label="Recipe filters">
           <label className="cookbook-search">
             <span>Search collection</span>

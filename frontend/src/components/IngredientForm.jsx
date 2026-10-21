@@ -1,3 +1,5 @@
+import { useVoiceInput } from '../lib/useVoiceInput.js';
+import { spokenIngredients, appendVoiceIngredients } from '../lib/voice.js';
 import { activePantry, getPantry, saveFormPantry } from "../lib/pantryInventory.js";
 import { cookbookOwner } from "../lib/savedRecipes.js";
 import { RESTRICTIONS } from "../../../shared/recipe-safety.js";
@@ -79,7 +81,19 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showWheelModal, setShowWheelModal] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
-  const [isListening, setIsListening] = useState(false);
+  const voiceValues = useRef({ mode, slots, freeformText });
+  voiceValues.current = { mode, slots, freeformText };
+  const voice = useVoiceInput(transcript => {
+    if (cookbookOwner() !== inventoryOwner) throw new Error('Your account changed. Reopen the kitchen before using voice input.');
+    const incoming = spokenIngredients(transcript);
+    const values = voiceValues.current;
+    const existing = values.mode === 'freeform' ? values.freeformText.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean) : values.slots;
+    const { items, added } = appendVoiceIngredients(existing, incoming);
+    if (values.mode === 'freeform') { const text = items.filter(Boolean).join(', '); voiceValues.current.freeformText = text; setFreeformText(text); }
+    else { voiceValues.current.slots = items; setSlots(items); }
+    return added ? `Added ${added} ingredient${added === 1 ? '' : 's'}. Review the names before generating a recipe.` : 'Those ingredients are already in your list. Review the names before generating a recipe.';
+  }, { disabled: isLoading, context: mode });
+  const isListening = voice.isListening;
   const fileInputRef = useRef(null);
   const [servings, setServings] = useState(2);
   const [maxMinutes, setMaxMinutes] = useState(30);
@@ -190,46 +204,6 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
     reader.readAsDataURL(file);
   }
 
-  function handleVoiceInput() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Voice recognition is not supported in this browser. Try Chrome or Safari.");
-      return;
-    }
-
-    if (isListening) return;
-
-    try {
-      const recognition = new SpeechRecognition();
-      recognition.lang = "en-US";
-      recognition.interimResults = false;
-
-      recognition.onstart = () => setIsListening(true);
-      recognition.onend = () => setIsListening(false);
-      recognition.onerror = () => setIsListening(false);
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        const parts = transcript
-          .replace(/I have|I've got|and|with|some/gi, ",")
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
-
-        if (mode === "freeform") {
-          setFreeformText(parts.join(", "));
-        } else {
-          setSlots(parts.slice(0, slots.length));
-        }
-      };
-
-      recognition.start();
-    } catch (err) {
-      console.warn("Speech error:", err);
-      setIsListening(false);
-    }
-  }
-
   function applyPreset(preset) {
     setSlots(preset.items);
     if (preset.items.length === 3) setMode("3");
@@ -269,7 +243,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
   const hasAnyInput = pantryNames.length > 0 && equipment.length > 0;
 
   return (
-    <div className="ingredient-workbench bg-[#FFF8EC] rounded-loro-lg border border-[#E3CFB1] shadow-loro p-6 sm:p-8 relative">
+    <div className="ingredient-workbench ui-card relative">
       {/* Header with Step Indicator & Action Shortcuts */}
       <div className="workbench-header flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-[#E3CFB1]">
         <div>
@@ -290,7 +264,9 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
           {/* Voice input */}
           <button
             type="button"
-            onClick={handleVoiceInput}
+            onClick={voice.toggle}
+            disabled={isLoading}
+            aria-describedby="voice-input-feedback"
             aria-pressed={isListening}
             className={`px-3 py-1.5 rounded-lg text-xs font-typewriter font-bold border transition-all flex items-center gap-1.5 ${
               isListening
@@ -299,7 +275,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
             }`}
             title="Speak your ingredients"
           >
-            <span>{isListening ? "Listening…" : "Use voice"}</span>
+            <span>{isListening ? "Stop listening" : "Use voice"}</span>
           </button>
 
           {/* Photo upload */}
@@ -338,9 +314,12 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
         </div>
       </div>
 
+      <div id="voice-input-feedback" className="pt-3 text-sm">
+        {voice.error ? <p role="alert">{voice.error}</p> : voice.message ? <p role="status">{voice.message}</p> : null}
+      </div>
       {/* Ingredient Count Mode Tabs: 3 Items, 5 Items, 7 Items, Freeform */}
       <div className="mode-selector pt-6 pb-2">
-        <label className="block text-xs font-typewriter font-bold tracking-wider text-[#201B17] uppercase mb-2">
+        <label className="ui-label block mb-2">
           Choose your input
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -357,7 +336,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
               }`}
             >
               <div className="font-bold text-xs">{m.label}</div>
-              <div className={`text-[10px] font-typewriter ${mode === m.id ? "text-[#F3C694]" : "text-[#6D5545]"}`}>
+              <div className={`text-xs font-typewriter ${mode === m.id ? "text-[#F3C694]" : "text-[#6D5545]"}`}>
                 {m.desc}
               </div>
             </button>
@@ -394,6 +373,68 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
       )}
 
       <form onSubmit={handleSubmit} className="pantry-form mt-6 space-y-6">
+        {/* Slot-based input OR Freeform Box */}
+        {mode === "freeform" ? (
+          <div className="space-y-1.5">
+            <label className="ui-label block">
+              List what you have
+            </label>
+            <textarea
+              aria-label="Pantry ingredients"
+              rows={4}
+              value={freeformText}
+              onChange={(e) => setFreeformText(e.target.value)}
+              placeholder="e.g. Chicken thighs, sweet corn, garlic cloves, heavy cream, parmesan, fresh basil, cracked pepper"
+              disabled={isLoading}
+              className="ui-field w-full"
+            />
+          </div>
+        ) : (
+          <div className="ingredient-slots space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {slots.map((val, idx) => (
+                <div key={idx} className="space-y-1">
+                  <label htmlFor={`pantry-ingredient-${idx}`} className="ui-label block">
+                    Ingredient {String(idx + 1).padStart(2, "0")}
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      id={`pantry-ingredient-${idx}`}
+                      type="text"
+                      value={val}
+                      onChange={(e) => handleSlotChange(idx, e.target.value)}
+                      placeholder={`e.g. ${idx === 0 ? "Chicken / Tofu" : idx === 1 ? "Sweet Corn / Veg" : "Garlic / Butter"}`}
+                      disabled={isLoading}
+                      className="ui-field w-full pr-10"
+                    />
+                    {val && (
+                      <button
+                        type="button"
+                        aria-label={`Clear ingredient ${idx + 1}`}
+                        onClick={() => handleSlotChange(idx, "")}
+                        className="absolute right-2 text-gray-400 hover:text-gray-600 text-xs"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Add extra slot button */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={addSlot}
+                className="text-xs font-typewriter font-bold text-[#201B17] hover:text-[#F2382F] flex items-center gap-1"
+              >
+                + Add another ingredient
+              </button>
+            </div>
+          </div>
+        )}
+
         <fieldset disabled={isLoading} className="space-y-4 rounded-lg border border-[#E3CFB1] p-4">
           <legend className="font-semibold">Your household & pantry</legend>
           <button type="button" className="underline text-sm" onClick={() => {
@@ -420,184 +461,12 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
           {imagePreview && <p className="text-sm">Confirm photo ingredients by entering their names below before requesting a dinner. Availability is checked against those names.</p>}
         </fieldset>
 
-        {/* Slot-based input OR Freeform Box */}
-        {mode === "freeform" ? (
-          <div className="space-y-1.5">
-            <label className="block text-xs font-typewriter font-bold tracking-wider text-[#201B17] uppercase">
-              List what you have
-            </label>
-            <textarea
-              rows={4}
-              value={freeformText}
-              onChange={(e) => setFreeformText(e.target.value)}
-              placeholder="e.g. Chicken thighs, sweet corn, garlic cloves, heavy cream, parmesan, fresh basil, cracked pepper"
-              disabled={isLoading}
-              className="w-full bg-[#F5E6CC]/60 border border-[#E3CFB1] focus:border-[#F2382F] focus:bg-white text-[#201B17] placeholder-[#9C806D] text-sm font-medium rounded-lg p-4 outline-none transition-all leading-relaxed"
-            />
-          </div>
-        ) : (
-          <div className="ingredient-slots space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {slots.map((val, idx) => (
-                <div key={idx} className="space-y-1">
-                  <label className="block text-[11px] font-typewriter font-bold text-[#201B17] uppercase">
-                    Ingredient {String(idx + 1).padStart(2, "0")}
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={val}
-                      onChange={(e) => handleSlotChange(idx, e.target.value)}
-                      placeholder={`e.g. ${idx === 0 ? "Chicken / Tofu" : idx === 1 ? "Sweet Corn / Veg" : "Garlic / Butter"}`}
-                      disabled={isLoading}
-                      className="w-full bg-[#F5E6CC]/60 border border-[#E3CFB1] focus:border-[#F2382F] focus:bg-white text-[#201B17] placeholder-[#9C806D] text-sm font-medium rounded-lg px-3.5 py-2.5 outline-none transition-all pr-8"
-                    />
-                    {val && (
-                      <button
-                        type="button"
-                        onClick={() => handleSlotChange(idx, "")}
-                        className="absolute right-2 text-gray-400 hover:text-gray-600 text-xs"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Add extra slot button */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={addSlot}
-                className="text-xs font-typewriter font-bold text-[#201B17] hover:text-[#F2382F] flex items-center gap-1"
-              >
-                + Add another ingredient
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Quick Suggestion Chips */}
-        <div className="quick-add pt-1">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-typewriter font-bold text-[#6D5545] uppercase tracking-wider">
-              Quick add
-            </span>
-            {hasAnyInput && (
-              <button
-                type="button"
-                onClick={clearAll}
-                className="text-xs font-typewriter text-[#6D5545] hover:text-[#F2382F] transition-colors underline"
-              >
-                Clear all
-              </button>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {POPULAR_INGREDIENTS.map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => addIngredientToNextSlot(item)}
-                disabled={isLoading}
-                className="px-2.5 py-1 text-xs font-medium bg-[#F5E6CC] hover:bg-[#F2382F] hover:text-white text-[#201B17] border border-[#E3CFB1] rounded-md transition-all active:scale-95"
-              >
-                + {item}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Smokehouse Curated Combos */}
-        <div className="preset-panel bg-[#F5E6CC]/70 rounded-loro p-4 border border-[#E3CFB1]">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-typewriter font-bold text-[#201B17] uppercase tracking-wider flex items-center gap-1.5">
-              Suggested combinations
-            </span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-            {currentPresets.map((preset) => (
-              <button
-                key={preset.name}
-                type="button"
-                onClick={() => applyPreset(preset)}
-                disabled={isLoading}
-                className="text-left p-3 rounded-lg bg-white border border-[#E3CFB1] hover:border-[#F2382F] hover:shadow-loro-sm transition-all group"
-              >
-                <div className="text-xs font-bold text-[#201B17] group-hover:text-[#F2382F] line-clamp-1 mb-1">
-                  {preset.name}
-                </div>
-                <div className="text-[11px] text-[#6D5545] font-medium font-typewriter truncate">
-                  {preset.items.join(" • ")}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Cooking Style Options */}
-        <div className="style-panel">
-          <label className="block text-xs font-typewriter font-bold tracking-wider text-[#201B17] uppercase mb-2">
-            Choose a direction
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {COOKING_STYLES.map((style) => (
-              <button
-                key={style}
-                type="button"
-                onClick={() => setSelectedStyle(style)}
-                aria-pressed={selectedStyle === style}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
-                  selectedStyle === style
-                    ? "bg-[#201B17] text-[#F5E6CC] border-[#201B17] shadow-sm"
-                    : "bg-white text-[#201B17] border-[#E3CFB1] hover:bg-[#F5E6CC]"
-                }`}
-              >
-                {style}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Advanced Options Toggle */}
-        <div className="advanced-panel">
-          <button
-            type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="text-xs font-semibold text-[#6D5545] hover:text-[#201B17] flex items-center gap-1.5"
-          >
-            <span>{showAdvanced ? "−" : "+"}</span>
-            <span>Dietary notes and preferences</span>
-          </button>
-
-          {showAdvanced && (
-            <div className="mt-3 p-4 bg-[#F5E6CC]/60 rounded-lg border border-[#E3CFB1]">
-              <label className="block text-xs font-typewriter text-[#201B17] mb-1 font-semibold">
-                Special instructions (e.g. gluten-free, extra spicy, kid-friendly, under 500 calories)
-              </label>
-              <input
-                type="text"
-                value={dietaryNote}
-                onChange={(e) => setDietaryNote(e.target.value)}
-                placeholder="e.g. Make it spicy with a crispy texture, dairy-free"
-                className="w-full bg-white border border-[#E3CFB1] rounded-md px-3 py-2 text-sm text-[#201B17] outline-none focus:border-[#F2382F]"
-              />
-            </div>
-          )}
-        </div>
-
         {/* Submit CTA Button */}
         <div className="submit-panel pt-2">
           <button
             type="submit"
             disabled={isLoading || !hasAnyInput}
-            className={`w-full py-4 px-6 rounded-loro font-bold text-base uppercase tracking-wider text-white shadow-loro-coral btn-shimmer transition-all flex items-center justify-center gap-3 ${
-              isLoading || !hasAnyInput
-                ? "bg-[#201B17]/40 cursor-not-allowed"
-                : "bg-[#F2382F] hover:bg-[#CF2A23] active:scale-[0.99] cursor-pointer"
-            }`}
+            className="ui-button ui-button-primary w-full"
           >
             {isLoading ? (
               <div className="flex items-center gap-3">
@@ -607,7 +476,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
                   <span className="simmer-dot" />
                 </span>
                 <span className="font-typewriter text-sm tracking-widest text-[#F5E6CC]">
-                  STOKING THE HEARTH & CRAFTING TOP 3 FEASTS...
+                  Finding your dinner…
                 </span>
               </div>
             ) : (
@@ -618,6 +487,121 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
             )}
           </button>
         </div>
+        <details className="ingredient-inspiration">
+          <summary>Quick add, suggested combinations & preferences</summary>
+          <div className="space-y-6 pt-4">
+            {/* Quick Suggestion Chips */}
+            <div className="quick-add pt-1">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-typewriter font-bold text-[#6D5545] uppercase tracking-wider">
+                  Quick add
+                </span>
+                {hasAnyInput && (
+                  <button
+                    type="button"
+                    onClick={clearAll}
+                    className="text-xs font-typewriter text-[#6D5545] hover:text-[#F2382F] transition-colors underline"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {POPULAR_INGREDIENTS.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => addIngredientToNextSlot(item)}
+                    disabled={isLoading}
+                    className="px-2.5 py-1 text-xs font-medium bg-[#F5E6CC] hover:bg-[#F2382F] hover:text-white text-[#201B17] border border-[#E3CFB1] rounded-md transition-all active:scale-95"
+                  >
+                    + {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Smokehouse Curated Combos */}
+            <div className="preset-panel bg-[#F5E6CC]/70 rounded-loro p-4 border border-[#E3CFB1]">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-typewriter font-bold text-[#201B17] uppercase tracking-wider flex items-center gap-1.5">
+                  Suggested combinations
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {currentPresets.map((preset) => (
+                  <button
+                    key={preset.name}
+                    type="button"
+                    onClick={() => applyPreset(preset)}
+                    disabled={isLoading}
+                    className="text-left p-3 rounded-lg bg-white border border-[#E3CFB1] hover:border-[#F2382F] hover:shadow-loro-sm transition-all group"
+                  >
+                    <div className="text-xs font-bold text-[#201B17] group-hover:text-[#F2382F] line-clamp-1 mb-1">
+                      {preset.name}
+                    </div>
+                    <div className="text-xs text-[#6D5545] font-medium font-typewriter truncate">
+                      {preset.items.join(" • ")}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Cooking Style Options */}
+            <div className="style-panel">
+              <label className="ui-label block mb-2">
+                Choose a direction
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {COOKING_STYLES.map((style) => (
+                  <button
+                    key={style}
+                    type="button"
+                    onClick={() => setSelectedStyle(style)}
+                    aria-pressed={selectedStyle === style}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
+                      selectedStyle === style
+                        ? "bg-[#201B17] text-[#F5E6CC] border-[#201B17] shadow-sm"
+                        : "bg-white text-[#201B17] border-[#E3CFB1] hover:bg-[#F5E6CC]"
+                    }`}
+                  >
+                    {style}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Advanced Options Toggle */}
+            <div className="advanced-panel">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                aria-expanded={showAdvanced}
+                className="text-xs font-semibold text-[#6D5545] hover:text-[#201B17] flex items-center gap-1.5"
+              >
+                <span>{showAdvanced ? "−" : "+"}</span>
+                <span>Dietary notes and preferences</span>
+              </button>
+
+              {showAdvanced && (
+                <div className="mt-3 p-4 bg-[#F5E6CC]/60 rounded-lg border border-[#E3CFB1]">
+                  <label className="block text-xs font-typewriter text-[#201B17] mb-1 font-semibold">
+                    Special instructions (e.g. gluten-free, extra spicy, kid-friendly, under 500 calories)
+                  </label>
+                  <input
+                    type="text"
+                    value={dietaryNote}
+                    onChange={(e) => setDietaryNote(e.target.value)}
+                    placeholder="e.g. Make it spicy with a crispy texture, dairy-free"
+                    className="w-full bg-white border border-[#E3CFB1] rounded-md px-3 py-2 text-sm text-[#201B17] outline-none focus:border-[#F2382F]"
+                  />
+                </div>
+              )}
+            </div>
+
+          </div>
+        </details>
       </form>
 
       {/* Mystery Pantry Wheel Modal */}

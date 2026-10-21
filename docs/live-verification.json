@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-10-06T16:41:17.699Z",
+  "checks": [
+    {
+      "name": "API readiness",
+      "status": "PASS",
+      "detail": "Configuration and quota storage check."
+    },
+    {
+      "name": "Puter account A",
+      "status": "PENDING",
+      "detail": "Permanent test-account token missing."
+    },
+    {
+      "name": "Puter account B",
+      "status": "PENDING",
+      "detail": "Permanent test-account token missing."
+    },
+    {
+      "name": "distinct accounts",
+      "status": "PENDING",
+      "detail": "Two distinct permanent identities required."
+    },
+    {
+      "name": "live text provider",
+      "status": "PASS",
+      "detail": "1 structured recipes validated; one provider call. This is not a signed-in HTTP flow."
+    },
+    {
+      "name": "photo scanning",
+      "status": "PENDING",
+      "detail": "Vision model missing."
+    },
+    {
+      "name": "live nutrition source",
+      "status": "PENDING",
+      "detail": "USDA key missing."
+    },
+    {
+      "name": "two-device cloud and accessibility",
+      "status": "PENDING",
+      "detail": "Complete the real-device checklist in docs/1700_release_verification.md."
+    }
+  ]
+}

@@ -86,3 +86,14 @@ export async function adaptRecipeApi(recipe, ingredientId, replacement) {
     { action: 'adapt', recipe: recipe.structured, ingredientId, replacement });
   return adapted;
 }
+
+export async function checkServiceReadiness() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/readiness`, { signal: AbortSignal.timeout(8000), cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || typeof data?.ready !== 'boolean') throw new Error('Invalid readiness response.');
+    return data;
+  } catch {
+    return { ready: false, message: 'We could not connect to the recipe service. Check your connection and try again shortly.' };
+  }
+}

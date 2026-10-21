@@ -56,10 +56,12 @@ export function startCookbookSync() {
   window.addEventListener('mise-cookbook-change', sync);
   window.addEventListener('mise-auth-change', sync);
   window.addEventListener('online', sync);
+  window.addEventListener('focus', sync);
   sync();
   return () => {
     window.removeEventListener('mise-cookbook-change', sync);
     window.removeEventListener('mise-auth-change', sync);
     window.removeEventListener('online', sync);
+    window.removeEventListener('focus', sync);
   };
 }

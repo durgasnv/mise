@@ -112,7 +112,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
   }
 
   return (
-    <article className="recipe-card paper-card print-card rounded-loro-lg border border-[#E3CFB1] shadow-loro-lg overflow-hidden transition-all relative">
+    <article className="recipe-card ui-card print-card overflow-hidden relative">
       {/* Top Banner Ribbon */}
       <div className="recipe-ribbon bg-[#201B17] text-[#F5E6CC] px-6 py-2.5 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
@@ -209,7 +209,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
               <h3 className="font-display text-xl text-[#201B17] flex items-center gap-2">
                 Ingredients
               </h3>
-              <span className="text-[11px] font-typewriter text-[#6D5545]">
+              <span className="text-xs font-typewriter text-[#6D5545]">
                 ({portionCount} servings)
               </span>
             </div>
@@ -249,7 +249,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
                       }}
                       disabled={!baseRecipe.structured}
                       title={baseRecipe.structured ? "Adapt this recipe with a replacement" : "Regenerate this legacy recipe to enable swaps"}
-                      className="no-print text-[10px] font-typewriter text-[#6D5545] hover:text-[#F2382F] px-1.5 py-0.5 rounded border border-[#E3CFB1] hover:border-[#F2382F] bg-white transition-all flex-shrink-0"
+                      className="no-print text-xs font-typewriter text-[#6D5545] hover:text-[#F2382F] px-1.5 py-0.5 rounded border border-[#E3CFB1] hover:border-[#F2382F] bg-white transition-all flex-shrink-0"
                     >
                       Swap
                     </button>
@@ -266,7 +266,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
                 <h3 className="font-display text-xl text-[#201B17] flex items-center gap-2">
                   Method
                 </h3>
-                <span className="text-[11px] font-typewriter text-[#6D5545]">
+                <span className="text-xs font-typewriter text-[#6D5545]">
                   Click step to check off
                 </span>
               </div>
@@ -313,7 +313,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
               <div className="pairing-panel grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#F5E6CC]/70 p-4 rounded-loro border border-[#E3CFB1]">
                 {recipe.pairing && (
                   <div className="space-y-1">
-                    <span className="text-[11px] font-typewriter font-bold uppercase tracking-wider text-[#F2382F] flex items-center gap-1">
+                    <span className="text-xs font-typewriter font-bold uppercase tracking-wider text-[#F2382F] flex items-center gap-1">
                       Beverage pairing
                     </span>
                     <p className="text-xs text-[#201B17] font-medium leading-relaxed">
@@ -324,7 +324,7 @@ export function RecipeCard({ recipe: providedRecipe, onSaveChange, onCookAnother
 
                 {recipe.quickSide && (
                   <div className="space-y-1">
-                    <span className="text-[11px] font-typewriter font-bold uppercase tracking-wider text-[#6D5545] flex items-center gap-1">
+                    <span className="text-xs font-typewriter font-bold uppercase tracking-wider text-[#6D5545] flex items-center gap-1">
                       Companion side
                     </span>
                     <p className="text-xs text-[#201B17] font-medium leading-relaxed">

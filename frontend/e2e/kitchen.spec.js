@@ -6,6 +6,7 @@ import { DEFAULT_CONSTRAINTS } from '../../shared/pantry.js';
 const constraints = { ...DEFAULT_CONSTRAINTS, pantry: [{ name: 'potato', quantity: 500, unit: 'g' }] };
 const recipe = recipeView(dinner, { id: 'browser-recipe', constraints, review: {} });
 test.beforeEach(async ({ page }) => {
+  await page.route('**/api/readiness', route => route.fulfill({ json: { ready: true, message: 'The recipe service is ready.' } }));
   await page.route('https://js.puter.com/**',route => route.abort());
   await page.addInitScript(({ recipe }) => {
     if (!localStorage.getItem('mise_active_chef_user_v3')) localStorage.setItem('mise_active_chef_user_v3', JSON.stringify({ id: 'browser-chef', provider: 'puter', name: 'Test chef', dietaryPreferences: [] }));
@@ -84,4 +85,79 @@ test('a failed connection preserves ingredients and allows an explicit retry', a
   await expect(page.getByRole('alert')).toHaveCount(0);
   await expect(page.getByText('Skillet potatoes', { exact: true }).first()).toBeVisible();
   expect(attempts).toBe(2);
+});
+
+test('unavailable service blocks generation while preserving editable ingredients', async ({ page }) => {
+  let generationCalls = 0;
+  await page.route('**/api/readiness', route => route.fulfill({ json: { ready: false, message: 'The recipe service is unavailable. Please try again shortly.' } }));
+  await page.route('**/api/generate-recipe', route => { generationCalls++; return route.abort(); });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.getByLabel('Ingredient 01', { exact: true }).fill('potato');
+  await page.getByRole('button', { name: 'Recommend dinner' }).click();
+  await expect(page.getByRole('alert')).toContainText('recipe service is unavailable');
+  await expect(page.getByLabel('Ingredient 01', { exact: true })).toHaveValue('potato');
+  expect(generationCalls).toBe(0);
+});
+test('leftover planning avoids groceries and repeating a week does not duplicate dinners', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'Plan meals & groceries' }).click();
+  await page.getByLabel('Week starting').fill('2026-10-05');
+  await page.getByLabel('Date', { exact: true }).fill('2026-10-06');
+  await page.getByLabel('Saved recipe').selectOption(recipe.id);
+  await page.getByRole('button', { name: 'Record selected recipe as leftovers' }).click();
+  await expect(page.getByText('Skillet potatoes: 2 portions remaining')).toBeVisible();
+  await page.getByLabel('Recorded leftovers').selectOption({ index: 1 });
+  await page.getByRole('button', { name: 'Plan leftovers on selected date' }).click();
+  await expect(page.getByText('Your recorded pantry covers this week.')).toBeVisible();
+  await page.getByRole('button', { name: 'Add dinner', exact: true }).click();
+  await page.getByRole('button', { name: 'Repeat this week next week' }).click();
+  await page.getByRole('button', { name: 'Repeat this week next week' }).click();
+  await expect(page.getByRole('button', { name: 'Remove dinner', exact: true })).toHaveCount(3);
+  await page.reload(); await page.getByRole('button', { name: 'Plan meals & groceries' }).click();
+  await expect(page.getByText('Skillet potatoes: 2 portions remaining')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+});
+test('keyboard skip navigation and ingredient labels expose usable controls', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  const skip = page.getByRole('link', { name: 'Skip to main content' });
+  await skip.focus(); await expect(skip).toBeVisible(); await page.keyboard.press('Enter');
+  await expect(page.locator('#main-content')).toBeFocused();
+  await expect(page.getByLabel('Ingredient 01', { exact: true })).toBeVisible();
+  await page.getByLabel('Ingredient 01', { exact: true }).fill('potato');
+  await page.getByRole('button', { name: 'Clear ingredient 1', exact: true }).click();
+  await expect(page.getByLabel('Ingredient 01', { exact: true })).toHaveValue('');
+});
+
+test('pantry conflict review keeps the chosen stock version after refresh', async ({ page }) => {
+  await page.addInitScript(() => {
+    const base = { id:'stock',name:'potato',quantity:500,unit:'g',expiresOn:null };
+    localStorage.setItem('mise_pantry_v1:puter%3Abrowser-chef',JSON.stringify({version:1,items:[{...base,quantity:400}],staples:[],deductions:[]}));
+    localStorage.setItem('mise_workspace_v1:puter%3Abrowser-chef',JSON.stringify([
+      {opId:'base',entity:'pantry_v1/item/potato',parents:[],value:base},
+      {opId:'left',entity:'pantry_v1/item/potato',parents:['base'],value:{...base,quantity:400}},
+      {opId:'right',entity:'pantry_v1/item/potato',parents:['base'],value:{...base,quantity:300}},
+    ]));
+  });
+  await page.goto('/',{waitUntil:'domcontentloaded'});
+  await page.getByText('Review changes: Pantry: potato',{exact:true}).click();
+  await expect(page.getByText('potato: 300 g',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Keep version 2',exact:true}).click();
+  await expect(page.getByText('Review changes: Pantry: potato',{exact:true})).toHaveCount(0);
+  await page.getByRole('button',{name:'Manage pantry'}).click();
+  await expect(page.getByText('300 g',{exact:true})).toBeVisible();
+});
+test('cookbook exposes competing recipe methods and retains an explicit resolution', async ({ page }) => {
+  await page.addInitScript(({recipe}) => {
+    const base={id:recipe.id,opId:'base',type:'save',at:1,parents:[],recipe};
+    localStorage.setItem('mise_cookbook_v3:puter%3Abrowser-chef',JSON.stringify({version:3,operations:[base,
+      {...base,opId:'left',at:100,parents:['base'],recipe:{...recipe,title:'Left dinner'}},
+      {...base,opId:'right',at:2,parents:['base'],recipe:{...recipe,title:'Right dinner'}},
+    ]}));
+  },{recipe});
+  await page.goto('/',{waitUntil:'domcontentloaded'});await page.getByRole('button',{name:'View cookbook'}).click();
+  await expect(page.getByRole('heading',{name:'Review competing recipe edits'})).toBeVisible();
+  await page.getByText('Version 2: Right dinner',{exact:true}).click();
+  await page.getByRole('button',{name:'Keep recipe version 2',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Review competing recipe edits'})).toHaveCount(0);
+  await expect(page.getByText('Right dinner',{exact:true})).toBeVisible();
 });

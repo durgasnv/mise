@@ -9,7 +9,8 @@
     "dev:frontend": "npm --prefix frontend run dev",
     "start": "node backend/server.js",
     "dev:db": "npm --prefix backend run dev:db",
-    "check:db": "npm --prefix backend run check:db"
+    "check:db": "npm --prefix backend run check:db",
+    "dev": "node scripts/dev.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

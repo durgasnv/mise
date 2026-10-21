@@ -1,3 +1,4 @@
+import { startWorkspaceSync } from './lib/workspaceSync.js';
 import { MeasurementsPage } from './pages/MeasurementsPage.jsx';
 import { startMeasurementSync } from './lib/measurements.js';
 import { MealPlanPage } from "./pages/MealPlanPage.jsx";
@@ -33,6 +34,7 @@ export default function App() {
   const [prefilledIngredients, setPrefilledIngredients] = useState(null);
 
   useEffect(() => startCookbookSync(), []);
+  useEffect(() => startWorkspaceSync(), []);
   useEffect(() => startMeasurementSync(), []);
 
   useEffect(() => {
@@ -117,6 +119,7 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="min-h-screen flex flex-col bg-[#F5E6CC] text-[#201B17]">
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <Navbar
           currentView={view}
           onNavigate={(v) => handleNavigate(v)}
@@ -124,7 +127,7 @@ export default function App() {
           onOpenDemoCookingMode={() => requireAuth(() => setShowDemoCooking(true), "Sign in to launch Hands-Free Cooking Mode!")}
         />
 
-        <div className="flex-1">
+        <div className="flex-1" id="main-content" tabIndex={-1}>
           <AnimatePresence mode="wait">
             {view === "landing" && (
               <motion.div key="landing" variants={pageVariants} initial="hidden" animate="show" exit="exit">

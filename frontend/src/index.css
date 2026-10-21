@@ -9,6 +9,8 @@
   --mise-paper: #fff8ec;
   --mise-peach: #efbf8b;
   --mise-ink: #201b17;
+  --mise-control-radius: 3px;
+  --mise-control-height: 44px;
   --mise-rule: rgba(32, 27, 23, 0.22);
 }
 
@@ -36,8 +38,8 @@ textarea:focus-visible {
 .app-subnav {
   min-height: 47px;
   padding: 0 !important;
-  color: var(--mise-red);
-  border-color: var(--mise-red) !important;
+  color: var(--mise-ink);
+  border-color: var(--mise-ink) !important;
   background: var(--mise-cream) !important;
 }
 
@@ -48,7 +50,7 @@ textarea:focus-visible {
 .app-subnav button,
 .app-subnav span {
   font-family: "DM Sans", sans-serif !important;
-  font-size: 9px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -56,22 +58,22 @@ textarea:focus-visible {
 
 .app-subnav button:hover { color: var(--mise-ink) !important; }
 
-.app-shell { padding-top: clamp(46px, 7vw, 92px) !important; }
+.app-shell { padding-top: clamp(24px, 4vw, 48px) !important; }
 
 .kitchen-intro {
   display: grid;
   grid-template-columns: .8fr 2fr 1fr;
   align-items: end;
   gap: 28px;
-  padding-bottom: 54px;
+  padding-bottom: 24px;
   border-bottom: 1px solid var(--mise-red);
-  color: var(--mise-red);
+  color: var(--mise-ink);
 }
 
 .kitchen-intro h1 {
   margin: 0;
   font-family: "Bodoni Moda", serif;
-  font-size: clamp(58px, 7vw, 100px);
+  font-size: clamp(40px, 5vw, 64px);
   font-weight: 500;
   letter-spacing: -.055em;
   line-height: .79;
@@ -84,16 +86,12 @@ textarea:focus-visible {
 .kitchen-grid { gap: 24px !important; }
 
 .ingredient-workbench {
-  padding: clamp(22px, 4vw, 42px) !important;
-  border-color: var(--mise-red) !important;
-  border-radius: 0 !important;
-  background: var(--mise-paper) !important;
-  box-shadow: none !important;
+  padding: clamp(22px, 4vw, 42px);
 }
 
 .ingredient-workbench h2 {
   margin-top: 8px !important;
-  color: var(--mise-red) !important;
+  color: var(--mise-ink) !important;
   font-family: "Bodoni Moda", serif !important;
   font-size: clamp(34px, 4vw, 52px) !important;
   font-weight: 500;
@@ -101,39 +99,21 @@ textarea:focus-visible {
   line-height: .92;
 }
 
-.ingredient-workbench label,
+.ingredient-workbench label:not(.ui-label),
 .ingredient-workbench .quick-add > div:first-child > span,
 .ingredient-workbench .preset-panel > div:first-child > span {
   color: var(--mise-ink) !important;
   font-family: "IBM Plex Mono", monospace !important;
-  font-size: 9px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
   letter-spacing: .12em !important;
   text-transform: uppercase;
 }
 
-.ingredient-workbench input,
-.ingredient-workbench textarea {
-  border-radius: 0 !important;
-  border-color: var(--mise-rule) !important;
-  background: transparent !important;
-}
-
-.ingredient-workbench input:focus,
-.ingredient-workbench textarea:focus {
-  border-color: var(--mise-red) !important;
-  background: #fffaf1 !important;
-}
-
-.ingredient-workbench .rounded-full { border-radius: 999px; }
-.ingredient-workbench .rounded-lg,
-.ingredient-workbench .rounded-md,
-.ingredient-workbench .rounded-loro { border-radius: 1px !important; }
-
 .kitchen-aside .paper-card {
   border: 0 !important;
-  border-top: 1px solid var(--mise-red) !important;
-  border-bottom: 1px solid var(--mise-red) !important;
+  border-top: 1px solid var(--mise-rule) !important;
+  border-bottom: 1px solid var(--mise-rule) !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -151,8 +131,8 @@ textarea:focus-visible {
 .recipe-deck-tabs {
   padding: 16px 0 !important;
   border: 0 !important;
-  border-top: 1px solid var(--mise-red) !important;
-  border-bottom: 1px solid var(--mise-red) !important;
+  border-top: 1px solid var(--mise-rule) !important;
+  border-bottom: 1px solid var(--mise-rule) !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -161,22 +141,15 @@ textarea:focus-visible {
 .recipe-deck-tabs button { border-radius: 0 !important; }
 .recipe-deck-stage > div[class*="absolute"] { display: none; }
 
-.recipe-card {
-  border-color: var(--mise-red) !important;
-  border-radius: 0 !important;
-  background: var(--mise-paper) !important;
-  box-shadow: none !important;
-}
-
-.recipe-card > div:first-child { background: var(--mise-red) !important; }
+.recipe-card > div:first-child { background: var(--mise-ink) !important; }
 
 .recipe-card h1 {
   color: var(--mise-red) !important;
   font-family: "Bodoni Moda", serif !important;
-  font-size: clamp(44px, 6vw, 72px) !important;
+  font-size: clamp(32px, 4vw, 48px) !important;
   font-weight: 500;
   letter-spacing: -.05em !important;
-  line-height: .88 !important;
+  line-height: 1.1 !important;
   text-transform: uppercase;
 }
 
@@ -202,132 +175,122 @@ textarea:focus-visible {
 
 /* Boxless editorial controls — mirrors the landing page */
 .workbench-header {
-  padding-bottom: 30px !important;
-  border-color: var(--mise-red) !important;
+  padding-bottom: 30px;
+  border-color: var(--mise-rule);
 }
 
 .workbench-header > div:first-child > div:first-child > span:first-child {
-  padding: 0 !important;
-  color: var(--mise-red) !important;
-  border-radius: 0 !important;
-  background: transparent !important;
+  padding: 0;
+  color: var(--mise-red);
+  border-radius: 0;
+  background: transparent;
   letter-spacing: .14em;
 }
 
 .workbench-header > div:last-child button {
   min-height: 34px;
-  padding-inline: 11px !important;
-  border-color: var(--mise-red) !important;
-  border-radius: 0 !important;
-  color: var(--mise-red) !important;
-  background: transparent !important;
+  padding-inline: 11px;
+  border-color: var(--mise-rule);
+  border-radius: 0;
+  color: var(--mise-red);
+  background: transparent;
 }
 
 .workbench-header > div:last-child button:hover,
 .workbench-header > div:last-child button[class*="bg-[#F2382F]"] {
-  color: var(--mise-cream) !important;
-  background: var(--mise-red) !important;
+  color: var(--mise-cream);
+  background: var(--mise-red);
 }
 
 .mode-selector {
-  padding: 28px 0 !important;
+  padding: 28px 0;
   border-bottom: 1px solid var(--mise-rule);
 }
 
 .mode-selector > div {
-  gap: 0 !important;
+  gap: 0;
   border-top: 1px solid var(--mise-rule);
   border-left: 1px solid var(--mise-rule);
 }
 
 .mode-selector > div > button {
   min-height: 68px;
-  border-width: 0 1px 1px 0 !important;
-  border-color: var(--mise-rule) !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  border-width: 0 1px 1px 0;
+  border-color: var(--mise-rule);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .mode-selector > div > button[class*="bg-[#201B17]"] {
-  color: var(--mise-cream) !important;
-  background: var(--mise-red) !important;
+  color: var(--mise-cream);
+  background: var(--mise-red);
 }
 
-.mode-selector > div > button[class*="bg-[#201B17]"] div:last-child { color: var(--mise-cream) !important; opacity: .78; }
+.mode-selector > div > button[class*="bg-[#201B17]"] div:last-child { color: var(--mise-cream); opacity: .78; }
 
 .photo-preview {
-  margin-top: 28px !important;
-  padding: 14px 0 !important;
-  border-width: 1px 0 !important;
-  border-color: var(--mise-red) !important;
-  border-radius: 0 !important;
-  background: transparent !important;
+  margin-top: 28px;
+  padding: 14px 0;
+  border-width: 1px 0;
+  border-color: var(--mise-rule);
+  border-radius: 0;
+  background: transparent;
 }
 
-.photo-preview img { border-radius: 0 !important; }
+.photo-preview img { border-radius: 0; }
 
-.pantry-form { margin-top: 0 !important; }
-.pantry-form > div { margin: 0 !important; padding: 28px 0; border-bottom: 1px solid var(--mise-rule); }
+.pantry-form { margin-top: 0; }
+.pantry-form > div { margin: 0; padding: 28px 0; border-bottom: 1px solid var(--mise-rule); }
 
-.ingredient-slots input,
-.pantry-form textarea,
-.advanced-panel input {
-  min-height: 48px;
-  padding-inline: 0 !important;
-  border-width: 0 0 1px !important;
-}
-
-.ingredient-slots input { font-family: "Bodoni Moda", serif; font-size: 18px !important; }
-
-.quick-add > div:last-child { gap: 0 !important; border-top: 1px solid var(--mise-rule); border-left: 1px solid var(--mise-rule); }
+.quick-add > div:last-child { gap: 0; border-top: 1px solid var(--mise-rule); border-left: 1px solid var(--mise-rule); }
 .quick-add > div:last-child button {
-  margin: 0 !important;
-  padding: 9px 11px !important;
-  border-width: 0 1px 1px 0 !important;
-  border-color: var(--mise-rule) !important;
-  border-radius: 0 !important;
-  background: transparent !important;
+  margin: 0;
+  padding: 9px 11px;
+  border-width: 0 1px 1px 0;
+  border-color: var(--mise-rule);
+  border-radius: 0;
+  background: transparent;
   font-family: "IBM Plex Mono", monospace;
-  font-size: 10px !important;
+  font-size: 12px;
 }
-.quick-add > div:last-child button:hover { color: var(--mise-cream) !important; background: var(--mise-red) !important; }
+.quick-add > div:last-child button:hover { color: var(--mise-cream); background: var(--mise-red); }
 
 .preset-panel {
-  padding: 28px 0 !important;
-  border-width: 0 0 1px !important;
-  border-radius: 0 !important;
-  background: transparent !important;
+  padding: 28px 0;
+  border-width: 0 0 1px;
+  border-radius: 0;
+  background: transparent;
 }
 
-.preset-panel > div:last-child { gap: 0 !important; border-top: 1px solid var(--mise-rule); border-left: 1px solid var(--mise-rule); }
+.preset-panel > div:last-child { gap: 0; border-top: 1px solid var(--mise-rule); border-left: 1px solid var(--mise-rule); }
 .preset-panel > div:last-child button {
   min-height: 88px;
-  padding: 14px !important;
-  border-width: 0 1px 1px 0 !important;
-  border-color: var(--mise-rule) !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  padding: 14px;
+  border-width: 0 1px 1px 0;
+  border-color: var(--mise-rule);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
-.preset-panel > div:last-child button:hover { color: var(--mise-cream); background: var(--mise-red) !important; }
-.preset-panel > div:last-child button:hover div { color: inherit !important; }
+.preset-panel > div:last-child button:hover { color: var(--mise-cream); background: var(--mise-red); }
+.preset-panel > div:last-child button:hover div { color: inherit; }
 
-.style-panel > div { gap: 0 !important; }
+.style-panel > div { gap: 0; }
 .style-panel button {
   margin: 0 -1px -1px 0;
-  padding: 9px 12px !important;
-  border-color: var(--mise-rule) !important;
-  border-radius: 0 !important;
-  background: transparent !important;
+  padding: 9px 12px;
+  border-color: var(--mise-rule);
+  border-radius: 0;
+  background: transparent;
 }
-.style-panel button[class*="bg-[#201B17]"] { color: var(--mise-cream) !important; border-color: var(--mise-red) !important; background: var(--mise-red) !important; }
+.style-panel button[class*="bg-[#201B17]"] { color: var(--mise-cream); border-color: var(--mise-rule); background: var(--mise-red); }
 
 .advanced-panel > div {
-  padding: 18px 0 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
+  padding: 18px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .advanced-panel > button {
@@ -336,25 +299,15 @@ textarea:focus-visible {
   min-height: 40px;
   align-items: center;
   justify-content: space-between;
-  color: var(--mise-red) !important;
+  color: var(--mise-red);
   font-family: "IBM Plex Mono", monospace;
-  font-size: 9px !important;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
 }
 
-.submit-panel { padding-bottom: 0 !important; border-bottom: 0 !important; }
-.submit-panel button {
-  min-height: 60px;
-  border: 1px solid var(--mise-red);
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  font-family: "DM Sans", sans-serif;
-  font-size: 11px !important;
-  letter-spacing: .11em;
-}
-
+.submit-panel { padding-bottom: 0; border-bottom: 0; }
 .kitchen-manifesto {
   position: relative;
   min-height: 220px;
@@ -364,7 +317,7 @@ textarea:focus-visible {
   border: 0 !important;
   border-radius: 0 !important;
   color: var(--mise-cream) !important;
-  background: var(--mise-red) !important;
+  background: var(--mise-ink) !important;
 }
 
 .kitchen-manifesto::before {
@@ -377,7 +330,7 @@ textarea:focus-visible {
 
 .kitchen-loading {
   border-width: 1px 0 !important;
-  border-color: var(--mise-red) !important;
+  border-color: var(--mise-rule) !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -391,13 +344,13 @@ textarea:focus-visible {
 }
 
 .kitchen-loading > p:nth-of-type(1) {
-  color: var(--mise-red) !important;
+  color: var(--mise-ink) !important;
   font-family: "Bodoni Moda", serif !important;
   font-size: clamp(34px, 5vw, 58px) !important;
   font-weight: 500;
 }
 
-.recipe-ribbon { min-height: 48px; background: var(--mise-red) !important; }
+.recipe-ribbon { min-height: 48px; background: var(--mise-ink) !important; }
 .recipe-card > div:nth-child(2) { padding: clamp(22px, 5vw, 54px) !important; }
 
 .portion-control {
@@ -410,7 +363,7 @@ textarea:focus-visible {
 .portion-control button { border: 1px solid var(--mise-rule); border-radius: 0 !important; }
 .portion-control button[class*="bg-[#F2382F]"] { border-color: var(--mise-red); }
 
-.recipe-layout { gap: 0 !important; border-top: 1px solid var(--mise-red); }
+.recipe-layout { gap: 0 !important; border-top: 1px solid var(--mise-rule); }
 .ingredients-panel {
   padding: 34px 34px 34px 0 !important;
   border-width: 0 1px 0 0 !important;
@@ -456,7 +409,7 @@ textarea:focus-visible {
 
 .recipe-card button {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: .06em;
   text-transform: uppercase;
@@ -507,7 +460,7 @@ textarea:focus-visible {
 .kitchen-intro h1,
 .ingredient-workbench h2,
 .recipe-card h1 {
-  color: var(--mise-red) !important;
+  color: var(--mise-ink) !important;
 }
 
 .workbench-header > div:last-child button {
@@ -562,20 +515,6 @@ textarea:focus-visible {
 .advanced-panel > button {
   color: var(--mise-red) !important;
   background: transparent !important;
-  opacity: 1 !important;
-}
-
-.submit-panel button:not(:disabled) {
-  color: var(--mise-cream) !important;
-  border-color: var(--mise-red) !important;
-  background: var(--mise-red) !important;
-  opacity: 1 !important;
-}
-
-.submit-panel button:disabled {
-  color: #715f50 !important;
-  border-color: #bca68a !important;
-  background: #dfccb0 !important;
   opacity: 1 !important;
 }
 
@@ -637,7 +576,7 @@ textarea:focus-visible {
   color: var(--mise-cream);
   background: var(--mise-red);
   font-family: "DM Sans", sans-serif;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .09em;
   text-transform: uppercase;
@@ -656,12 +595,12 @@ textarea:focus-visible {
 }
 
 .cookbook-search { width: min(100%, 420px); }
-.cookbook-search span { display: block; margin-bottom: 7px; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.cookbook-search span { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .cookbook-search input { width: 100%; padding: 9px 0; border: 0; border-bottom: 1px solid var(--mise-rule); border-radius: 0; outline: 0; background: transparent; font-size: 13px; }
 .cookbook-search input:focus { border-color: var(--mise-red); }
 
 .cookbook-filters { display: flex; gap: 8px; }
-.cookbook-filters button { padding: 8px 12px; border: 1px solid var(--mise-rule); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.cookbook-filters button { padding: 8px 12px; border: 1px solid var(--mise-rule); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .cookbook-filters button.active { color: var(--mise-cream); border-color: var(--mise-ink); background: var(--mise-ink); }
 
 .cookbook-grid {
@@ -683,18 +622,18 @@ textarea:focus-visible {
 }
 
 .cookbook-card:hover { color: var(--mise-cream); background: var(--mise-red); }
-.cookbook-card-top, .cookbook-card-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.cookbook-card-top, .cookbook-card-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .cookbook-card-top button { margin-left: auto; padding-bottom: 2px; border-bottom: 1px solid currentColor; }
-.cookbook-card-body > p { margin-bottom: 16px; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.cookbook-card-body > p { margin-bottom: 16px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .cookbook-card h2 { font-family: "Bodoni Moda", serif; font-size: 38px; font-weight: 500; letter-spacing: -.035em; line-height: .92; text-transform: uppercase; }
-.cookbook-card ul { margin-top: 35px; padding-top: 14px; border-top: 1px solid currentColor; font-size: 11px; line-height: 1.7; }
+.cookbook-card ul { margin-top: 35px; padding-top: 14px; border-top: 1px solid currentColor; font-size: 12px; line-height: 1.7; }
 
 .cookbook-empty { display: grid; min-height: 430px; place-items: center; align-content: center; padding: 60px 20px; border-bottom: 1px solid var(--mise-red); text-align: center; }
 .empty-mark { color: var(--mise-red); font-size: 28px; }
 .cookbook-empty h2 { margin-top: 18px; color: var(--mise-red); font-family: "Bodoni Moda", serif; font-size: 48px; font-weight: 500; }
 .cookbook-empty p { max-width: 440px; margin: 10px 0 28px; font-size: 13px; }
 
-.editorial-toast { position: fixed; right: 24px; bottom: 24px; z-index: 60; display: flex; gap: 26px; align-items: center; padding: 14px 18px; color: var(--mise-cream); background: var(--mise-ink); border: 1px solid var(--mise-red); font-size: 11px; }
+.editorial-toast { position: fixed; right: 24px; bottom: 24px; z-index: 60; display: flex; gap: 26px; align-items: center; padding: 14px 18px; color: var(--mise-cream); background: var(--mise-ink); border: 1px solid var(--mise-red); font-size: 12px; }
 .editorial-toast button { color: var(--mise-peach); border-bottom: 1px solid currentColor; font-weight: 700; text-transform: uppercase; }
 
 /* Dialogs and focused modes */
@@ -715,7 +654,7 @@ textarea:focus-visible {
   right: 42px;
   color: rgba(242, 56, 47, .55);
   font-family: "DM Sans", sans-serif;
-  font-size: 7px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .14em;
 }
@@ -840,7 +779,7 @@ textarea:focus-visible {
 .micro-label {
   display: block;
   font-family: "DM Sans", sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.18em;
   line-height: 1.2;
@@ -886,7 +825,7 @@ textarea:focus-visible {
 .mise-desktop-nav {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: clamp(14px, 2vw, 26px);
 }
 
 .mise-desktop-nav button,
@@ -894,7 +833,7 @@ textarea:focus-visible {
 .sign-in-link {
   position: relative;
   font-family: "DM Sans", sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .07em;
   text-transform: uppercase;
@@ -932,7 +871,7 @@ textarea:focus-visible {
   color: var(--mise-cream);
   border-radius: 50%;
   background: var(--mise-red);
-  font-size: 8px;
+  font-size: 12px;
   vertical-align: top;
 }
 
@@ -946,7 +885,7 @@ textarea:focus-visible {
   color: var(--mise-cream);
   background: var(--mise-red);
   font-family: "DM Sans", sans-serif;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -958,7 +897,7 @@ textarea:focus-visible {
 .mise-profile { position: relative; }
 .profile-trigger { display: flex; align-items: center; gap: 7px; }
 .profile-trigger > span { display: grid; width: 28px; height: 28px; place-items: center; color: var(--mise-cream); border-radius: 50%; background: var(--mise-red); font-size: 12px; font-style: normal; }
-.profile-trigger em { font-family: "DM Sans", sans-serif; font-size: 10px; font-style: normal; font-weight: 700; text-transform: uppercase; }
+.profile-trigger em { font-family: "DM Sans", sans-serif; font-size: 12px; font-style: normal; font-weight: 700; text-transform: uppercase; }
 
 .mise-profile-menu {
   position: absolute;
@@ -975,8 +914,8 @@ textarea:focus-visible {
 .profile-menu-head { padding: 8px 8px 12px; border-bottom: 1px solid var(--mise-rule); }
 .profile-menu-head strong, .profile-menu-head span { display: block; }
 .profile-menu-head strong { font-family: "Bodoni Moda", serif; font-size: 19px; }
-.profile-menu-head span { margin-top: 2px; color: #6d655e; font-size: 10px; }
-.mise-profile-menu > button { display: block; width: 100%; padding: 10px 8px; text-align: left; font-size: 11px; }
+.profile-menu-head span { margin-top: 2px; color: #6d655e; font-size: 12px; }
+.mise-profile-menu > button { display: block; width: 100%; padding: 10px 8px; text-align: left; font-size: 12px; }
 .mise-profile-menu > button:hover { color: var(--mise-red); }
 .mise-profile-menu .signout { margin-top: 4px; color: var(--mise-red); border-top: 1px solid var(--mise-rule); }
 
@@ -1009,7 +948,7 @@ textarea:focus-visible {
   text-align: left;
 }
 
-.mise-mobile-nav button span { font-family: "DM Sans", sans-serif; font-size: 9px; font-weight: 700; }
+.mise-mobile-nav button span { font-family: "DM Sans", sans-serif; font-size: 12px; font-weight: 700; }
 
 .editorial-hero {
   position: relative;
@@ -1033,7 +972,7 @@ textarea:focus-visible {
   align-items: flex-start;
   color: var(--mise-red);
   font-family: "DM Sans", sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.17em;
   text-transform: uppercase;
@@ -1111,7 +1050,7 @@ textarea:focus-visible {
   color: var(--mise-cream);
   border: 1px solid rgba(255,255,255,.55);
   font-family: "DM Sans", sans-serif;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -1145,7 +1084,7 @@ textarea:focus-visible {
   padding: 0 0 7px;
   border-bottom: 1px solid currentColor;
   font-family: "DM Sans", sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -1193,7 +1132,7 @@ textarea:focus-visible {
 
 .pantry-field span {
   color: var(--mise-red);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -1218,7 +1157,7 @@ textarea:focus-visible {
   color: var(--mise-cream);
   border-right: 0;
   background: var(--mise-red);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -1284,7 +1223,7 @@ textarea:focus-visible {
   color: var(--mise-red);
   border: 1px solid var(--mise-red);
   border-radius: 50%;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -1308,7 +1247,7 @@ textarea:focus-visible {
 }
 
 .manifesto-stamp span { font-family: "Bodoni Moda", serif; font-size: 44px; }
-.manifesto-stamp small { max-width: 52px; font-size: 7px; letter-spacing: .1em; text-transform: uppercase; }
+.manifesto-stamp small { max-width: 52px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
 
 .feature-section {
   padding: clamp(90px, 11vw, 150px) 0;
@@ -1338,11 +1277,11 @@ textarea:focus-visible {
   border-bottom: 1px solid var(--mise-rule);
 }
 
-.feature-number { align-self: start; padding-top: 30px; font-size: 10px; font-weight: 700; }
+.feature-number { align-self: start; padding-top: 30px; font-size: 12px; font-weight: 700; }
 .feature-icon svg { width: 70px; fill: none; stroke: var(--mise-red); stroke-width: 1.25; }
 .feature-row h3 { color: var(--mise-red); font-family: "Bodoni Moda", serif; font-size: 31px; font-weight: 500; line-height: 1; }
 .feature-row p { max-width: 330px; font-size: 13px; line-height: 1.6; }
-.feature-row button { justify-self: end; padding-bottom: 6px; border-bottom: 1px solid currentColor; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.feature-row button { justify-self: end; padding-bottom: 6px; border-bottom: 1px solid currentColor; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 
 .dish-section {
   padding: clamp(90px, 11vw, 150px) 0;
@@ -1386,12 +1325,12 @@ textarea:focus-visible {
 }
 
 .dish-card:hover img { transform: scale(1.04); }
-.dish-image-wrap > span { position: absolute; top: 12px; right: 12px; display: grid; width: 36px; height: 36px; place-items: center; color: var(--mise-red); border-radius: 50%; background: var(--mise-cream); font-size: 10px; font-weight: 700; }
+.dish-image-wrap > span { position: absolute; top: 12px; right: 12px; display: grid; width: 36px; height: 36px; place-items: center; color: var(--mise-red); border-radius: 50%; background: var(--mise-cream); font-size: 12px; font-weight: 700; }
 
 .dish-card-copy { padding-top: 18px; }
-.dish-card-copy p { margin-bottom: 12px; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.dish-card-copy p { margin-bottom: 12px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .dish-card-copy h3 { max-width: 360px; font-family: "Bodoni Moda", serif; font-size: 30px; font-weight: 500; line-height: 1; text-transform: uppercase; }
-.dish-card-copy > span { display: block; margin-top: 14px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.dish-card-copy > span { display: block; margin-top: 14px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
 
 .tools-section {
   display: grid;
@@ -1425,7 +1364,7 @@ textarea:focus-visible {
   padding: 16px 19px;
   color: var(--mise-red);
   border: 1px solid var(--mise-red);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -1491,7 +1430,7 @@ textarea:focus-visible {
 .footer-brand { font-family: "Bodoni Moda", serif; font-size: clamp(56px, 7vw, 104px); line-height: .75; }
 .footer-brand em { display: block; margin-left: 62px; font-size: .35em; font-weight: 400; }
 .footer-grid > p { max-width: 250px; font-family: "Bodoni Moda", serif; font-size: 23px; line-height: 1.1; }
-.footer-meta { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.footer-meta { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 
 @media (max-width: 980px) {
   .mise-nav-inner { grid-template-columns: 1fr auto; }
@@ -1670,4 +1609,57 @@ textarea:focus-visible {
       background: #FFFFFF !important;
     }
   }
+}
+
+/* Keyboard visibility and touch controls throughout the kitchen. */
+:where(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid #9f3028;
+  outline-offset: 3px;
+}
+@media (pointer: coarse) {
+  :where(button, summary, input:not([type="checkbox"]), select) { min-height: 44px; }
+  input[type="checkbox"] { width: 22px; height: 22px; }
+}
+.app-shell :where(input, select, textarea) { max-width: 100%; }
+@media (max-width: 640px) {
+  .app-shell :where(input, select, textarea) { font-size: 16px; }
+}
+
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 200; padding: 12px; background: #fff8ec; color: #201b17; transform: translateY(-150%); }
+.skip-link:focus { transform: translateY(0); }
+
+/* Readable everyday controls across the kitchen. */
+.app-page { font-size: 16px; line-height: 1.6; }
+.app-page :where(input:not([type="checkbox"]):not([type="file"]), select, textarea) { font-size: 16px; }
+.ingredient-workbench label { line-height: 1.5; letter-spacing: .04em !important; }
+
+.service-status { padding: 12px 0; border-bottom: 1px solid var(--mise-rule); font-size: 14px; }
+.service-status summary { cursor: pointer; font-weight: 600; }
+
+.ingredient-inspiration { border-top: 1px solid var(--mise-rule); padding-top: 20px; }
+.ingredient-inspiration > summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+
+.method-panel ol p { font-size: clamp(16px, 1.5vw, 18px); line-height: 1.7; }
+
+.mise-mobile-nav button.active { color: var(--mise-ink); background: var(--mise-paper); font-weight: 700; box-shadow: inset 3px 0 var(--mise-red); }
+
+/* Shared UI primitives: component rules own appearance; utilities own layout. */
+.ui-card { border: 1px solid var(--mise-rule); border-radius: var(--mise-control-radius); background: var(--mise-paper); }
+.ui-label { color: var(--mise-ink); font-family: "DM Sans", sans-serif; font-size: 13px; font-weight: 600; line-height: 1.5; }
+.ui-field { min-height: var(--mise-control-height); padding: 12px; border: 1px solid var(--mise-rule); border-radius: var(--mise-control-radius); background: var(--mise-paper); color: var(--mise-ink); font-family: "DM Sans", sans-serif; font-size: 16px; line-height: 1.5; }
+.ui-field::placeholder { color: #6d5545; }
+.ui-field:focus { border-color: var(--mise-red-dark); }
+.ui-field.pr-10 { padding-right: 40px; }
+.ui-button { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: var(--mise-control-height); padding: 10px 16px; border: 1px solid transparent; border-radius: var(--mise-control-radius); font-family: "DM Sans", sans-serif; font-size: 14px; font-weight: 600; line-height: 1.5; }
+.ui-button-primary { color: var(--mise-paper); background: var(--mise-red-dark); }
+.ui-button-primary:hover:not(:disabled) { background: #a9221c; }
+.ui-button-secondary { color: var(--mise-ink); border-color: var(--mise-rule); background: transparent; }
+.ui-button-secondary:hover:not(:disabled) { background: var(--mise-paper); }
+.ui-button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 640px) {
+  .app-subnav > div { flex-wrap: wrap; gap: 8px; padding-block: 10px; }
+  .kitchen-intro { padding-bottom: 24px; }
+  .kitchen-intro h1 { font-size: clamp(38px, 10vw, 52px); line-height: 1; }
+  .kitchen-intro p { margin-top: 18px; }
+  .app-shell { padding-top: 24px !important; }
 }

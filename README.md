@@ -27,12 +27,10 @@ npm --prefix backend install
 npm --prefix frontend install
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
-npm run dev:backend
-# In a second terminal:
-npm run dev:frontend
+npm run dev
 ```
 
-The frontend normally runs at `http://localhost:5173`; the backend uses port 5000. Keep both terminals running. Leave `VITE_API_URL` empty for local development: Vite proxies same-origin `/api` requests to the backend. Set an HTTPS API origin at build time only if the deployed API is hosted separately. Recipe generation also requires Puter sign-in, a server Groq key and `MONGODB_URI` for shared account limits.
+The frontend normally runs at `http://localhost:5173`; the backend uses port 5000. The root `npm run dev` starts a local database when needed, then the backend and frontend; it reuses running services. Keep that terminal running. Separate `dev:db`, `dev:backend` and `dev:frontend` commands remain available. Leave `VITE_API_URL` empty for local development: Vite proxies same-origin `/api` requests to the backend. Set an HTTPS API origin at build time only if the deployed API is hosted separately. Recipe generation also requires Puter sign-in, a server Groq key and `MONGODB_URI` for shared account limits.
 
 For a local database, install [MongoDB Community](https://www.mongodb.com/docs/v8.0/tutorial/install-mongodb-on-ubuntu-tarball/) and set `MONGODB_URI=mongodb://127.0.0.1:27017/mise_local` in `backend/.env`. Set `MONGOD_BIN` if its executable is not on PATH. Run `npm run dev:db` in a third terminal, then `npm run check:db`. The database binds to loopback and stores its data in ignored `backend/.local/mongodb/`. Restart the backend after changing its environment. A hosted database can instead use its own `MONGODB_URI`; no local database process is needed.
 
@@ -70,3 +68,9 @@ npm run check:release
 Serverless routes exist in `api/` and `frontend/api/`; `backend/server.js` serves the same handlers locally. Set backend secrets on the deployment and build the frontend with the correct API origin. Do not publish `.env` files.
 
 [Release checks and remaining live verification](docs/1700_release_verification.md) distinguish local mock/browser coverage from real provider, database, account and device checks. [Findings and fixes](docs/1600_findings_and_fix_plan.md) records the completed implementation; [API contracts](docs/1400_api_reference_and_schemas.md) describes requests and data.
+
+The kitchen checks service readiness before recipe generation. Pantry, meal plans, leftovers and cooking progress use local storage plus optional Puter synchronization, with reviewable competing edits and preserved deletion history. Cookbook edits also support explicit conflict review. Meal planning can repeat a selected week into the next week and schedule recorded leftovers without adding their ingredients to groceries.
+
+Run `npm --prefix backend run check:live` for a sanitized report. Set `MISE_RUN_LIVE_GENERATION=true` only when allowing a billable text-provider check. The latest report is [live-verification.json](docs/live-verification.json); real accounts, photos, USDA credentials and device checks are reported individually.
+
+Voice input adds English ingredient names to the existing form without replacing typed items. Select **Use voice**, allow microphone access, speak names separated by commas or “and”, then select **Stop listening** and review the names. Microphone, network and unsupported-browser failures appear beside the control. Cooking mode's **Read Step** supports stopping and reports playback failures. These features depend on the browser's [Web Speech APIs](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API); automated checks simulate speech events, so microphone/audio hardware still needs an on-device check.

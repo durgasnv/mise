@@ -1,3 +1,4 @@
+import { validateRevisions } from '../../../shared/revisions.js';
 import { validateNutrition } from '../../../shared/nutrition.js';
 import { validateRecipes } from "../../../shared/recipes.js";
 import { validateConstraints } from "../../../shared/pantry.js";
@@ -102,16 +103,21 @@ export function validCookbookRecipe(r) {
 }
 export function validateCookbookOperations(ops) {
   if (!Array.isArray(ops) || ops.some(op => !op || typeof op.opId !== 'string' || typeof op.id !== 'string' || typeof op.at !== 'number' || !Number.isFinite(op.at) || op.at < 0 || !['save', 'delete'].includes(op.type) || (op.type === 'save' && (!validCookbookRecipe(op.recipe) || op.recipe.id !== op.id)))) throw new Error('Cookbook data is unreadable. The original data has been preserved.');
+  if (ops.some(op => op.parents && (!Array.isArray(op.parents) || op.parents.some(p => typeof p !== 'string' || p === op.opId)))) throw new Error('Invalid cookbook revision history.');
   return ops;
 }
 export function mergeCookbooks(...books) {
   const operations = new Map();
-  for (const book of books) for (const op of validateCookbookOperations(book.operations || [])) operations.set(op.opId, op);
+  for (const book of books) for (const op of validateCookbookOperations(book.operations || [])) {
+    if (operations.has(op.opId) && JSON.stringify(operations.get(op.opId)) !== JSON.stringify(op)) throw new Error('Conflicting cookbook revision IDs.');
+    operations.set(op.opId, op);
+  }
+  validateRevisions([...operations.values()].map(op => ({ opId: op.opId, entity: op.id, parents: op.parents || [] })));
   return { version: 3, operations: [...operations.values()] };
 }
 export function recipesFromBook(book) {
   const latest = new Map();
-  for (const op of validateCookbookOperations(book.operations)) {
+  for (const op of [...cookbookHeads(book).values()].flat()) {
     const prior = latest.get(op.id);
     if (!prior || op.at > prior.at || (op.at === prior.at && op.opId > prior.opId)) latest.set(op.id, op);
   }
@@ -134,7 +140,7 @@ export function getSavedRecipes() { return recipesFromBook(readCookbook()); }
 function mutateBook(type, id, recipe) {
   const owner = cookbookOwner(), book = readCookbook(owner);
   const at = Math.max(Date.now(), ...book.operations.map(op => op.at + 1));
-  const op = { type, id, at, opId: globalThis.crypto?.randomUUID?.() || `${at}-${Math.random().toString(36).slice(2)}`, ...(recipe ? { recipe: { ...recipe, savedAt: new Date(at).toISOString() } } : {}) };
+  const op = { type, id, at, parents: cookbookHeads(book).get(id)?.map(op => op.opId) || [], opId: globalThis.crypto?.randomUUID?.() || `${at}-${Math.random().toString(36).slice(2)}`, ...(recipe ? { recipe: { ...recipe, savedAt: new Date(at).toISOString() } } : {}) };
   const updated = mergeCookbooks(book, { operations: [op] });
   writeCookbook(updated, owner);
   window.dispatchEvent(new CustomEvent('mise-cookbook-change', { detail: { owner } }));
@@ -165,4 +171,20 @@ export function importLegacyCookbook() {
   for (const recipe of JSON.parse(original).filter(validCookbookRecipe)) saveRecipe(recipe);
   localStorage.setItem('mise_legacy_cookbook_claimed', cookbookOwner());
   return getSavedRecipes();
+}
+
+export function cookbookHeads(book) {
+  const operations = validateCookbookOperations(book.operations), replaced = new Set();
+  const legacy = operations.filter(op => !op.parents);
+  for (const op of legacy) if (legacy.some(other => other.id === op.id && (other.at > op.at || (other.at === op.at && other.opId > op.opId)))) replaced.add(op.opId);
+  for (const op of operations) for (const parent of op.parents || []) replaced.add(parent);
+  const heads = new Map();
+  for (const op of operations) if (!replaced.has(op.opId)) { const list = heads.get(op.id) || []; list.push(op); heads.set(op.id, list); }
+  return heads;
+}
+export function cookbookConflicts(owner = cookbookOwner()) { return [...cookbookHeads(readCookbook(owner))].filter(([,heads]) => heads.length > 1).map(([id,heads]) => ({ id, heads })); }
+export function resolveCookbookConflict(id, opId) {
+  const heads = cookbookHeads(readCookbook()).get(id) || [], selected = heads.find(op => op.opId === opId);
+  if (!selected) throw new Error('This conflict changed. Review again.');
+  return mutateBook(selected.type, id, selected.recipe);
 }

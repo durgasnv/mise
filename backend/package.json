@@ -10,7 +10,8 @@
     "check:models": "node scripts/check-generation-models.js",
     "check:release": "node scripts/release-check.js",
     "dev:db": "node scripts/dev-db.js",
-    "check:db": "node scripts/check-db.js"
+    "check:db": "node scripts/check-db.js",
+    "check:live": "node scripts/check-live.js"
   },
   "engines": {
     "node": ">=18"

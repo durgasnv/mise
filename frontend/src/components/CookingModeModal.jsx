@@ -1,3 +1,4 @@
+import { useStepSpeech } from '../lib/useStepSpeech.js';
 import { useDialog } from "../lib/useDialog.js";
 import { cookingSessions, updateCookingSession, timerSeconds as remainingTimer, stepDuration } from "../lib/cookingProgress.js";
 import { cookbookOwner } from "../lib/savedRecipes.js";
@@ -32,12 +33,13 @@ export function CookingModeModal({ recipe, onClose, onComplete, sessionId }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(restored?.currentStepIndex || 0);
   const [timer, setTimer] = useState(restored?.timer || { remainingSeconds: stepDuration(recipe?.instructions?.[restored?.currentStepIndex || 0]), deadline: null });
   const [now, setNow] = useState(Date.now);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [progressError, setProgressError] = useState('');
   const dialog = useDialog(onClose);
   const previousStep = useRef(currentStepIndex);
   const steps = recipe?.instructions || [];
   const currentStep = steps[currentStepIndex];
+  const speech = useStepSpeech(currentStep, currentStepIndex);
+  const isSpeaking = speech.isSpeaking;
   const timerSeconds = remainingTimer(timer, now);
   const timerRunning = timer.deadline !== null;
   function setTimerSeconds(value) {
@@ -54,7 +56,6 @@ export function CookingModeModal({ recipe, onClose, onComplete, sessionId }) {
     if (previousStep.current === currentStepIndex) return;
     previousStep.current = currentStepIndex;
     setTimer({ remainingSeconds: stepDuration(currentStep), deadline: null });
-    if (typeof window !== 'undefined') window.speechSynthesis?.cancel(); setIsSpeaking(false);
   }, [currentStepIndex, currentStep]);
   useEffect(() => {
     if (timer.deadline === null) return;
@@ -66,7 +67,6 @@ export function CookingModeModal({ recipe, onClose, onComplete, sessionId }) {
     try { updateCookingSession(sessionId, { currentStepIndex, timer }, owner); setProgressError(''); }
     catch { setProgressError('Cooking continues, but progress could not be saved on this device.'); }
   }, [sessionId, currentStepIndex, timer, owner]);
-  useEffect(() => () => window.speechSynthesis?.cancel(), []);
 
   // Keyboard navigation
   useEffect(() => {
@@ -95,25 +95,6 @@ export function CookingModeModal({ recipe, onClose, onComplete, sessionId }) {
       setTimer({ remainingSeconds: stepDuration(steps[currentStepIndex - 1]), deadline: null });
       setCurrentStepIndex((prev) => prev - 1);
     }
-  }
-
-  function readStepAloud() {
-    if (!("speechSynthesis" in window)) return;
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(`Step ${currentStepIndex + 1}. ${currentStep}`);
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    setIsSpeaking(true);
-    window.speechSynthesis.speak(utterance);
   }
 
   function formatTime(totalSecs) {
@@ -149,7 +130,9 @@ export function CookingModeModal({ recipe, onClose, onComplete, sessionId }) {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={readStepAloud}
+              onClick={speech.toggle}
+              aria-pressed={isSpeaking}
+              aria-describedby="cooking-voice-feedback"
               className={`px-3 py-1.5 rounded-md text-xs font-typewriter font-bold flex items-center gap-1.5 transition-all ${
                 isSpeaking
                   ? "bg-[#F2382F] text-white animate-pulse"
@@ -169,6 +152,7 @@ export function CookingModeModal({ recipe, onClose, onComplete, sessionId }) {
         </div>
       </div>
 
+      <div id="cooking-voice-feedback">{speech.error && <p role="alert" className="px-6 py-2">{speech.error}</p>}</div>
       {progressError && <p role="alert" className="px-6 py-2">{progressError}</p>}
       {/* Main Step Center Display */}
       <div className="max-w-4xl w-full mx-auto px-6 py-10 my-auto text-center space-y-8">
