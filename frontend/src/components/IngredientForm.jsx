@@ -373,32 +373,6 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
       )}
 
       <form onSubmit={handleSubmit} className="pantry-form mt-6 space-y-6">
-        <fieldset disabled={isLoading} className="space-y-4 rounded-lg border border-[#E3CFB1] p-4">
-          <legend className="font-semibold">Your household & pantry</legend>
-          <button type="button" className="underline text-sm" onClick={() => {
-            try {
-              const items = [...new Map(pantryNames.map(name => [canonicalName(name), { name, quantity: amounts[name]?.quantity ? Number(amounts[name].quantity) : null, unit: amounts[name]?.unit || 'count' }])).values()];
-              saveFormPantry(items, staples, inventoryOwner); setPantryMessage('Pantry saved for this account on this device.');
-            } catch (e) { setPantryMessage(e.message); }
-          }}>Save these ingredients & staples to my pantry</button>
-          {pantryMessage && <p role="status" className="text-sm">{pantryMessage}</p>}
-          <div className="flex flex-wrap gap-4">
-            <label>Servings <input aria-label="Servings" className="w-16 border p-1" type="number" min="1" max="12" value={servings} onChange={e => setServings(Number(e.target.value))} /></label>
-            <label>Minutes available <input className="w-20 border p-1" type="number" min="5" max="1440" value={maxMinutes} onChange={e => setMaxMinutes(Number(e.target.value))} /></label>
-          </div>
-          <p className="text-sm">Dietary restrictions & allergens</p>
-          <div className="flex flex-wrap gap-3">{RESTRICTIONS.map(item => <label key={item}><input type="checkbox" checked={restrictions.includes(item)} onChange={() => toggleChoice(setRestrictions, item)} /> {item}</label>)}</div>
-          <label className="block">Other ingredients to exclude <input className="border p-2 w-full" placeholder="Comma-separated ingredient names" value={excluded} onChange={e => setExcluded(e.target.value)} maxLength={500} /></label>
-          <p className="text-sm">Available equipment</p>
-          <div className="flex flex-wrap gap-3">{EQUIPMENT.map(item => <label key={item}><input type="checkbox" checked={equipment.includes(item)} onChange={() => toggleChoice(setEquipment, item)} /> {item}</label>)}</div>
-          <p className="text-sm">Confirm staples you actually have</p>
-          <div className="flex flex-wrap gap-3">{['salt', 'black pepper', 'olive oil', 'butter', 'garlic'].map(item => <label key={item}><input type="checkbox" checked={staples.includes(item)} onChange={() => toggleChoice(setStaples, item)} /> {item}</label>)}</div>
-          <label className="block"><input type="checkbox" checked={strictPantry} onChange={e => setStrictPantry(e.target.checked)} /> Use only my confirmed pantry</label>
-          <p className="text-sm">Optional available amounts (leave blank to check before cooking). Enter ingredient names separately from amounts. Cup = 240 ml; tbsp = 15 ml; tsp = 5 ml.</p>
-          {[...new Set(pantryNames)].map(name => <div key={name} className="flex items-center gap-2 flex-wrap"><span className="min-w-24">{name}</span><input aria-label={`Available amount of ${name}`} className="w-24 border p-1" type="number" min="0.001" step="any" placeholder="Unknown" value={amounts[name]?.quantity || ''} onChange={e => setAmounts(a => ({ ...a, [name]: { ...a[name], quantity: e.target.value } }))} /><select aria-label={`Unit for ${name}`} className="border p-1" value={amounts[name]?.unit || 'count'} onChange={e => setAmounts(a => ({ ...a, [name]: { ...a[name], unit: e.target.value } }))}>{UNITS.map(u => <option key={u}>{u}</option>)}</select></div>)}
-          {imagePreview && <p className="text-sm">Confirm photo ingredients by entering their names below before requesting a dinner. Availability is checked against those names.</p>}
-        </fieldset>
-
         {/* Slot-based input OR Freeform Box */}
         {mode === "freeform" ? (
           <div className="space-y-1.5">
@@ -461,6 +435,65 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
           </div>
         )}
 
+        <fieldset disabled={isLoading} className="space-y-4 rounded-lg border border-[#E3CFB1] p-4">
+          <legend className="font-semibold">Your household & pantry</legend>
+          <button type="button" className="underline text-sm" onClick={() => {
+            try {
+              const items = [...new Map(pantryNames.map(name => [canonicalName(name), { name, quantity: amounts[name]?.quantity ? Number(amounts[name].quantity) : null, unit: amounts[name]?.unit || 'count' }])).values()];
+              saveFormPantry(items, staples, inventoryOwner); setPantryMessage('Pantry saved for this account on this device.');
+            } catch (e) { setPantryMessage(e.message); }
+          }}>Save these ingredients & staples to my pantry</button>
+          {pantryMessage && <p role="status" className="text-sm">{pantryMessage}</p>}
+          <div className="flex flex-wrap gap-4">
+            <label>Servings <input aria-label="Servings" className="w-16 border p-1" type="number" min="1" max="12" value={servings} onChange={e => setServings(Number(e.target.value))} /></label>
+            <label>Minutes available <input className="w-20 border p-1" type="number" min="5" max="1440" value={maxMinutes} onChange={e => setMaxMinutes(Number(e.target.value))} /></label>
+          </div>
+          <p className="text-sm">Dietary restrictions & allergens</p>
+          <div className="flex flex-wrap gap-3">{RESTRICTIONS.map(item => <label key={item}><input type="checkbox" checked={restrictions.includes(item)} onChange={() => toggleChoice(setRestrictions, item)} /> {item}</label>)}</div>
+          <label className="block">Other ingredients to exclude <input className="border p-2 w-full" placeholder="Comma-separated ingredient names" value={excluded} onChange={e => setExcluded(e.target.value)} maxLength={500} /></label>
+          <p className="text-sm">Available equipment</p>
+          <div className="flex flex-wrap gap-3">{EQUIPMENT.map(item => <label key={item}><input type="checkbox" checked={equipment.includes(item)} onChange={() => toggleChoice(setEquipment, item)} /> {item}</label>)}</div>
+          <p className="text-sm">Confirm staples you actually have</p>
+          <div className="flex flex-wrap gap-3">{['salt', 'black pepper', 'olive oil', 'butter', 'garlic'].map(item => <label key={item}><input type="checkbox" checked={staples.includes(item)} onChange={() => toggleChoice(setStaples, item)} /> {item}</label>)}</div>
+          <label className="block"><input type="checkbox" checked={strictPantry} onChange={e => setStrictPantry(e.target.checked)} /> Use only my confirmed pantry</label>
+          <p className="text-sm">Optional available amounts (leave blank to check before cooking). Enter ingredient names separately from amounts. Cup = 240 ml; tbsp = 15 ml; tsp = 5 ml.</p>
+          {[...new Set(pantryNames)].map(name => <div key={name} className="flex items-center gap-2 flex-wrap"><span className="min-w-24">{name}</span><input aria-label={`Available amount of ${name}`} className="w-24 border p-1" type="number" min="0.001" step="any" placeholder="Unknown" value={amounts[name]?.quantity || ''} onChange={e => setAmounts(a => ({ ...a, [name]: { ...a[name], quantity: e.target.value } }))} /><select aria-label={`Unit for ${name}`} className="border p-1" value={amounts[name]?.unit || 'count'} onChange={e => setAmounts(a => ({ ...a, [name]: { ...a[name], unit: e.target.value } }))}>{UNITS.map(u => <option key={u}>{u}</option>)}</select></div>)}
+          {imagePreview && <p className="text-sm">Confirm photo ingredients by entering their names below before requesting a dinner. Availability is checked against those names.</p>}
+        </fieldset>
+
+        {/* Submit CTA Button */}
+        <div className="submit-panel pt-2">
+          <button
+            type="submit"
+            disabled={isLoading || !hasAnyInput}
+            className={`w-full py-4 px-6 rounded-loro font-bold text-base uppercase tracking-wider text-white shadow-loro-coral btn-shimmer transition-all flex items-center justify-center gap-3 ${
+              isLoading || !hasAnyInput
+                ? "bg-[#201B17]/40 cursor-not-allowed"
+                : "bg-[#F2382F] hover:bg-[#CF2A23] active:scale-[0.99] cursor-pointer"
+            }`}
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-3">
+                <span className="flex gap-1.5">
+                  <span className="simmer-dot" />
+                  <span className="simmer-dot" />
+                  <span className="simmer-dot" />
+                </span>
+                <span className="font-typewriter text-sm tracking-widest text-[#F5E6CC]">
+                  Finding your dinner…
+                </span>
+              </div>
+            ) : (
+              <>
+                <span>Recommend dinner</span>
+                <span aria-hidden="true">→</span>
+              </>
+            )}
+          </button>
+        </div>
+        <details className="ingredient-inspiration">
+          <summary>Quick add, suggested combinations & preferences</summary>
+          <div className="space-y-6 pt-4">
         {/* Quick Suggestion Chips */}
         <div className="quick-add pt-1">
           <div className="flex items-center justify-between mb-2">
@@ -548,6 +581,7 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
           <button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
+            aria-expanded={showAdvanced}
             className="text-xs font-semibold text-[#6D5545] hover:text-[#201B17] flex items-center gap-1.5"
           >
             <span>{showAdvanced ? "−" : "+"}</span>
@@ -570,36 +604,8 @@ export function IngredientForm({ onSubmit, isLoading, initialIngredients }) {
           )}
         </div>
 
-        {/* Submit CTA Button */}
-        <div className="submit-panel pt-2">
-          <button
-            type="submit"
-            disabled={isLoading || !hasAnyInput}
-            className={`w-full py-4 px-6 rounded-loro font-bold text-base uppercase tracking-wider text-white shadow-loro-coral btn-shimmer transition-all flex items-center justify-center gap-3 ${
-              isLoading || !hasAnyInput
-                ? "bg-[#201B17]/40 cursor-not-allowed"
-                : "bg-[#F2382F] hover:bg-[#CF2A23] active:scale-[0.99] cursor-pointer"
-            }`}
-          >
-            {isLoading ? (
-              <div className="flex items-center gap-3">
-                <span className="flex gap-1.5">
-                  <span className="simmer-dot" />
-                  <span className="simmer-dot" />
-                  <span className="simmer-dot" />
-                </span>
-                <span className="font-typewriter text-sm tracking-widest text-[#F5E6CC]">
-                  STOKING THE HEARTH & CRAFTING TOP 3 FEASTS...
-                </span>
-              </div>
-            ) : (
-              <>
-                <span>Recommend dinner</span>
-                <span aria-hidden="true">→</span>
-              </>
-            )}
-          </button>
-        </div>
+          </div>
+        </details>
       </form>
 
       {/* Mystery Pantry Wheel Modal */}

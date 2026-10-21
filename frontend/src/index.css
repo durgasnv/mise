@@ -1696,3 +1696,6 @@ textarea:focus-visible {
 
 .service-status { padding: 12px 0; border-bottom: 1px solid var(--mise-rule); font-size: 14px; }
 .service-status summary { cursor: pointer; font-weight: 600; }
+
+.ingredient-inspiration { border-top: 1px solid var(--mise-rule); padding-top: 20px; }
+.ingredient-inspiration > summary { cursor: pointer; font-size: 14px; font-weight: 600; }
