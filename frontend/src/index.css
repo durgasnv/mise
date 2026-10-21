@@ -56,14 +56,14 @@ textarea:focus-visible {
 
 .app-subnav button:hover { color: var(--mise-ink) !important; }
 
-.app-shell { padding-top: clamp(46px, 7vw, 92px) !important; }
+.app-shell { padding-top: clamp(24px, 4vw, 48px) !important; }
 
 .kitchen-intro {
   display: grid;
   grid-template-columns: .8fr 2fr 1fr;
   align-items: end;
   gap: 28px;
-  padding-bottom: 54px;
+  padding-bottom: 24px;
   border-bottom: 1px solid var(--mise-red);
   color: var(--mise-red);
 }
@@ -71,7 +71,7 @@ textarea:focus-visible {
 .kitchen-intro h1 {
   margin: 0;
   font-family: "Bodoni Moda", serif;
-  font-size: clamp(58px, 7vw, 100px);
+  font-size: clamp(40px, 5vw, 64px);
   font-weight: 500;
   letter-spacing: -.055em;
   line-height: .79;
@@ -1693,3 +1693,6 @@ textarea:focus-visible {
 .app-page { font-size: 16px; line-height: 1.6; }
 .app-page :where(input:not([type="checkbox"]):not([type="file"]), select, textarea) { font-size: 16px; }
 .ingredient-workbench label { line-height: 1.5; letter-spacing: .04em !important; }
+
+.service-status { padding: 12px 0; border-bottom: 1px solid var(--mise-rule); font-size: 14px; }
+.service-status summary { cursor: pointer; font-weight: 600; }

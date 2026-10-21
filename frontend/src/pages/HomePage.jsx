@@ -126,20 +126,21 @@ export function HomePage({ onBack, onViewSaved, onViewPantry, onViewPlan, onView
         </div>
       </div>
 
-      <main className="app-shell max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 space-y-12">
+      <main className="app-shell max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 space-y-6">
         <header className="kitchen-intro">
           <span className="micro-label">01 / Pantry composition</span>
           <h1>What are we<br /><em>working with?</em></h1>
           <p>Name what you have. Mise will recommend a dinner that fits, with alternatives when useful.</p>
         </header>
         <div className="flex flex-wrap gap-3">{onViewPantry && <button className="editorial-button" onClick={onViewPantry}>Manage pantry</button>}{onViewPlan && <button className="editorial-button" onClick={onViewPlan}>Plan meals & groceries</button>}{onViewMeasurements && <button className="editorial-button" onClick={onViewMeasurements}>Meal activity & privacy</button>}</div>
-        <section className="paper-card p-4 flex flex-wrap gap-3 justify-between" aria-label="Recipe service status">
-          <div><p role="status">{readiness ? readiness.message : 'Checking the recipe service…'}</p>
+        <details className="service-status" open={readiness && !readiness.ready ? true : undefined}>
+          <summary>{!readiness ? 'Checking recipe availability…' : readiness.ready ? 'Ready to recommend dinner' : 'Recipe service needs attention'}</summary>
+          <div className="flex flex-wrap items-center gap-3 pt-3">
+            <p role="status">{readiness?.message}</p>
             {getCurrentUser()?.provider === 'demo' && <p>Sign in with Puter to generate recipes. Demo mode supports cooking previews.</p>}
+            <button type="button" className="underline" disabled={!readiness} onClick={refreshReadiness}>Check connection</button>
           </div>
-          <button type="button" className="underline" disabled={!readiness} onClick={refreshReadiness}>Check connection</button>
-        </section>
-        <WorkspaceSyncPanel />
+        </details>
         {onOpenRecipe && <ResumeCooking onOpenRecipe={onOpenRecipe} />}
         {/* Top Grid: Form + Kitchen Tips */}
         <div className="kitchen-grid grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -191,6 +192,8 @@ export function HomePage({ onBack, onViewSaved, onViewPantry, onViewPlan, onView
             </div>
           </aside>
         </div>
+
+        <WorkspaceSyncPanel />
 
         {generationError && (
           <div role="alert" className="border border-[#F2382F] bg-[#FFF8EC] p-5 text-[#201B17]">
