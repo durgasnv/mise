@@ -36,8 +36,8 @@ textarea:focus-visible {
 .app-subnav {
   min-height: 47px;
   padding: 0 !important;
-  color: var(--mise-red);
-  border-color: var(--mise-red) !important;
+  color: var(--mise-ink);
+  border-color: var(--mise-ink) !important;
   background: var(--mise-cream) !important;
 }
 
@@ -65,7 +65,7 @@ textarea:focus-visible {
   gap: 28px;
   padding-bottom: 24px;
   border-bottom: 1px solid var(--mise-red);
-  color: var(--mise-red);
+  color: var(--mise-ink);
 }
 
 .kitchen-intro h1 {
@@ -85,7 +85,7 @@ textarea:focus-visible {
 
 .ingredient-workbench {
   padding: clamp(22px, 4vw, 42px) !important;
-  border-color: var(--mise-red) !important;
+  border-color: var(--mise-rule) !important;
   border-radius: 0 !important;
   background: var(--mise-paper) !important;
   box-shadow: none !important;
@@ -93,7 +93,7 @@ textarea:focus-visible {
 
 .ingredient-workbench h2 {
   margin-top: 8px !important;
-  color: var(--mise-red) !important;
+  color: var(--mise-ink) !important;
   font-family: "Bodoni Moda", serif !important;
   font-size: clamp(34px, 4vw, 52px) !important;
   font-weight: 500;
@@ -121,7 +121,7 @@ textarea:focus-visible {
 
 .ingredient-workbench input:focus,
 .ingredient-workbench textarea:focus {
-  border-color: var(--mise-red) !important;
+  border-color: var(--mise-rule) !important;
   background: #fffaf1 !important;
 }
 
@@ -132,8 +132,8 @@ textarea:focus-visible {
 
 .kitchen-aside .paper-card {
   border: 0 !important;
-  border-top: 1px solid var(--mise-red) !important;
-  border-bottom: 1px solid var(--mise-red) !important;
+  border-top: 1px solid var(--mise-rule) !important;
+  border-bottom: 1px solid var(--mise-rule) !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -151,8 +151,8 @@ textarea:focus-visible {
 .recipe-deck-tabs {
   padding: 16px 0 !important;
   border: 0 !important;
-  border-top: 1px solid var(--mise-red) !important;
-  border-bottom: 1px solid var(--mise-red) !important;
+  border-top: 1px solid var(--mise-rule) !important;
+  border-bottom: 1px solid var(--mise-rule) !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -162,13 +162,13 @@ textarea:focus-visible {
 .recipe-deck-stage > div[class*="absolute"] { display: none; }
 
 .recipe-card {
-  border-color: var(--mise-red) !important;
+  border-color: var(--mise-rule) !important;
   border-radius: 0 !important;
   background: var(--mise-paper) !important;
   box-shadow: none !important;
 }
 
-.recipe-card > div:first-child { background: var(--mise-red) !important; }
+.recipe-card > div:first-child { background: var(--mise-ink) !important; }
 
 .recipe-card h1 {
   color: var(--mise-red) !important;
@@ -203,7 +203,7 @@ textarea:focus-visible {
 /* Boxless editorial controls — mirrors the landing page */
 .workbench-header {
   padding-bottom: 30px !important;
-  border-color: var(--mise-red) !important;
+  border-color: var(--mise-rule) !important;
 }
 
 .workbench-header > div:first-child > div:first-child > span:first-child {
@@ -217,7 +217,7 @@ textarea:focus-visible {
 .workbench-header > div:last-child button {
   min-height: 34px;
   padding-inline: 11px !important;
-  border-color: var(--mise-red) !important;
+  border-color: var(--mise-rule) !important;
   border-radius: 0 !important;
   color: var(--mise-red) !important;
   background: transparent !important;
@@ -260,7 +260,7 @@ textarea:focus-visible {
   margin-top: 28px !important;
   padding: 14px 0 !important;
   border-width: 1px 0 !important;
-  border-color: var(--mise-red) !important;
+  border-color: var(--mise-rule) !important;
   border-radius: 0 !important;
   background: transparent !important;
 }
@@ -321,7 +321,7 @@ textarea:focus-visible {
   border-radius: 0 !important;
   background: transparent !important;
 }
-.style-panel button[class*="bg-[#201B17]"] { color: var(--mise-cream) !important; border-color: var(--mise-red) !important; background: var(--mise-red) !important; }
+.style-panel button[class*="bg-[#201B17]"] { color: var(--mise-cream) !important; border-color: var(--mise-rule) !important; background: var(--mise-red) !important; }
 
 .advanced-panel > div {
   padding: 18px 0 0 !important;
@@ -364,7 +364,7 @@ textarea:focus-visible {
   border: 0 !important;
   border-radius: 0 !important;
   color: var(--mise-cream) !important;
-  background: var(--mise-red) !important;
+  background: var(--mise-ink) !important;
 }
 
 .kitchen-manifesto::before {
@@ -377,7 +377,7 @@ textarea:focus-visible {
 
 .kitchen-loading {
   border-width: 1px 0 !important;
-  border-color: var(--mise-red) !important;
+  border-color: var(--mise-rule) !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -391,13 +391,13 @@ textarea:focus-visible {
 }
 
 .kitchen-loading > p:nth-of-type(1) {
-  color: var(--mise-red) !important;
+  color: var(--mise-ink) !important;
   font-family: "Bodoni Moda", serif !important;
   font-size: clamp(34px, 5vw, 58px) !important;
   font-weight: 500;
 }
 
-.recipe-ribbon { min-height: 48px; background: var(--mise-red) !important; }
+.recipe-ribbon { min-height: 48px; background: var(--mise-ink) !important; }
 .recipe-card > div:nth-child(2) { padding: clamp(22px, 5vw, 54px) !important; }
 
 .portion-control {
@@ -410,7 +410,7 @@ textarea:focus-visible {
 .portion-control button { border: 1px solid var(--mise-rule); border-radius: 0 !important; }
 .portion-control button[class*="bg-[#F2382F]"] { border-color: var(--mise-red); }
 
-.recipe-layout { gap: 0 !important; border-top: 1px solid var(--mise-red); }
+.recipe-layout { gap: 0 !important; border-top: 1px solid var(--mise-rule); }
 .ingredients-panel {
   padding: 34px 34px 34px 0 !important;
   border-width: 0 1px 0 0 !important;
