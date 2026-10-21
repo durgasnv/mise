@@ -993,8 +993,9 @@ textarea:focus-visible {
   font-family: "Bodoni Moda", "Times New Roman", serif;
   font-size: clamp(70px, 10.6vw, 168px);
   font-weight: 600;
-  letter-spacing: -0.07em;
-  line-height: 0.69;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  row-gap: 0.08em;
   text-transform: uppercase;
 }
 
@@ -1438,7 +1439,7 @@ textarea:focus-visible {
   .cookbook-link { display: none; }
   .menu-toggle { display: block; }
   .mise-mobile-nav { display: block; }
-  .hero-heading { font-size: clamp(62px, 12vw, 110px); line-height: .76; }
+  .hero-heading { font-size: clamp(62px, 12vw, 110px); }
   .hero-visual { grid-column: 3 / 9; }
   .hero-copy { grid-column: 9 / -1; }
   .pantry-strip { grid-template-columns: 1fr repeat(3, 1fr); }
@@ -1467,7 +1468,7 @@ textarea:focus-visible {
   .hero-layout { display: flex; min-height: auto; flex-direction: column; }
   .hero-kicker { margin-bottom: 38px; }
   .hero-heading-wrap { padding: 0; }
-  .hero-heading { font-size: clamp(51px, 16vw, 82px); line-height: .8; }
+  .hero-heading { font-size: clamp(51px, 16vw, 82px); }
   .hero-heading-indent { align-self: flex-start; margin-left: .45em; }
   .hero-visual { width: 76%; height: 370px; margin: 26px 0 0 auto; }
   .hero-copy { max-width: 74%; margin: 26px 0 34px; }
