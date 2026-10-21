@@ -173,10 +173,10 @@ textarea:focus-visible {
 .recipe-card h1 {
   color: var(--mise-red) !important;
   font-family: "Bodoni Moda", serif !important;
-  font-size: clamp(44px, 6vw, 72px) !important;
+  font-size: clamp(32px, 4vw, 48px) !important;
   font-weight: 500;
   letter-spacing: -.05em !important;
-  line-height: .88 !important;
+  line-height: 1.1 !important;
   text-transform: uppercase;
 }
 
@@ -1699,3 +1699,5 @@ textarea:focus-visible {
 
 .ingredient-inspiration { border-top: 1px solid var(--mise-rule); padding-top: 20px; }
 .ingredient-inspiration > summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+
+.method-panel ol p { font-size: clamp(16px, 1.5vw, 18px); line-height: 1.7; }
