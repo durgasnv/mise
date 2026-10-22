@@ -963,9 +963,12 @@ textarea:focus-visible {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   min-height: calc(100vh - 106px);
+  grid-template-rows: auto auto auto auto;
+  row-gap: clamp(32px, 4vw, 64px);
 }
 
 .hero-kicker {
+  grid-row: 1;
   grid-column: 1 / -1;
   display: flex;
   justify-content: space-between;
@@ -979,10 +982,12 @@ textarea:focus-visible {
 }
 
 .hero-heading-wrap {
+  grid-row: 2;
+  min-width: 0;
   grid-column: 1 / -1;
   align-self: start;
   z-index: 2;
-  padding-top: clamp(28px, 6vh, 76px);
+  padding-block: 12px;
 }
 
 .hero-heading {
@@ -991,10 +996,12 @@ textarea:focus-visible {
   margin: 0;
   color: var(--mise-red);
   font-family: "Bodoni Moda", "Times New Roman", serif;
-  font-size: clamp(70px, 10.6vw, 168px);
+  font-size: clamp(56px, 8.6vw, 128px);
   font-weight: 600;
-  letter-spacing: -0.07em;
-  line-height: 0.69;
+  letter-spacing: -0.02em;
+  word-spacing: 0.08em;
+  line-height: 1.15;
+  row-gap: 0.14em;
   text-transform: uppercase;
 }
 
@@ -1013,6 +1020,7 @@ textarea:focus-visible {
 }
 
 .hero-visual {
+  grid-row: 3;
   position: relative;
   grid-column: 5 / 10;
   align-self: end;
@@ -1061,6 +1069,7 @@ textarea:focus-visible {
 .ingredient-note-two { right: 7%; bottom: 8%; }
 
 .hero-copy {
+  grid-row: 3;
   grid-column: 10 / -1;
   align-self: center;
   z-index: 2;
@@ -1438,7 +1447,7 @@ textarea:focus-visible {
   .cookbook-link { display: none; }
   .menu-toggle { display: block; }
   .mise-mobile-nav { display: block; }
-  .hero-heading { font-size: clamp(62px, 12vw, 110px); line-height: .76; }
+  .hero-heading { font-size: clamp(56px, 8.6vw, 84px); }
   .hero-visual { grid-column: 3 / 9; }
   .hero-copy { grid-column: 9 / -1; }
   .pantry-strip { grid-template-columns: 1fr repeat(3, 1fr); }
@@ -1465,12 +1474,12 @@ textarea:focus-visible {
   .editorial-shell { width: min(100% - 28px, 1280px); }
   .editorial-hero { min-height: auto; padding-top: 18px; }
   .hero-layout { display: flex; min-height: auto; flex-direction: column; }
-  .hero-kicker { margin-bottom: 38px; }
+  .hero-kicker { margin-bottom: 0; }
   .hero-heading-wrap { padding: 0; }
-  .hero-heading { font-size: clamp(51px, 16vw, 82px); line-height: .8; }
-  .hero-heading-indent { align-self: flex-start; margin-left: .45em; }
-  .hero-visual { width: 76%; height: 370px; margin: 26px 0 0 auto; }
-  .hero-copy { max-width: 74%; margin: 26px 0 34px; }
+  .hero-heading { font-size: clamp(36px, 10.8vw, 72px); }
+  .hero-heading-indent { align-self: flex-start; margin-left: 0; }
+  .hero-visual { width: 76%; height: 370px; margin: 0 0 0 auto; }
+  .hero-copy { max-width: 74%; margin: 0 0 2px; }
   .pantry-strip { display: grid; grid-template-columns: 1fr; margin: 0; }
   .pantry-strip-title, .pantry-field, .pantry-submit { min-height: 70px; border-right: 0; border-bottom: 1px solid var(--mise-red); }
   .pantry-field { gap: 10px; }

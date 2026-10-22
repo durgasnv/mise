@@ -18,3 +18,17 @@ test('reduced motion shows all landing content immediately',async({page})=>{
   await page.getByRole('button',{name:'Make dinner'}).click();await expect(page.getByRole('dialog',{name:'Sign in'})).toBeVisible();await page.keyboard.press('Escape');
   await expect(page.getByRole('button',{name:'Make dinner'})).toBeFocused();
 });
+
+test('hero headline keeps breathing room above the photograph', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => document.fonts.ready);
+  const heading = await page.locator('.hero-heading').boundingBox();
+  const photo = await page.locator('.hero-visual').boundingBox();
+  expect(photo.y - (heading.y + heading.height)).toBeGreaterThanOrEqual(32);
+  const lines = page.locator('.hero-heading > span');
+  const first = await lines.nth(0).boundingBox();
+  const second = await lines.nth(1).boundingBox();
+  expect(second.y - (first.y + first.height)).toBeGreaterThanOrEqual(5);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+});
